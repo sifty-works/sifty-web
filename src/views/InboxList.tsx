@@ -1,18 +1,17 @@
 import { useVacancies } from '../state/vacancies.ts'
+import { OfflineNotice } from './OfflineNotice.tsx'
 import { SearchField } from './SearchField.tsx'
 import { VacancyRow } from './VacancyRow.tsx'
 
-export function InboxList() {
-  const { state, query, setQuery, resetQuery } = useVacancies()
+interface Props {
+  reloadTrigger?: number
+}
+
+export function InboxList({ reloadTrigger }: Props) {
+  const { state, query, setQuery, resetQuery } = useVacancies(reloadTrigger)
 
   if (state.status === 'offline') {
-    return (
-      <div className="list-area list-area--center">
-        <p className="list-message">
-          Sifty is not running. Start it and refresh the page.
-        </p>
-      </div>
-    )
+    return <OfflineNotice />
   }
 
   if (state.status === 'error') {

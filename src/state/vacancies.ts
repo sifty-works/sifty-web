@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { listVacancies, OfflineError, ServerError, VacancyRow } from '../api/client.ts'
 
+// Sentinel so the first call always shows the loading state.
+const NEVER_LOADED = Symbol()
+
 const QUERY_KEY = 'sifty.inbox.query'
 
 function loadSavedQuery(): string {
@@ -36,11 +39,14 @@ export interface UseVacanciesResult {
   resetQuery: () => void
 }
 
-export function useVacancies(): UseVacanciesResult {
+export function useVacancies(reloadTrigger = 0): UseVacanciesResult {
   const [query, setQueryState] = useState<string>(loadSavedQuery)
   const [pending, setPending] = useState<string>(loadSavedQuery)
   const [state, setState] = useState<VacancyListState>({ status: 'loading' })
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Track the last query that triggered a full loading state so a catalogue
+  // reload (same query, new reloadTrigger) keeps current rows on screen.
+  const prevQueryRef = useRef<string | typeof NEVER_LOADED>(NEVER_LOADED)
 
   // Debounced setter: updates pending immediately, fires query after 250 ms.
   const setQuery = useCallback((q: string) => {
@@ -65,7 +71,13 @@ export function useVacancies(): UseVacanciesResult {
 
   useEffect(() => {
     let cancelled = false
-    setState({ status: 'loading' })
+    // Show the loading state on the first fetch or when the query changes.
+    // A catalogue-triggered reload (same query) keeps the current rows visible
+    // so the scroll position is preserved and there is no flicker.
+    if (prevQueryRef.current === NEVER_LOADED || prevQueryRef.current !== query) {
+      setState({ status: 'loading' })
+    }
+    prevQueryRef.current = query
 
     listVacancies(query)
       .then((data) => {
@@ -88,7 +100,7 @@ export function useVacancies(): UseVacanciesResult {
     return () => {
       cancelled = true
     }
-  }, [query])
+  }, [query, reloadTrigger])
 
   // Expose the pending value as the visible query so the field updates instantly.
   return { state, query: pending, setQuery, resetQuery }

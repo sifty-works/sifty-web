@@ -1,0 +1,67 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { CollectStatus, getStatus, StatusResponse } from '../api/client.ts'
+
+export type StatusState =
+  | { status: 'unknown' }
+  | { status: 'ok'; data: StatusResponse }
+  | { status: 'offline' }
+
+export interface UseStatusResult {
+  state: StatusState
+  /** Merge status keys into the state at once (the whole status, or a collect answer). */
+  applyStatus: (data: CollectStatus) => void
+}
+
+/**
+ * Polls GET /api/status every 5 seconds.
+ * Calls onCatalogueChange when the catalogue version advances.
+ * Returns applyStatus so callers can push a collect response without waiting for the next poll.
+ */
+export function useStatus(onCatalogueChange: () => void): UseStatusResult {
+  const [state, setState] = useState<StatusState>({ status: 'unknown' })
+  const callbackRef = useRef(onCatalogueChange)
+  const prevCatalogueRef = useRef<number | null>(null)
+
+  // Keep the callback ref current without restarting the poll.
+  useEffect(() => {
+    callbackRef.current = onCatalogueChange
+  })
+
+  const applyStatus = useCallback((data: CollectStatus) => {
+    if (prevCatalogueRef.current !== null && prevCatalogueRef.current !== data.catalogue) {
+      callbackRef.current()
+    }
+    prevCatalogueRef.current = data.catalogue
+    setState((s) =>
+      s.status === 'ok' || 'version' in data
+        ? { status: 'ok', data: { ...(s.status === 'ok' ? s.data : {}), ...data } as StatusResponse }
+        : s,
+    )
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    let timerId: ReturnType<typeof setTimeout> | null = null
+
+    async function poll() {
+      try {
+        const data = await getStatus()
+        if (!cancelled) applyStatus(data)
+      } catch {
+        if (!cancelled) setState({ status: 'offline' })
+      }
+      if (!cancelled) {
+        timerId = setTimeout(() => { void poll() }, 5000)
+      }
+    }
+
+    void poll()
+
+    return () => {
+      cancelled = true
+      if (timerId !== null) clearTimeout(timerId)
+    }
+  }, [applyStatus]) // applyStatus is stable (useCallback empty deps)
+
+  return { state, applyStatus }
+}
