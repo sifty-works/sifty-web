@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { CollectStatus, StatusResponse, triggerCollect } from '../api/client.ts'
+import { StatusResponse, triggerCollect } from '../api/client.ts'
 import { useSources } from '../state/sources.ts'
 import { OfflineNotice } from './OfflineNotice.tsx'
 
 interface Props {
   status: StatusResponse | null
-  applyStatus: (data: CollectStatus) => void
+  applyStatus: (data: StatusResponse) => void
+  statusText: string | null
 }
 
 const INTERVAL_OPTIONS = [
@@ -19,15 +20,12 @@ const INTERVAL_OPTIONS = [
   { label: '7 days', value: '168h' },
 ]
 
-export function SourcesPage({ status, applyStatus }: Props) {
+export function SourcesPage({ status, applyStatus, statusText }: Props) {
   const { state, add, toggle, remove, updateSchedule, addError } = useSources()
   const [nameVal, setNameVal] = useState('')
   const [urlVal, setUrlVal] = useState('')
 
   const isCollecting = status?.collecting != null
-  const statusText =
-    status?.collecting?.text ??
-    (status?.lastRun?.state === 'failed' ? status.lastRun.message : null)
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()

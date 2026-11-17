@@ -64,19 +64,11 @@ export class OfflineError extends Error {
 
 async function parseErrorBody(res: Response): Promise<string | null> {
   try {
-    const body: unknown = await res.json()
-    if (
-      body !== null &&
-      typeof body === 'object' &&
-      'error' in body &&
-      typeof (body as Record<string, unknown>)['error'] === 'string'
-    ) {
-      return (body as Record<string, unknown>)['error'] as string
-    }
+    const body = await res.json() as Record<string, unknown>
+    return typeof body?.error === 'string' ? body.error : null
   } catch {
-    // body was not JSON
+    return null
   }
-  return null
 }
 
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
@@ -108,11 +100,8 @@ export function getStatus(): Promise<StatusResponse> {
   return request<StatusResponse>('GET', '/api/status')
 }
 
-/** The collection keys of the status, as POST /api/collect answers them. */
-export type CollectStatus = Pick<StatusResponse, 'collecting' | 'lastRun' | 'catalogue'>
-
-export function triggerCollect(force: boolean): Promise<CollectStatus> {
-  return request<CollectStatus>('POST', '/api/collect', { force })
+export function triggerCollect(force: boolean): Promise<StatusResponse> {
+  return request<StatusResponse>('POST', '/api/collect', { force })
 }
 
 export function listSources(): Promise<SourceListResponse> {

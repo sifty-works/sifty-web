@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CollectStatus, getStatus, StatusResponse } from '../api/client.ts'
+import { getStatus, StatusResponse } from '../api/client.ts'
 
 export type StatusState =
   | { status: 'unknown' }
@@ -8,8 +8,8 @@ export type StatusState =
 
 export interface UseStatusResult {
   state: StatusState
-  /** Merge status keys into the state at once (the whole status, or a collect answer). */
-  applyStatus: (data: CollectStatus) => void
+  /** Replace status state with the given full status response. */
+  applyStatus: (data: StatusResponse) => void
 }
 
 /**
@@ -27,16 +27,12 @@ export function useStatus(onCatalogueChange: () => void): UseStatusResult {
     callbackRef.current = onCatalogueChange
   })
 
-  const applyStatus = useCallback((data: CollectStatus) => {
+  const applyStatus = useCallback((data: StatusResponse) => {
     if (prevCatalogueRef.current !== null && prevCatalogueRef.current !== data.catalogue) {
       callbackRef.current()
     }
     prevCatalogueRef.current = data.catalogue
-    setState((s) =>
-      s.status === 'ok' || 'version' in data
-        ? { status: 'ok', data: { ...(s.status === 'ok' ? s.data : {}), ...data } as StatusResponse }
-        : s,
-    )
+    setState({ status: 'ok', data })
   }, [])
 
   useEffect(() => {

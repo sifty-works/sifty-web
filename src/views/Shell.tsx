@@ -45,7 +45,7 @@ export function Shell() {
         {page === 'inbox' ? (
           <InboxList reloadTrigger={reloadCount} />
         ) : (
-          <SourcesPage status={status} applyStatus={applyStatus} />
+          <SourcesPage status={status} applyStatus={applyStatus} statusText={headerText} />
         )}
       </div>
     </div>
