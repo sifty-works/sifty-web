@@ -66,6 +66,7 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
               <tr>
                 <th>Name</th>
                 <th>Address</th>
+                <th>Status</th>
                 <th>Enabled</th>
                 <th></th>
               </tr>
@@ -75,6 +76,10 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
                 <tr key={s.key}>
                   <td>{s.name}</td>
                   <td className="sources-url">{s.url}</td>
+                  <td className={s.status?.attention ? 'source-status--attention' : 'source-status'}>
+                    {s.status?.attention && <span aria-hidden="true">⚠ </span>}
+                    {s.status?.text}
+                  </td>
                   <td>
                     <input
                       type="checkbox"

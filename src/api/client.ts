@@ -12,11 +12,17 @@ export interface VacancyListResponse {
   empty: string
 }
 
+export interface SourceStatus {
+  text: string
+  attention: boolean
+}
+
 export interface Source {
   key: string
   name: string
   url: string
   enabled: boolean
+  status: SourceStatus | null
 }
 
 export interface SourceListResponse {
@@ -37,6 +43,11 @@ export interface LastRun {
   message: string
 }
 
+export interface AttentionInfo {
+  count: number
+  text: string
+}
+
 export interface StatusResponse {
   version: string
   offline: boolean
@@ -44,6 +55,7 @@ export interface StatusResponse {
   collecting: CollectingInfo | null
   lastRun: LastRun | null
   catalogue: number
+  attention: AttentionInfo | null
 }
 
 /** The server returned an HTTP error with a well-formed {"error": string} body. */

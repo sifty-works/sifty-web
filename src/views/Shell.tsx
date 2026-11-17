@@ -23,12 +23,21 @@ export function Shell() {
   const headerText =
     status?.collecting?.text ??
     (status?.lastRun?.state === 'failed' ? status.lastRun.message : null)
+  const attentionText = status?.attention?.text ?? null
 
   return (
     <div className="shell">
       <header className="shell-header">
         <h1 className="shell-title">Sifty</h1>
         {headerText && <span className="shell-status">{headerText}</span>}
+        {attentionText && (
+          <button
+            className="shell-status shell-attention"
+            onClick={() => setPage('settings')}
+          >
+            {attentionText}
+          </button>
+        )}
         <div className="shell-nav">
           {page === 'inbox' ? (
             <button className="shell-nav-btn" onClick={() => setPage('settings')}>
