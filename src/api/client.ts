@@ -1,5 +1,14 @@
+export interface VacancyRow {
+  id: number
+  company: string
+  title: string
+  location: string
+  published: string
+}
+
 export interface VacancyListResponse {
-  rows: unknown[]
+  rows: VacancyRow[]
+  total: number
   empty: string
 }
 
@@ -36,10 +45,11 @@ async function parseErrorBody(res: Response): Promise<string | null> {
   return null
 }
 
-export async function listVacancies(): Promise<VacancyListResponse> {
+export async function listVacancies(q: string): Promise<VacancyListResponse> {
+  const url = q ? `/api/vacancies?q=${encodeURIComponent(q)}` : '/api/vacancies'
   let res: Response
   try {
-    res = await fetch('/api/vacancies')
+    res = await fetch(url)
   } catch {
     throw new OfflineError()
   }

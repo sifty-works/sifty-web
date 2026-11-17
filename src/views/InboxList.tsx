@@ -1,11 +1,9 @@
 import { useVacancies } from '../state/vacancies.ts'
+import { SearchField } from './SearchField.tsx'
+import { VacancyRow } from './VacancyRow.tsx'
 
 export function InboxList() {
-  const state = useVacancies()
-
-  if (state.status === 'loading') {
-    return <div className="list-area list-area--center" />
-  }
+  const { state, query, setQuery, resetQuery } = useVacancies()
 
   if (state.status === 'offline') {
     return (
@@ -25,13 +23,37 @@ export function InboxList() {
     )
   }
 
-  if (state.rows.length === 0) {
-    return (
-      <div className="list-area list-area--center">
-        <p className="list-message">{state.empty}</p>
-      </div>
-    )
-  }
+  const rows = state.status === 'ok' ? state.rows : []
+  const total = state.status === 'ok' ? state.total : 0
+  const empty = state.status === 'ok' ? state.empty : ''
+  const loading = state.status === 'loading'
 
-  return <div className="list-area">{/* rows rendered in later slices */}</div>
+  return (
+    <div className="list-area list-area--col">
+      <div className="list-toolbar">
+        <SearchField value={query} onChange={setQuery} />
+      </div>
+
+      <div className="list-scroll">
+        {loading ? null : rows.length === 0 ? (
+          <div className="list-empty">
+            <p className="list-message">{empty}</p>
+            {query.trim() !== '' && (
+              <button className="btn-reset" onClick={resetQuery}>
+                Reset filters
+              </button>
+            )}
+          </div>
+        ) : (
+          rows.map((row) => <VacancyRow key={row.id} row={row} />)
+        )}
+      </div>
+
+      {!loading && (
+        <div className="list-footer">
+          Showing {rows.length} / {total} roles
+        </div>
+      )}
+    </div>
+  )
 }
