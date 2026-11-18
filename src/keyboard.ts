@@ -23,3 +23,23 @@ export function installSearchShortcut(input: HTMLInputElement): () => void {
   document.addEventListener('keydown', handler)
   return () => document.removeEventListener('keydown', handler)
 }
+
+/**
+ * Installs J/↓ (next) and K/↑ (previous) keyboard shortcuts.
+ * Uses physical key codes so the shortcut works on non-Latin layouts.
+ * Returns a cleanup function.
+ */
+export function installNavShortcuts(onPrev: () => void, onNext: () => void): () => void {
+  function handler(e: KeyboardEvent): void {
+    if (shouldIgnore(e)) return
+    if (e.code === 'KeyJ' || e.code === 'ArrowDown') {
+      e.preventDefault()
+      onNext()
+    } else if (e.code === 'KeyK' || e.code === 'ArrowUp') {
+      e.preventDefault()
+      onPrev()
+    }
+  }
+  document.addEventListener('keydown', handler)
+  return () => document.removeEventListener('keydown', handler)
+}

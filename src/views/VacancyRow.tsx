@@ -1,31 +1,33 @@
-import { useState } from 'react'
 import { VacancyRow as VacancyRowData } from '../api/client.ts'
 
 interface Props {
   row: VacancyRowData
-  onBlock?: () => void
+  selected?: boolean
+  onSelect: () => void
 }
 
-export function VacancyRow({ row, onBlock }: Props) {
-  const [hovering, setHovering] = useState(false)
-  const canBlock = onBlock != null && row.company !== 'Unknown'
-
+export function VacancyRow({ row, selected, onSelect }: Props) {
   return (
     <div
-      className="vacancy-row"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
+      className={[
+        'vacancy-row',
+        row.unread ? 'vacancy-row--unread' : '',
+        selected ? 'vacancy-row--selected' : '',
+      ].filter(Boolean).join(' ')}
+      onClick={onSelect}
     >
       <div className="vacancy-row__company">{row.company}</div>
       <div className="vacancy-row__title">{row.title}</div>
       <div className="vacancy-row__meta">
+        {row.expired && <span className="vacancy-expired">Listing expired · </span>}
         <span className="vacancy-row__location">{row.location}</span>
         <span className="vacancy-row__sep"> · </span>
         <span className="vacancy-row__published">{row.published}</span>
-        {hovering && canBlock && (
-          <button className="btn-link vacancy-row__block" onClick={onBlock}>
-            Block company
-          </button>
+        {row.applied && (
+          <>
+            <span className="vacancy-row__sep"> · </span>
+            <span className="vacancy-row__applied">{row.applied}</span>
+          </>
         )}
       </div>
     </div>

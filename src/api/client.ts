@@ -4,6 +4,11 @@ export interface VacancyRow {
   title: string
   location: string
   published: string
+  unread: boolean
+  stage: string
+  reason: string
+  applied: string
+  expired: boolean
 }
 
 export interface VacancyCounts {
@@ -17,8 +22,29 @@ export interface VacancyCounts {
 export interface VacancyListResponse {
   rows: VacancyRow[]
   counts: VacancyCounts
-  empty: string
   profile: number
+  empty: string
+}
+
+export interface VacancyAction {
+  key: string
+  label: string
+  url?: string
+  message?: string
+}
+
+export interface VacancyListing {
+  state: string
+  html: string
+  empty: string
+}
+
+export interface VacancyView extends VacancyRow {
+  sources: string[]
+  original: string
+  status: string
+  actions: VacancyAction[]
+  listing: VacancyListing
 }
 
 export interface SourceStatus {
@@ -109,12 +135,30 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     if (message !== null) throw new ServerError(message)
     throw new OfflineError()
   }
+  if (res.status === 204) return undefined as unknown as T
   return res.json() as Promise<T>
 }
 
-export function listVacancies(q: string): Promise<VacancyListResponse> {
-  const url = q ? `/api/vacancies?q=${encodeURIComponent(q)}` : '/api/vacancies'
-  return request<VacancyListResponse>('GET', url)
+export function listVacancies(
+  profile: number | null,
+  stage: string,
+  q: string,
+): Promise<VacancyListResponse> {
+  const params = new URLSearchParams({ stage })
+  if (profile !== null) params.set('profile', String(profile))
+  if (q) params.set('q', q)
+  return request<VacancyListResponse>('GET', `/api/vacancies?${params.toString()}`)
+}
+
+export function getVacancy(id: number, profile: number | null): Promise<VacancyView> {
+  const params = new URLSearchParams()
+  if (profile !== null) params.set('profile', String(profile))
+  const qs = params.toString()
+  return request<VacancyView>('GET', qs ? `/api/vacancies/${id}?${qs}` : `/api/vacancies/${id}`)
+}
+
+export function markSeen(id: number): Promise<void> {
+  return request<void>('POST', `/api/vacancies/${id}/seen`)
 }
 
 export function getStatus(): Promise<StatusResponse> {

@@ -498,6 +498,254 @@ body {
   color: var(--color-text-muted);
 }
 
+/* Split pane: list on the left, page on the right */
+
+.inbox-split {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.inbox-list-pane {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-right: none;
+}
+
+.inbox-divider {
+  width: 5px;
+  flex-shrink: 0;
+  background: var(--color-border);
+  cursor: col-resize;
+  transition: background 0.1s;
+}
+
+.inbox-divider:hover,
+.inbox-divider:active {
+  background: #0070f3;
+}
+
+.inbox-page-pane {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.inbox-page-empty {
+  height: 100%;
+}
+
+/* Vacancy page */
+
+.vacancy-page {
+  padding: 20px 24px;
+  max-width: 760px;
+}
+
+.vacancy-page__header {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.vacancy-page__company {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.vacancy-page__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.vacancy-page__meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.vacancy-page__link {
+  color: var(--color-text-muted);
+  text-decoration: underline;
+}
+
+.vacancy-page__link:hover {
+  color: var(--color-text);
+}
+
+.vacancy-page__applied {
+  color: var(--color-text-muted);
+}
+
+.vacancy-page__status {
+  margin-top: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Action buttons on the vacancy page */
+
+.vacancy-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.btn-action {
+  height: 28px;
+  padding: 0 12px;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-system);
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-action:hover {
+  border-color: var(--color-text-muted);
+}
+
+/* Listing section on the vacancy page */
+
+.vacancy-page__listing {
+  margin-top: 4px;
+}
+
+.vacancy-listing__state {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+.vacancy-listing__body {
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.vacancy-listing__body h1,
+.vacancy-listing__body h2,
+.vacancy-listing__body h3 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin: 12px 0 4px;
+}
+
+.vacancy-listing__body p {
+  margin: 0 0 8px;
+}
+
+.vacancy-listing__body ul,
+.vacancy-listing__body ol {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+.vacancy-listing__empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Stage tabs in the shell header */
+
+.stage-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 12px;
+  flex-shrink: 0;
+}
+
+.stage-tab {
+  padding: 4px 10px;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-system);
+  color: rgba(242, 242, 247, 0.65);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stage-tab:hover {
+  color: var(--color-header-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stage-tab--active {
+  color: var(--color-header-text);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Archive sub-tabs below the main header */
+
+.stage-subtabs {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.stage-subtab {
+  padding: 6px 10px;
+  font-size: var(--font-size-base);
+  font-family: var(--font-system);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.stage-subtab:hover {
+  color: var(--color-text);
+}
+
+.stage-subtab--active {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+/* Unread and selected row states */
+
+.vacancy-row--unread .vacancy-row__title {
+  font-weight: 700;
+}
+
+.vacancy-row--selected {
+  background: var(--color-bg-secondary);
+  outline: 2px solid #0070f3;
+  outline-offset: -2px;
+}
+
+/* Expired badge in row meta */
+
+.vacancy-expired {
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+}
+
+/* Applied text in row meta */
+
+.vacancy-row__applied {
+  color: var(--color-text-muted);
+}
+
 /* Attention link in the shell header */
 
 .shell-attention {
