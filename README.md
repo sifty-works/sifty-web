@@ -60,7 +60,9 @@ This builds the client, writes the SHA-256 of `api/openapi.yaml` into
   at the archive root.
 - `release/sifty-web-<version>.sha256`: the SHA-256 checksum of the archive.
 
-Publishing the release archive is done by the coordinator.
+To publish, create a GitHub release tagged `v<version>` on
+`sifty-works/sifty-web` and attach both files from `release/`. The server
+pins the web client by version and checksum using those two files.
 
 ## Checks
 
