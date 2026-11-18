@@ -121,9 +121,12 @@ async function parseErrorBody(res: Response): Promise<string | null> {
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
   let res: Response
   try {
+    // The server requires the JSON content type on every changing request, even without a body.
     const init: RequestInit = { method }
-    if (body !== undefined) {
+    if (method !== 'GET') {
       init.headers = { 'Content-Type': 'application/json' }
+    }
+    if (body !== undefined) {
       init.body = JSON.stringify(body)
     }
     res = await fetch(url, init)
@@ -217,4 +220,25 @@ export function previewExclusion(kind: string, value: string): Promise<{ text: s
     'GET',
     `/api/exclusions/preview?kind=${encodeURIComponent(kind)}&value=${encodeURIComponent(value)}`,
   )
+}
+
+export interface DecisionRequest {
+  profile: number
+  from: string
+  to: string
+  reason?: string
+  confirmed?: boolean
+}
+
+export interface DecisionResponse {
+  row: VacancyRow
+  counts: VacancyCounts
+}
+
+export function postDecision(id: number, req: DecisionRequest): Promise<DecisionResponse> {
+  return request<DecisionResponse>('POST', `/api/vacancies/${id}/decision`, req)
+}
+
+export function deleteVacancy(id: number, profile: number): Promise<{ counts: VacancyCounts }> {
+  return request<{ counts: VacancyCounts }>('DELETE', `/api/vacancies/${id}?profile=${profile}`)
 }

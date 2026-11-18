@@ -1,11 +1,20 @@
 import { VacancyView } from '../api/client.ts'
+import { SessionDecision } from '../state/decisions.ts'
 
 interface Props {
   view: VacancyView
-  onAction: (key: string, url?: string) => void
+  /**
+   * When set, this vacancy was decided in the current session.
+   * The actions area shows the session decision state with an Undo button
+   * instead of the server-provided actions.
+   */
+  sessionDecision?: SessionDecision | null
+  /** Error text from the last failed action, shown below the actions. */
+  actionError?: string | null
+  onAction: (key: string, url?: string, message?: string) => void
 }
 
-export function VacancyPage({ view, onAction }: Props) {
+export function VacancyPage({ view, sessionDecision, actionError, onAction }: Props) {
   return (
     <div className="vacancy-page">
       <div className="vacancy-page__header">
@@ -39,20 +48,25 @@ export function VacancyPage({ view, onAction }: Props) {
         )}
       </div>
 
-      {view.actions.length > 0 && (
-        <div className="vacancy-page__actions">
-          {view.actions.map((action) => (
+      <div className="vacancy-page__actions">
+        {sessionDecision ? (
+          <SessionDecisionActions decision={sessionDecision} onUndo={() => onAction('undo')} />
+        ) : (
+          view.actions.map((action) => (
             <button
               key={action.key}
               className="btn-action"
-              onClick={() => onAction(action.key, action.url)}
+              onClick={() => onAction(action.key, action.url, action.message)}
               title={action.message}
             >
               {action.label}
             </button>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+        {actionError && (
+          <div className="vacancy-page__action-error">{actionError}</div>
+        )}
+      </div>
 
       <div className="vacancy-page__listing">
         <div className="vacancy-listing__state">{view.listing.state}</div>
@@ -66,5 +80,26 @@ export function VacancyPage({ view, onAction }: Props) {
         )}
       </div>
     </div>
+  )
+}
+
+interface SessionDecisionActionsProps {
+  decision: SessionDecision
+  onUndo: () => void
+}
+
+function SessionDecisionActions({ decision, onUndo }: SessionDecisionActionsProps) {
+  const text =
+    decision.to === 'shortlist'
+      ? 'Moved to Shortlist'
+      : 'Dismissed — hidden after this session'
+
+  return (
+    <>
+      <span className="vacancy-page__decided-text">{text}</span>
+      <button className="btn-action" onClick={onUndo}>
+        Undo
+      </button>
+    </>
   )
 }

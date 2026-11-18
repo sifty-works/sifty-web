@@ -102,6 +102,7 @@ export function Shell() {
             stage={stage}
             reloadTrigger={reloadCount}
             onCounts={setCounts}
+            settingsOpen={false}
           />
         ) : (
           <SourcesPage status={status} applyStatus={applyStatus} statusText={headerText} />
