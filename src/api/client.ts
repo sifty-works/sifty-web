@@ -6,10 +6,19 @@ export interface VacancyRow {
   published: string
 }
 
+export interface VacancyCounts {
+  inbox: number
+  shortlist: number
+  applied: number
+  dismissed: number
+  archive: number
+}
+
 export interface VacancyListResponse {
   rows: VacancyRow[]
-  total: number
+  counts: VacancyCounts
   empty: string
+  profile: number
 }
 
 export interface SourceStatus {

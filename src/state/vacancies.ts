@@ -82,7 +82,7 @@ export function useVacancies(reloadTrigger = 0): UseVacanciesResult {
     listVacancies(query)
       .then((data) => {
         if (!cancelled) {
-          setState({ status: 'ok', rows: data.rows, total: data.total, empty: data.empty })
+          setState({ status: 'ok', rows: data.rows, total: data.counts['inbox'] ?? 0, empty: data.empty })
         }
       })
       .catch((err: unknown) => {
