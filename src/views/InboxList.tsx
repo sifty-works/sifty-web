@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { addExclusion } from '../api/client.ts'
 import { useVacancies } from '../state/vacancies.ts'
 import { OfflineNotice } from './OfflineNotice.tsx'
 import { SearchField } from './SearchField.tsx'
@@ -8,7 +10,13 @@ interface Props {
 }
 
 export function InboxList({ reloadTrigger }: Props) {
-  const { state, query, setQuery, resetQuery } = useVacancies(reloadTrigger)
+  const [blockCount, setBlockCount] = useState(0)
+  const { state, query, setQuery, resetQuery } = useVacancies((reloadTrigger ?? 0) + blockCount)
+
+  async function handleBlock(company: string) {
+    await addExclusion('company', company)
+    setBlockCount((n) => n + 1)
+  }
 
   if (state.status === 'offline') {
     return <OfflineNotice />
@@ -44,7 +52,9 @@ export function InboxList({ reloadTrigger }: Props) {
             )}
           </div>
         ) : (
-          rows.map((row) => <VacancyRow key={row.id} row={row} />)
+          rows.map((row) => (
+              <VacancyRow key={row.id} row={row} onBlock={() => void handleBlock(row.company)} />
+            ))
         )}
       </div>
 

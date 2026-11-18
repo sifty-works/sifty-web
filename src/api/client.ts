@@ -135,3 +135,33 @@ export function deleteSource(key: string): Promise<SourceListResponse> {
 export function setSchedule(auto: boolean, interval: string): Promise<SourceListResponse> {
   return request<SourceListResponse>('PUT', '/api/sources/schedule', { auto, interval })
 }
+
+export interface Exclusion {
+  id: number
+  kind: 'word' | 'company'
+  value: string
+  scope: string
+}
+
+export interface ExclusionListResponse {
+  exclusions: Exclusion[]
+}
+
+export function listExclusions(): Promise<ExclusionListResponse> {
+  return request<ExclusionListResponse>('GET', '/api/exclusions')
+}
+
+export function addExclusion(kind: string, value: string): Promise<ExclusionListResponse> {
+  return request<ExclusionListResponse>('POST', '/api/exclusions', { kind, value })
+}
+
+export function removeExclusion(id: number): Promise<ExclusionListResponse> {
+  return request<ExclusionListResponse>('DELETE', '/api/exclusions', { id })
+}
+
+export function previewExclusion(kind: string, value: string): Promise<{ text: string }> {
+  return request<{ text: string }>(
+    'GET',
+    `/api/exclusions/preview?kind=${encodeURIComponent(kind)}&value=${encodeURIComponent(value)}`,
+  )
+}

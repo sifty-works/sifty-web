@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { StatusResponse, triggerCollect } from '../api/client.ts'
 import { useSources } from '../state/sources.ts'
+import { ExclusionsPage } from './ExclusionsPage.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
+
+type SettingsTab = 'sources' | 'exclusions'
 
 interface Props {
   status: StatusResponse | null
@@ -24,6 +27,7 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
   const { state, add, toggle, remove, updateSchedule, addError } = useSources()
   const [nameVal, setNameVal] = useState('')
   const [urlVal, setUrlVal] = useState('')
+  const [tab, setTab] = useState<SettingsTab>('sources')
 
   const isCollecting = status?.collecting != null
 
@@ -57,6 +61,22 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
 
   return (
     <div className="settings-page">
+      <div className="settings-tabs">
+        <button
+          className={tab === 'sources' ? 'settings-tab settings-tab--active' : 'settings-tab'}
+          onClick={() => setTab('sources')}
+        >
+          Sources
+        </button>
+        <button
+          className={tab === 'exclusions' ? 'settings-tab settings-tab--active' : 'settings-tab'}
+          onClick={() => setTab('exclusions')}
+        >
+          Exclusions
+        </button>
+      </div>
+
+      {tab === 'exclusions' ? <ExclusionsPage /> : (<>
       <section className="settings-section">
         <h2 className="settings-heading">Sources</h2>
 
@@ -170,6 +190,7 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
           {statusText && <span className="collect-status">{statusText}</span>}
         </div>
       </section>
+      </>)}
     </div>
   )
 }

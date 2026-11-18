@@ -434,6 +434,70 @@ body {
   color: var(--color-warning);
 }
 
+/* Settings tabs */
+
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0;
+}
+
+.settings-tab {
+  padding: 6px 12px;
+  font-size: var(--font-size-base);
+  font-family: var(--font-system);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.settings-tab:hover {
+  color: var(--color-text);
+}
+
+.settings-tab--active {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+/* Vacancy row: Block company button, shown only on row hover or focus */
+
+.vacancy-row__block {
+  display: none;
+  padding: 0;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-system);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.vacancy-row:hover .vacancy-row__block,
+.vacancy-row:focus-within .vacancy-row__block {
+  display: inline;
+}
+
+.vacancy-row__block:hover {
+  color: var(--color-text);
+}
+
+/* Form hint: muted supplementary text below a form field */
+
+.form-hint {
+  margin-top: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 /* Attention link in the shell header */
 
 .shell-attention {
