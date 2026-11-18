@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getStatus, StatusResponse } from '../api/client.ts'
+import { getStatus, StatusExtra } from '../api/client.ts'
 
 export type StatusState =
   | { status: 'unknown' }
-  | { status: 'ok'; data: StatusResponse }
+  | { status: 'ok'; data: StatusExtra }
   | { status: 'offline' }
 
 export interface UseStatusResult {
   state: StatusState
-  /** Replace status state with the given full status response. */
-  applyStatus: (data: StatusResponse) => void
+  /** Replace status state with the given status data. Accepts both the full status and
+   * the smaller collect response, since they share the fields the UI uses. */
+  applyStatus: (data: StatusExtra) => void
 }
 
 /**
@@ -27,7 +28,7 @@ export function useStatus(onCatalogueChange: () => void): UseStatusResult {
     callbackRef.current = onCatalogueChange
   })
 
-  const applyStatus = useCallback((data: StatusResponse) => {
+  const applyStatus = useCallback((data: StatusExtra) => {
     if (prevCatalogueRef.current !== null && prevCatalogueRef.current !== data.catalogue) {
       callbackRef.current()
     }

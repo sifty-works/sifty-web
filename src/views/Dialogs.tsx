@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-
-export type ApplyOutcome =
-  | { kind: 'not_yet' }
-  | { kind: 'applied' }
-  | { kind: 'dismissed'; reason: string }
+import type { Outcome } from '../api/client.ts'
 
 interface ApplyOutcomeDialogProps {
   title: string
   company: string
   note: string | null
+  outcomes: Outcome[]
   saving: boolean
   error: string | null
-  onDecide: (outcome: ApplyOutcome) => void
+  onDecide: (outcome: Outcome) => void
 }
 
-export function ApplyOutcomeDialog({ title, company, note, saving, error, onDecide }: ApplyOutcomeDialogProps) {
+export function ApplyOutcomeDialog({ title, company, note, outcomes, saving, error, onDecide }: ApplyOutcomeDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [pending, setPending] = useState<string | null>(null)
 
@@ -28,9 +25,9 @@ export function ApplyOutcomeDialog({ title, company, note, saving, error, onDeci
     }
   }, [])
 
-  async function decide(kind: string, outcome: ApplyOutcome) {
+  async function decide(outcome: Outcome) {
     if (pending !== null) return
-    setPending(kind)
+    setPending(outcome.key)
     onDecide(outcome)
   }
 
@@ -57,21 +54,17 @@ export function ApplyOutcomeDialog({ title, company, note, saving, error, onDeci
         </p>
       )}
       <div className="confirmation-actions">
-        <button type="button" disabled={saving} onClick={() => void decide('not_yet', { kind: 'not_yet' })}>
-          Not yet
-        </button>
-        <button type="button" disabled={saving} onClick={() => void decide('stale', { kind: 'dismissed', reason: 'stale' })}>
-          {pending === 'stale' ? 'Saving…' : 'No, vacancy is stale'}
-        </button>
-        <button type="button" disabled={saving} onClick={() => void decide('closed', { kind: 'dismissed', reason: 'closed' })}>
-          {pending === 'closed' ? 'Saving…' : 'No, vacancy is closed'}
-        </button>
-        <button type="button" disabled={saving} onClick={() => void decide('not_suitable', { kind: 'dismissed', reason: 'not_suitable' })}>
-          {pending === 'not_suitable' ? 'Saving…' : 'No, not suitable'}
-        </button>
-        <button type="button" className="primary" disabled={saving} onClick={() => void decide('applied', { kind: 'applied' })}>
-          {pending === 'applied' ? 'Saving…' : 'Yes, applied'}
-        </button>
+        {outcomes.map((outcome) => (
+          <button
+            key={outcome.key}
+            type="button"
+            disabled={saving}
+            className={outcome.confirmed ? 'primary' : undefined}
+            onClick={() => void decide(outcome)}
+          >
+            {pending === outcome.key ? 'Saving…' : outcome.label}
+          </button>
+        ))}
       </div>
     </dialog>
   )

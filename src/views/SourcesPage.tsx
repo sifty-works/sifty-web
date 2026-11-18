@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { previewExclusion, Source, StatusResponse, triggerCollect } from '../api/client.ts'
+import { previewExclusion, Source, StatusExtra, triggerCollect } from '../api/client.ts'
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
 import { OfflineNotice } from './OfflineNotice.tsx'
@@ -7,8 +7,8 @@ import { OfflineNotice } from './OfflineNotice.tsx'
 type SettingsNav = 'sources' | 'exclusions'
 
 interface Props {
-  status: StatusResponse | null
-  applyStatus: (data: StatusResponse) => void
+  status: StatusExtra | null
+  applyStatus: (data: StatusExtra) => void
   statusText: string | null
 }
 

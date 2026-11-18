@@ -5,6 +5,7 @@ import {
   getVacancy,
   markSeen,
   OfflineError,
+  Outcome,
   postDecision,
   ServerError,
   VacancyCounts,
@@ -14,7 +15,7 @@ import {
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { useVacancies } from '../state/vacancies.ts'
-import { ApplyOutcome, ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
+import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { ListResizer, useListWidth } from './ListResizer.tsx'
 import { SearchField } from './SearchField.tsx'
 import { VacancyPage } from './VacancyPage.tsx'
@@ -24,7 +25,7 @@ const SERVER_DOWN = 'Sifty server is not responding. Retrying…'
 
 type ActiveDialog =
   | { kind: 'none' }
-  | { kind: 'apply'; title: string; company: string; note: string | null }
+  | { kind: 'apply'; title: string; company: string; note: string | null; outcomes: Outcome[] }
   | { kind: 'delete'; title: string; company: string }
 
 /** Returns the id of the next undecided row after currentId, wrapping around. */
@@ -150,7 +151,7 @@ export function InboxList({
 
   const handleActionRef = useRef<(key: string, url?: string, message?: string) => void>(() => {})
 
-  async function handleAction(key: string, url?: string, _message?: string) {
+  async function handleAction(key: string, _url?: string, _message?: string) {
     if (!pageView || profile === null) return
     setActionError(null)
 
@@ -166,57 +167,53 @@ export function InboxList({
       return
     }
 
+    const action = pageView.actions?.find((a) => a.key === key)
+    if (!action) return
+
     if (key === 'apply') {
-      // Apply opens the employer URL in a new window, then shows the outcome dialog.
+      // Apply opens the employer URL in a new window (presentation), then shows the outcome dialog.
       let note: string | null = null
-      if (!url) {
-        note = _message ?? 'No valid employer or original listing URL is available. The role stays in Shortlist.'
+      if (!action.url) {
+        note = action.message ?? 'No valid employer or original listing URL is available. The role stays in Shortlist.'
       } else {
-        const opened = window.open(url, '_blank', 'noopener')
+        const opened = window.open(action.url, '_blank', 'noopener')
         if (!opened) {
           note = 'The application page was blocked. Allow popups and try Apply again. The role stays in Shortlist.'
         }
       }
       setApplyDialogSaving(false)
       setApplyDialogError(null)
-      setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note })
+      setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note, outcomes: action.outcomes ?? [] })
       return
     }
 
-    if (key === 'confirm') {
-      // Confirm always opens the outcome dialog directly — no URL required.
+    if (action.confirm === 'outcome') {
+      // Opens the outcome dialog directly — no URL required.
       setApplyDialogSaving(false)
       setApplyDialogError(null)
-      setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note: null })
+      setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note: null, outcomes: action.outcomes ?? [] })
       return
     }
 
-    if (key === 'delete') {
+    if (action.confirm === 'delete') {
       setDeleteDialogSaving(false)
       setDeleteDialogError(null)
       setActiveDialog({ kind: 'delete', title: pageView.title, company: pageView.company })
       return
     }
 
-    // Decision actions — stage moves derived from the action key.
-    // Undo in applied goes to shortlist, not inbox.
-    let from: string
-    let to: string
-    if (key === 'select') { from = 'inbox'; to = 'shortlist' }
-    else if (key === 'dismiss') { from = 'inbox'; to = 'dismissed' }
-    else if (key === 'undo') {
-      from = pageView.stage
-      to = pageView.stage === 'applied' ? 'shortlist' : 'inbox'
-    }
-    else if (key === 'inbox') { from = pageView.stage; to = 'inbox' }
-    else if (key === 'restore') { from = 'dismissed'; to = 'inbox' }
-    else { return }
+    // Direct stage move: to and from come from the action data.
+    if (!action.to) return
+    const from = pageView.stage
+    const to = action.to
 
     try {
-      const { counts: newCounts } = await postDecision(pageView.id, { profile, from, to })
+      const { counts: newCounts } = await postDecision(pageView.id, { profile, from, to, reason: '', confirmed: false })
       onCounts?.(newCounts)
 
-      if (key === 'select' || key === 'dismiss') {
+      // When moving from inbox to shortlist or dismissed, inject the row into the
+      // session list so it stays visible until reload.
+      if (pageView.stage === 'inbox' && (to === 'shortlist' || to === 'dismissed')) {
         const originalRow = rows.find((r) => r.id === pageView.id) ?? {
           id: pageView.id,
           company: pageView.company,
@@ -225,9 +222,6 @@ export function InboxList({
           published: pageView.published,
           unread: pageView.unread,
           stage: pageView.stage,
-          reason: pageView.reason,
-          applied: pageView.applied,
-          expired: pageView.expired,
         }
         const idx = displayRows.findIndex((r) => r.id === pageView.id)
         const newDecision: SessionDecision = {
@@ -247,7 +241,7 @@ export function InboxList({
           setPageView(null)
         }
       } else {
-        // undo / inbox / restore: row returns to its target stage; reload the list.
+        // Undo / return to inbox / restore: row moves back; remove from session list and reload.
         setSessionDecisions((prev) => {
           const next = new Map(prev)
           next.delete(pageView.id)
@@ -262,32 +256,24 @@ export function InboxList({
     }
   }
 
-  async function handleApplyOutcome(outcome: ApplyOutcome) {
+  async function handleApplyOutcome(outcome: Outcome) {
     if (!pageView || profile === null) return
-    if (outcome.kind === 'not_yet') {
+    if (!outcome.to) {
+      // "Not yet" and any outcome without a stage — just close the dialog.
       setActiveDialog({ kind: 'none' })
       return
     }
     setApplyDialogSaving(true)
     setApplyDialogError(null)
     try {
-      if (outcome.kind === 'applied') {
-        const { counts: newCounts } = await postDecision(pageView.id, {
-          profile,
-          from: pageView.stage,
-          to: 'applied',
-          confirmed: true,
-        })
-        onCounts?.(newCounts)
-      } else {
-        const { counts: newCounts } = await postDecision(pageView.id, {
-          profile,
-          from: pageView.stage,
-          to: 'dismissed',
-          reason: outcome.reason,
-        })
-        onCounts?.(newCounts)
-      }
+      const { counts: newCounts } = await postDecision(pageView.id, {
+        profile,
+        from: pageView.stage,
+        to: outcome.to,
+        reason: outcome.reason ?? '',
+        confirmed: outcome.confirmed ?? false,
+      })
+      onCounts?.(newCounts)
       setActiveDialog({ kind: 'none' })
       setBlockCount((n) => n + 1)
       setSelectedId(null)
@@ -455,6 +441,7 @@ export function InboxList({
           title={activeDialog.title}
           company={activeDialog.company}
           note={activeDialog.note}
+          outcomes={activeDialog.outcomes}
           saving={applyDialogSaving}
           error={applyDialogError}
           onDecide={(outcome) => void handleApplyOutcome(outcome)}

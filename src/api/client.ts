@@ -1,102 +1,27 @@
-export interface VacancyRow {
-  id: number
-  company: string
-  title: string
-  location: string
-  published: string
-  unread: boolean
-  stage: string
-  reason: string
-  applied: string
-  expired: boolean
-}
+import type { components } from './schema.gen.ts'
 
-export interface VacancyCounts {
-  inbox: number
-  shortlist: number
-  applied: number
-  dismissed: number
-  archive: number
-}
-
-export interface VacancyListResponse {
-  rows: VacancyRow[]
-  counts: VacancyCounts
-  profile: number
-  empty: string
-}
-
-export interface VacancyAction {
-  key: string
-  label: string
-  url?: string
-  message?: string
-}
-
-export interface VacancyListing {
-  state: string
-  html: string
-  empty: string
-}
-
-export interface VacancySource {
-  name: string
-  url?: string
-}
-
-export interface VacancyView extends VacancyRow {
-  sources: VacancySource[]
-  original: string
-  status: string
-  actions: VacancyAction[]
-  listing: VacancyListing
-}
-
-export interface SourceStatus {
-  text: string
-  attention: boolean
-}
-
-export interface Source {
-  key: string
-  name: string
-  url: string
-  enabled: boolean
-  status: SourceStatus | null
-}
-
-export interface SourceListResponse {
-  sources: Source[]
-  auto: boolean
-  interval: string
-}
-
-export interface CollectingInfo {
-  done: number
-  total: number
-  text: string
-}
-
-export interface LastRun {
-  state: string
-  finished: string
-  message: string
-}
-
-export interface AttentionInfo {
-  count: number
-  text: string
-}
-
-export interface StatusResponse {
-  version: string
-  offline: boolean
-  debug: boolean
-  collecting: CollectingInfo | null
-  lastRun: LastRun | null
-  catalogue: number
-  attention: AttentionInfo | null
-}
+// Types derived from the generated schema. The aliases below keep the names
+// the rest of the application uses while the generated file stays unedited.
+export type VacancyRow = components['schemas']['Row']
+export type VacancyCounts = components['schemas']['Counts']
+export type VacancyListResponse = components['schemas']['ListResp']
+export type VacancyAction = components['schemas']['Action']
+export type Outcome = components['schemas']['Outcome']
+export type VacancyListing = components['schemas']['ListingView']
+export type VacancySource = components['schemas']['VacancySource']
+export type VacancyView = components['schemas']['VacancyView']
+export type SourceStatus = components['schemas']['SourceStatus']
+export type Source = components['schemas']['Source']
+export type SourceListResponse = components['schemas']['SourcesResp']
+export type CollectingInfo = components['schemas']['CollectProgress']
+export type LastRun = components['schemas']['LastRun']
+export type AttentionInfo = components['schemas']['Attention']
+export type StatusResponse = components['schemas']['StatusResp']
+export type StatusExtra = components['schemas']['StatusExtra']
+export type DecisionRequest = components['schemas']['DecisionReq']
+export type DecisionResponse = components['schemas']['DecisionResp']
+export type Exclusion = components['schemas']['Exclusion']
+export type ExclusionListResponse = components['schemas']['ExclusionsResp']
 
 /** The server returned an HTTP error with a well-formed {"error": string} body. */
 export class ServerError extends Error {
@@ -173,8 +98,8 @@ export function getStatus(): Promise<StatusResponse> {
   return request<StatusResponse>('GET', '/api/status')
 }
 
-export function triggerCollect(force: boolean): Promise<StatusResponse> {
-  return request<StatusResponse>('POST', '/api/collect', { force })
+export function triggerCollect(force: boolean): Promise<StatusExtra> {
+  return request<StatusExtra>('POST', '/api/collect', { force })
 }
 
 export function listSources(): Promise<SourceListResponse> {
@@ -197,17 +122,6 @@ export function setSchedule(auto: boolean, interval: string): Promise<SourceList
   return request<SourceListResponse>('PUT', '/api/sources/schedule', { auto, interval })
 }
 
-export interface Exclusion {
-  id: number
-  kind: 'word' | 'company'
-  value: string
-  scope: string
-}
-
-export interface ExclusionListResponse {
-  exclusions: Exclusion[]
-}
-
 export function listExclusions(): Promise<ExclusionListResponse> {
   return request<ExclusionListResponse>('GET', '/api/exclusions')
 }
@@ -225,19 +139,6 @@ export function previewExclusion(kind: string, value: string): Promise<{ text: s
     'GET',
     `/api/exclusions/preview?kind=${encodeURIComponent(kind)}&value=${encodeURIComponent(value)}`,
   )
-}
-
-export interface DecisionRequest {
-  profile: number
-  from: string
-  to: string
-  reason?: string
-  confirmed?: boolean
-}
-
-export interface DecisionResponse {
-  row: VacancyRow
-  counts: VacancyCounts
 }
 
 export function postDecision(id: number, req: DecisionRequest): Promise<DecisionResponse> {
