@@ -6,8 +6,10 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "dev": "vite",
-    "check": "tsc --noEmit",
-    "gen-api": "openapi-typescript ../api/openapi.yaml -o src/api/schema.gen.ts"
+    "check": "node scripts/check-stale.mjs && tsc --noEmit",
+    "gen-api": "openapi-typescript api/openapi.yaml -o src/api/schema.gen.ts",
+    "sync-api": "node scripts/sync-api.mjs",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "react": "19.3.1",
