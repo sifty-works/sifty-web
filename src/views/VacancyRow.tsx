@@ -9,38 +9,26 @@ interface Props {
 }
 
 export function VacancyRow({ row, selected, onSelect, decidedTo }: Props) {
+  const classes = [
+    'job-row',
+    row.unread ? 'unseen' : 'seen',
+    selected ? 'selected' : '',
+    decidedTo === 'dismissed' ? 'session-no' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <div
-      className={[
-        'vacancy-row',
-        row.unread ? 'vacancy-row--unread' : '',
-        selected ? 'vacancy-row--selected' : '',
-        decidedTo ? 'vacancy-row--decided' : '',
-      ].filter(Boolean).join(' ')}
-      onClick={onSelect}
-    >
-      <div className="vacancy-row__company">{row.company}</div>
-      <div className="vacancy-row__title">
-        {decidedTo === 'shortlist' && (
-          <span className="vacancy-row__decided-badge vacancy-row__decided-badge--shortlist">✓ Shortlisted · </span>
-        )}
-        {decidedTo === 'dismissed' && (
-          <span className="vacancy-row__decided-badge vacancy-row__decided-badge--dismissed">Dismissed · </span>
-        )}
+    <button className={classes} onClick={onSelect} aria-pressed={selected}>
+      <div className="row-company">{row.company}</div>
+      <strong>
+        {decidedTo === 'shortlist' && <span className="yes-check" title="Shortlisted">✓ </span>}
         {row.title}
+      </strong>
+      <div className="row-location">
+        {row.expired && <span title="Listing expired">◷ </span>}
+        {row.location}
+        {row.applied && <span> · {row.applied}</span>}
       </div>
-      <div className="vacancy-row__meta">
-        {row.expired && <span className="vacancy-expired">Listing expired · </span>}
-        <span className="vacancy-row__location">{row.location}</span>
-        <span className="vacancy-row__sep"> · </span>
-        <span className="vacancy-row__published">{row.published}</span>
-        {row.applied && (
-          <>
-            <span className="vacancy-row__sep"> · </span>
-            <span className="vacancy-row__applied">{row.applied}</span>
-          </>
-        )}
-      </div>
-    </div>
+      <div className="row-location">{row.published}</div>
+    </button>
   )
 }

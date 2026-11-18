@@ -1,85 +1,156 @@
+import { Fragment } from 'react'
 import { VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
 
+// Keys that map to keyboard shortcut hints shown as <kbd> caps.
+const KEY_HINT: Record<string, string> = { select: 'Y', dismiss: 'N', apply: 'A' }
+
+// Keys rendered as small link-buttons on a second line below main actions.
+const LINK_KEYS = new Set(['confirm', 'delete'])
+
 interface Props {
   view: VacancyView
-  /**
-   * When set, this vacancy was decided in the current session.
-   * The actions area shows the session decision state with an Undo button
-   * instead of the server-provided actions.
-   */
   sessionDecision?: SessionDecision | null
-  /** Error text from the last failed action, shown below the actions. */
   actionError?: string | null
   onAction: (key: string, url?: string, message?: string) => void
 }
 
 export function VacancyPage({ view, sessionDecision, actionError, onAction }: Props) {
+  const mainActions = view.actions?.filter((a) => !LINK_KEYS.has(a.key)) ?? []
+  const linkActions = view.actions?.filter((a) => LINK_KEYS.has(a.key)) ?? []
+
+  // Shortlist layout when the server supplies an 'apply' action.
+  const applyAction = mainActions.find((a) => a.key === 'apply')
+  const isShortlist = applyAction != null
+
   return (
-    <div className="vacancy-page">
-      <div className="vacancy-page__header">
-        <div className="vacancy-page__company">{view.company}</div>
-        <h2 className="vacancy-page__title">{view.title}</h2>
-        <div className="vacancy-page__meta">
-          {view.expired && <span className="vacancy-expired">Listing expired · </span>}
-          <span>{view.published}</span>
-          {view.sources.map((s) => (
-            <span key={s}> · {s}</span>
-          ))}
-          {view.original && (
-            <span>
-              {' · '}
-              <a
-                className="vacancy-page__link"
-                href={view.original}
-                target="_blank"
-                rel="noreferrer"
-              >
+    <>
+      <div className="detail-top">
+        <div className="role-heading">
+          <p className="company">{view.company}</p>
+          <h1>{view.title}</h1>
+          <div className="role-meta">
+            {view.expired && <span className="state-expired">Listing expired</span>}
+            <span>{view.published}</span>
+            {view.sources?.map((s) => (
+              <span key={s} className="source-link">{s}</span>
+            ))}
+            {view.original && (
+              <a href={view.original} target="_blank" rel="noreferrer">
                 Original listing ↗
               </a>
-            </span>
+            )}
+            {view.applied && <span>{view.applied}</span>}
+          </div>
+          {view.status && <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>{view.status}</p>}
+        </div>
+
+        <div className="review-actions">
+          {sessionDecision ? (
+            <SessionDecisionActions
+              decision={sessionDecision}
+              onUndo={() => onAction('undo')}
+            />
+          ) : isShortlist ? (
+            /* Shortlist: .shortlist-top + .action-links-row (see application.css) */
+            <>
+              <div className="shortlist-top">
+                {/* All main actions except apply render as plain buttons on the left */}
+                {mainActions
+                  .filter((a) => a.key !== 'apply')
+                  .map((a) => (
+                    <ActionButton key={a.key} action={a} onAction={onAction} />
+                  ))}
+                {/* Apply seg on the right — no "via employer site" right segment yet */}
+                <div className="apply-seg">
+                  <button
+                    className="apply-seg-active"
+                    onClick={() => onAction(applyAction.key, applyAction.url, applyAction.message)}
+                  >
+                    {applyAction.label.replace(/ [A-Z]$/, '')} <kbd>A</kbd>
+                  </button>
+                </div>
+              </div>
+              {linkActions.length > 0 && (
+                <div className="action-links-row">
+                  {linkActions.map((action, i) => (
+                    <Fragment key={action.key}>
+                      {i > 0 && (
+                        <span className="action-links-sep" aria-hidden="true">|</span>
+                      )}
+                      <ActionButton action={action} onAction={onAction} />
+                    </Fragment>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            /* Inbox / archive: plain action buttons + optional link row */
+            <>
+              {mainActions.map((action) => (
+                <ActionButton key={action.key} action={action} onAction={onAction} />
+              ))}
+              {linkActions.length > 0 && (
+                <div className="action-links-row">
+                  {linkActions.map((action, i) => (
+                    <Fragment key={action.key}>
+                      {i > 0 && (
+                        <span className="action-links-sep" aria-hidden="true">|</span>
+                      )}
+                      <ActionButton action={action} onAction={onAction} />
+                    </Fragment>
+                  ))}
+                </div>
+              )}
+            </>
           )}
-          {view.applied && (
-            <span className="vacancy-page__applied"> · {view.applied}</span>
+          {actionError && (
+            <span className="danger" style={{ fontSize: 13 }}>{actionError}</span>
           )}
         </div>
-        {view.status && (
-          <div className="vacancy-page__status">{view.status}</div>
-        )}
       </div>
 
-      <div className="vacancy-page__actions">
-        {sessionDecision ? (
-          <SessionDecisionActions decision={sessionDecision} onUndo={() => onAction('undo')} />
-        ) : (
-          view.actions.map((action) => (
-            <button
-              key={action.key}
-              className="btn-action"
-              onClick={() => onAction(action.key, action.url, action.message)}
-              title={action.message}
-            >
-              {action.label}
-            </button>
-          ))
-        )}
-        {actionError && (
-          <div className="vacancy-page__action-error">{actionError}</div>
-        )}
-      </div>
-
-      <div className="vacancy-page__listing">
-        <div className="vacancy-listing__state">{view.listing.state}</div>
+      <section className="listing-panel" style={{ marginTop: 24 }}>
+        <header className="panel-head">
+          <h2>Listing text</h2>
+          {view.listing.state && <span className="panel-sub">{view.listing.state}</span>}
+        </header>
         {view.listing.html ? (
           <div
-            className="vacancy-listing__body"
+            className="listing-text"
             dangerouslySetInnerHTML={{ __html: view.listing.html }}
           />
         ) : (
-          <p className="vacancy-listing__empty">{view.listing.empty}</p>
+          <p className="listing-missing">{view.listing.empty}</p>
         )}
-      </div>
-    </div>
+      </section>
+    </>
+  )
+}
+
+interface ActionButtonProps {
+  action: { key: string; label: string; url?: string; message?: string }
+  onAction: (key: string, url?: string, message?: string) => void
+}
+
+function ActionButton({ action, onAction }: ActionButtonProps) {
+  const hint = KEY_HINT[action.key]
+  // Strip the trailing single-letter keyboard hint the server appends to labels
+  // (e.g. "✓ Select Y" → "✓ Select") and render it as a <kbd> cap instead.
+  const label = hint ? action.label.replace(/ [A-Z]$/, '') : action.label
+  const cls =
+    action.key === 'select' ? 'primary'
+    : action.key === 'delete' ? 'link-button split-delete'
+    : action.key === 'dismiss' ? 'no-button'
+    : action.key === 'confirm' ? 'link-button'
+    : ''
+  return (
+    <button
+      className={cls || undefined}
+      onClick={() => onAction(action.key, action.url, action.message)}
+    >
+      {label}{hint && <kbd>{hint}</kbd>}
+    </button>
   )
 }
 
@@ -92,14 +163,14 @@ function SessionDecisionActions({ decision, onUndo }: SessionDecisionActionsProp
   const text =
     decision.to === 'shortlist'
       ? 'Moved to Shortlist'
-      : 'Dismissed — hidden after this session'
+      : decision.to === 'applied'
+        ? 'Confirmed application'
+        : 'Dismissed — hidden after this session'
 
   return (
     <>
-      <span className="vacancy-page__decided-text">{text}</span>
-      <button className="btn-action" onClick={onUndo}>
-        Undo
-      </button>
+      <span className={decision.to === 'dismissed' ? 'danger' : 'muted'}>{text}</span>
+      <button onClick={onUndo}>Undo</button>
     </>
   )
 }

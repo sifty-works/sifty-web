@@ -1,0 +1,138 @@
+/* Outcome / confirmation dialog —————————————————————————————————— */
+.application-confirmation {
+  border: 0;
+  border-radius: 12px;
+  background: #17171a;
+  color: #ececee;
+  padding: 28px;
+  width: min(520px, calc(100vw - 32px));
+  box-shadow: 0 16px 40px #0009;
+}
+.application-confirmation::backdrop {
+  background: #0009;
+}
+.application-confirmation h2 {
+  font-size: 24px;
+  line-height: 1.25;
+}
+.application-confirmation p {
+  font-size: 14px;
+}
+.confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+.application-confirmation .confirmation-actions {
+  flex-wrap: wrap;
+}
+.application-confirmation .confirmation-actions button {
+  flex: 1 1 calc(50% - 5px);
+}
+
+/* Shortlist actions layout ————————————————————————————————————————
+   .review-actions:has(.shortlist-top) switches the flex direction to
+   column so .shortlist-top and .action-links-row each occupy a full
+   row. */
+.review-actions:has(.shortlist-top) {
+  flex-direction: column;
+  align-items: stretch;
+}
+.shortlist-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.review-actions:has(.shortlist-top) .action-links-row {
+  align-self: flex-end;
+}
+
+/* Apply segmented control ————————————————————————————————————————
+   Active left segment: card background, ink text, matches the active
+   detail-tab style. Right segment ("via employer site") is omitted
+   until the server supplies the employer URL. */
+.apply-seg {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 11px;
+  background: var(--well);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+/* Override the .review-actions button height rule for inner buttons. */
+.detail .apply-seg button { height: auto; }
+.detail .apply-seg-active {
+  background: var(--card);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.detail .apply-seg-active:hover:not(:disabled) { background: var(--card); color: var(--ink); }
+
+/* Action links row ————————————————————————————————————————————————
+   ✓ Confirm application… | × Delete role… right-aligned below the
+   main shortlist buttons, and also the standalone delete link in
+   dismissed / archive views. */
+.action-links-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+}
+.action-links-row button {
+  height: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+}
+.detail .action-links-row button:hover:not(:disabled) {
+  color: var(--ink) !important;
+  background: transparent !important;
+  text-decoration-color: currentColor;
+}
+.detail .action-links-row button:disabled {
+  opacity: 0.55;
+  cursor: default;
+  background: transparent !important;
+}
+.action-links-sep {
+  color: var(--ink-4);
+  user-select: none;
+  font-size: 12px;
+}
+
+/* Delete link (standalone, outside the action-links-row) ————————— */
+.split-delete {
+  font-size: 12px !important;
+  height: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--ink-3) !important;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+}
+.detail .split-delete:hover:not(:disabled) {
+  color: var(--ink) !important;
+  background: transparent !important;
+  text-decoration-color: currentColor;
+}
+.detail .split-delete:disabled {
+  opacity: 0.55;
+  cursor: default;
+  background: transparent !important;
+}

@@ -15,41 +15,17 @@ import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcome, ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
-import { OfflineNotice } from './OfflineNotice.tsx'
+import { ListResizer, useListWidth } from './ListResizer.tsx'
 import { SearchField } from './SearchField.tsx'
 import { VacancyPage } from './VacancyPage.tsx'
 import { VacancyRow } from './VacancyRow.tsx'
 
-const LIST_WIDTH_KEY = 'sifty.list.width'
-const LIST_WIDTH_DEFAULT = 320
-const LIST_WIDTH_MIN = 200
-const LIST_WIDTH_MAX = 600
+const SERVER_DOWN = 'Sifty server is not responding. Retrying…'
 
 type ActiveDialog =
   | { kind: 'none' }
-  | { kind: 'apply'; note: string | null }
-  | { kind: 'delete' }
-
-function loadListWidth(): number {
-  try {
-    const v = localStorage.getItem(LIST_WIDTH_KEY)
-    if (v !== null) {
-      const n = parseInt(v, 10)
-      if (!isNaN(n) && n >= LIST_WIDTH_MIN && n <= LIST_WIDTH_MAX) return n
-    }
-  } catch {
-    // storage unavailable — use default
-  }
-  return LIST_WIDTH_DEFAULT
-}
-
-function saveListWidth(w: number): void {
-  try {
-    localStorage.setItem(LIST_WIDTH_KEY, String(w))
-  } catch {
-    // storage unavailable — ignore
-  }
-}
+  | { kind: 'apply'; title: string; company: string; note: string | null }
+  | { kind: 'delete'; title: string; company: string }
 
 /** Returns the id of the next undecided row after currentId, wrapping around. */
 function findNextUndecided(
@@ -73,11 +49,21 @@ interface Props {
   stage: string
   reloadTrigger?: number
   onCounts?: (counts: VacancyCounts) => void
-  /** True when Settings is open — prevents keyboard shortcuts from firing. */
   settingsOpen?: boolean
+  mainTab?: string
+  archiveTab?: string
+  onArchiveTab?: (tab: string) => void
 }
 
-export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Props) {
+export function InboxList({
+  stage,
+  reloadTrigger,
+  onCounts,
+  settingsOpen,
+  mainTab,
+  archiveTab,
+  onArchiveTab,
+}: Props) {
   const [blockCount, setBlockCount] = useState(0)
   const { state, query, setQuery, resetQuery } = useVacancies(
     stage,
@@ -88,7 +74,7 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
   const [seenInSession, setSeenInSession] = useState<ReadonlySet<number>>(new Set())
   const [pageView, setPageView] = useState<VacancyView | null>(null)
   const [pageError, setPageError] = useState<string | null>(null)
-  const [listWidth, setListWidth] = useState<number>(loadListWidth)
+  const [listWidth, setListWidth] = useListWidth()
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
   const [actionError, setActionError] = useState<string | null>(null)
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>({ kind: 'none' })
@@ -96,7 +82,7 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
   const [applyDialogError, setApplyDialogError] = useState<string | null>(null)
   const [deleteDialogSaving, setDeleteDialogSaving] = useState(false)
   const [deleteDialogError, setDeleteDialogError] = useState<string | null>(null)
-  const dragRef = useRef<{ startX: number; startW: number } | null>(null)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   const dialogOpen = activeDialog.kind !== 'none'
   const profile = state.status === 'ok' ? state.profile : null
@@ -104,7 +90,12 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
   const counts = state.status === 'ok' ? state.counts : null
   const empty = state.status === 'ok' ? state.empty : ''
   const loading = state.status === 'loading'
-  const total = counts ? (counts[stage as keyof VacancyCounts] ?? rows.length) : 0
+  const serverDown = state.status === 'offline'
+
+  // Reset banner dismissed state when server comes back.
+  useEffect(() => {
+    if (state.status === 'ok') setBannerDismissed(false)
+  }, [state.status])
 
   // Inject session-decided rows back into the inbox list so they stay visible until reload.
   const displayRows = useMemo<VacancyRowData[]>(() => {
@@ -127,10 +118,8 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
   )
 
   useEffect(() => {
-    if (state.status === 'ok') {
-      onCounts?.(state.counts)
-    }
-  }, [state, onCounts])
+    if (counts !== null) onCounts?.(counts)
+  }, [counts, onCounts])
 
   const selectRow = useCallback(
     (id: number) => {
@@ -159,8 +148,6 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
     [rows, seenInSession, profile],
   )
 
-  // handleAction is defined as a plain function; we keep a ref so the keyboard
-  // effects always call the latest version without stale closures.
   const handleActionRef = useRef<(key: string, url?: string, message?: string) => void>(() => {})
 
   async function handleAction(key: string, url?: string, _message?: string) {
@@ -179,7 +166,7 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
       return
     }
 
-    if (key === 'apply' || key === 'confirm') {
+    if (key === 'apply') {
       // Apply opens the employer URL in a new window, then shows the outcome dialog.
       let note: string | null = null
       if (!url) {
@@ -192,23 +179,36 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
       }
       setApplyDialogSaving(false)
       setApplyDialogError(null)
-      setActiveDialog({ kind: 'apply', note })
+      setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note })
+      return
+    }
+
+    if (key === 'confirm') {
+      // Confirm always opens the outcome dialog directly — no URL required.
+      setApplyDialogSaving(false)
+      setApplyDialogError(null)
+      setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note: null })
       return
     }
 
     if (key === 'delete') {
       setDeleteDialogSaving(false)
       setDeleteDialogError(null)
-      setActiveDialog({ kind: 'delete' })
+      setActiveDialog({ kind: 'delete', title: pageView.title, company: pageView.company })
       return
     }
 
-    // Decision actions
+    // Decision actions — stage moves derived from the action key.
+    // Undo in applied goes to shortlist, not inbox.
     let from: string
     let to: string
     if (key === 'select') { from = 'inbox'; to = 'shortlist' }
     else if (key === 'dismiss') { from = 'inbox'; to = 'dismissed' }
-    else if (key === 'undo' || key === 'inbox') { from = pageView.stage; to = 'inbox' }
+    else if (key === 'undo') {
+      from = pageView.stage
+      to = pageView.stage === 'applied' ? 'shortlist' : 'inbox'
+    }
+    else if (key === 'inbox') { from = pageView.stage; to = 'inbox' }
     else if (key === 'restore') { from = 'dismissed'; to = 'inbox' }
     else { return }
 
@@ -217,7 +217,6 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
       onCounts?.(newCounts)
 
       if (key === 'select' || key === 'dismiss') {
-        // Keep row in inbox list with decided badge; move to next undecided row.
         const originalRow = rows.find((r) => r.id === pageView.id) ?? {
           id: pageView.id,
           company: pageView.company,
@@ -248,7 +247,7 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
           setPageView(null)
         }
       } else {
-        // undo / inbox / restore: row returns to inbox; reload the list.
+        // undo / inbox / restore: row returns to its target stage; reload the list.
         setSessionDecisions((prev) => {
           const next = new Map(prev)
           next.delete(pageView.id)
@@ -307,7 +306,6 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
       const { counts: newCounts } = await deleteVacancy(pageView.id, profile)
       onCounts?.(newCounts)
       setActiveDialog({ kind: 'none' })
-      // Move to the next available row.
       const idx = displayRows.findIndex((r) => r.id === pageView.id)
       const nextRow =
         displayRows.find((_, i) => i > idx) ??
@@ -326,7 +324,6 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
     }
   }
 
-  // Keep ref current on every render.
   handleActionRef.current = (key, url, message) => void handleAction(key, url, message)
 
   // Nav shortcuts: J/K and ↓/↑, blocked while a dialog is open.
@@ -347,19 +344,20 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
   }, [displayRows, selectedId, selectRow, dialogOpen])
 
   // Action shortcuts: Y selects (inbox), N dismisses (inbox), A applies (shortlist).
+  // Only act when the matching action is present in pageView.actions.
   useEffect(() => {
     return installActionShortcuts(
       () => {
-        if (stage === 'inbox' && selectedId !== null)
+        if (stage === 'inbox' && selectedId !== null && pageView?.actions?.some((a) => a.key === 'select'))
           handleActionRef.current('select')
       },
       () => {
-        if (stage === 'inbox' && selectedId !== null)
+        if (stage === 'inbox' && selectedId !== null && pageView?.actions?.some((a) => a.key === 'dismiss'))
           handleActionRef.current('dismiss')
       },
       () => {
         if (stage === 'shortlist' && selectedId !== null && pageView) {
-          const a = pageView.actions.find((x) => x.key === 'apply')
+          const a = pageView.actions?.find((x) => x.key === 'apply')
           if (a) handleActionRef.current('apply', a.url, a.message)
         }
       },
@@ -367,64 +365,38 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
     )
   }, [stage, selectedId, pageView, dialogOpen, settingsOpen])
 
-  useEffect(() => {
-    function onMouseMove(e: MouseEvent) {
-      if (!dragRef.current) return
-      const w = Math.max(
-        LIST_WIDTH_MIN,
-        Math.min(LIST_WIDTH_MAX, dragRef.current.startW + e.clientX - dragRef.current.startX),
-      )
-      setListWidth(w)
-      saveListWidth(w)
-    }
-    function onMouseUp() {
-      dragRef.current = null
-    }
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
-    return () => {
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
-    }
-  }, [])
-
-  function onDividerMouseDown(e: React.MouseEvent) {
-    dragRef.current = { startX: e.clientX, startW: listWidth }
-    e.preventDefault()
-  }
-
-  function onDividerDblClick() {
-    setListWidth(LIST_WIDTH_DEFAULT)
-    saveListWidth(LIST_WIDTH_DEFAULT)
-  }
-
-  if (state.status === 'offline') {
-    return <OfflineNotice />
-  }
-
-  if (state.status === 'error') {
-    return (
-      <div className="list-area list-area--center">
-        <p className="list-message">{state.message}</p>
-      </div>
-    )
-  }
+  const isArchive = mainTab === 'archive'
 
   return (
-    <div className="inbox-split">
-      <div className="inbox-list-pane" style={{ width: listWidth }}>
-        <div className="list-toolbar">
-          <SearchField value={query} onChange={setQuery} />
-        </div>
+    <div className="workspace" style={{ '--list-w': `${listWidth}px` } as React.CSSProperties}>
+      <aside className="catalogue" aria-label="Vacancies">
+        <ListResizer width={listWidth} onChange={setListWidth} />
+        <SearchField value={query} onChange={setQuery} />
+        {isArchive && (
+          <div className="archive-tabs">
+            <button
+              className={archiveTab === 'applied' ? 'active' : undefined}
+              aria-pressed={archiveTab === 'applied'}
+              onClick={() => onArchiveTab?.('applied')}
+            >
+              Applied
+            </button>
+            <button
+              className={archiveTab === 'dismissed' ? 'active' : undefined}
+              aria-pressed={archiveTab === 'dismissed'}
+              onClick={() => onArchiveTab?.('dismissed')}
+            >
+              Dismissed
+            </button>
+          </div>
+        )}
 
-        <div className="list-scroll">
+        <div className="job-list">
           {loading ? null : displayRows.length === 0 ? (
-            <div className="list-empty">
-              <p className="list-message">{empty}</p>
-              {query.trim() !== '' && (
-                <button className="btn-reset" onClick={resetQuery}>
-                  Reset filters
-                </button>
+            <div className="empty">
+              <p>{serverDown ? SERVER_DOWN : empty}</p>
+              {!serverDown && query.trim() !== '' && (
+                <button onClick={resetQuery}>Reset filters</button>
               )}
             </div>
           ) : (
@@ -440,45 +412,48 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
           )}
         </div>
 
-        {!loading && (
-          <div className="list-footer">
-            <span>Showing {displayRows.length} / {total} roles</span>
-            {dismissedThisSession > 0 && (
-              <span className="list-footer__notice">
-                {dismissedThisSession} dismissed this session — they disappear next time.
-              </span>
-            )}
-          </div>
+        {!loading && dismissedThisSession > 0 && (
+          <p className="session-note">
+            {dismissedThisSession} dismissed this session — they disappear next time.
+          </p>
         )}
-      </div>
+      </aside>
 
-      <div
-        className="inbox-divider"
-        onMouseDown={onDividerMouseDown}
-        onDoubleClick={onDividerDblClick}
-        role="separator"
-        aria-label="Resize list"
-      />
+      <main className="detail" aria-label="Selected vacancy">
+        <div className="detail-inner">
+          {serverDown && !bannerDismissed && (
+            <div className="banner error" data-kind="retry" role="alert">
+              {SERVER_DOWN}
+              <button aria-label="Dismiss" onClick={() => setBannerDismissed(true)}>×</button>
+            </div>
+          )}
 
-      <div className="inbox-page-pane">
-        {pageError ? (
-          <div className="list-area--center" style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-            <p className="list-message">{pageError}</p>
-          </div>
-        ) : pageView ? (
-          <VacancyPage
-            view={pageView}
-            sessionDecision={sessionDecisions.get(pageView.id) ?? null}
-            actionError={actionError}
-            onAction={(key, url, message) => void handleAction(key, url, message)}
-          />
-        ) : (
-          <div className="inbox-page-empty" />
-        )}
-      </div>
+          {pageError ? (
+            <div className="banner error" data-kind="retry" role="alert">{pageError}</div>
+          ) : pageView ? (
+            <VacancyPage
+              view={pageView}
+              sessionDecision={sessionDecisions.get(pageView.id) ?? null}
+              actionError={actionError}
+              onAction={(key, url, message) => void handleAction(key, url, message)}
+            />
+          ) : (
+            <div className="empty">
+              <h1>{displayRows.length ? 'Select a role' : 'No role selected'}</h1>
+              <p>
+                {displayRows.length
+                  ? 'Choose a role to review its evidence.'
+                  : 'This stage has no visible roles. Change stage or filters, or collect jobs in Sources.'}
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
 
       {activeDialog.kind === 'apply' && (
         <ApplyOutcomeDialog
+          title={activeDialog.title}
+          company={activeDialog.company}
           note={activeDialog.note}
           saving={applyDialogSaving}
           error={applyDialogError}
@@ -487,6 +462,8 @@ export function InboxList({ stage, reloadTrigger, onCounts, settingsOpen }: Prop
       )}
       {activeDialog.kind === 'delete' && (
         <DeleteConfirmDialog
+          title={activeDialog.title}
+          company={activeDialog.company}
           saving={deleteDialogSaving}
           error={deleteDialogError}
           onKeep={() => setActiveDialog({ kind: 'none' })}

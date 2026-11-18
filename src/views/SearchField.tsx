@@ -1,37 +1,39 @@
 import { useEffect, useRef } from 'react'
-import { installSearchShortcut } from '../keyboard.ts'
+import { Icon } from './Icon.tsx'
 
 interface Props {
   value: string
-  onChange: (q: string) => void
+  onChange: (v: string) => void
 }
 
 export function SearchField({ value, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!inputRef.current) return
-    return installSearchShortcut(inputRef.current)
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === '/' && document.activeElement !== inputRef.current) {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Escape') {
-      inputRef.current?.blur()
-    }
-  }
-
   return (
-    <div className="search-bar">
+    <div className="search list-search">
+      <span aria-hidden="true">
+        <Icon name="search" size={15} />
+      </span>
       <input
         ref={inputRef}
-        className="search-input"
-        type="search"
+        id="find"
+        aria-label="Search catalogue"
         placeholder="Search company, role, tech"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        aria-label="Search vacancies"
       />
+      <kbd>/</kbd>
     </div>
   )
 }

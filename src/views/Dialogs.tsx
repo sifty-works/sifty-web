@@ -1,124 +1,121 @@
-/**
- * Dialogs.tsx — modal dialogs for Apply outcome and permanent deletion.
- *
- * Neither dialog closes on Escape; the user must make an explicit choice.
- */
-import React from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-/** Outcome the user selected in the Apply outcome dialog. */
 export type ApplyOutcome =
   | { kind: 'not_yet' }
-  | { kind: 'dismissed'; reason: string }
   | { kind: 'applied' }
+  | { kind: 'dismissed'; reason: string }
 
 interface ApplyOutcomeDialogProps {
+  title: string
+  company: string
   note: string | null
   saving: boolean
   error: string | null
   onDecide: (outcome: ApplyOutcome) => void
 }
 
-/**
- * "Did you submit your application?" dialog, shown after Apply is clicked.
- * Escape is suppressed; the user must pick an answer.
- */
-export function ApplyOutcomeDialog({ note, saving, error, onDecide }: ApplyOutcomeDialogProps) {
-  function prevent(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') e.preventDefault()
+export function ApplyOutcomeDialog({ title, company, note, saving, error, onDecide }: ApplyOutcomeDialogProps) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const [pending, setPending] = useState<string | null>(null)
+
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
+    const element = dialog.current
+    element?.showModal()
+    return () => {
+      element?.close()
+      if (previous?.isConnected) previous.focus()
+    }
+  }, [])
+
+  async function decide(kind: string, outcome: ApplyOutcome) {
+    if (pending !== null) return
+    setPending(kind)
+    onDecide(outcome)
   }
 
   return (
-    <div className="dialog-backdrop" onKeyDown={prevent}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="apply-dialog-title">
-        <h3 id="apply-dialog-title" className="dialog__title">Did you submit your application?</h3>
-        {note && <p className="dialog__note">{note}</p>}
-        {error && (
-          <p className="dialog__error">
-            The outcome could not be saved. The role has not been changed by this action. Try again,
-            or close this dialog to review the error.
-            <span className="dialog__error-detail"> {error}</span>
-          </p>
-        )}
-        <div className="dialog__actions">
-          <button
-            className="btn-action"
-            disabled={saving}
-            onClick={() => onDecide({ kind: 'not_yet' })}
-          >
-            Not yet
-          </button>
-          <button
-            className="btn-action"
-            disabled={saving}
-            onClick={() => onDecide({ kind: 'dismissed', reason: 'vacancy is stale' })}
-          >
-            No, vacancy is stale
-          </button>
-          <button
-            className="btn-action"
-            disabled={saving}
-            onClick={() => onDecide({ kind: 'dismissed', reason: 'vacancy is closed' })}
-          >
-            No, vacancy is closed
-          </button>
-          <button
-            className="btn-action"
-            disabled={saving}
-            onClick={() => onDecide({ kind: 'dismissed', reason: 'not suitable' })}
-          >
-            No, not suitable
-          </button>
-          <button
-            className="btn-action btn-action--primary"
-            disabled={saving}
-            onClick={() => onDecide({ kind: 'applied' })}
-          >
-            Yes, applied
-          </button>
-        </div>
+    <dialog
+      ref={dialog}
+      className="application-confirmation"
+      aria-labelledby="application-question"
+      aria-describedby="application-explanation"
+      onCancel={(e) => e.preventDefault()}
+    >
+      <h2 id="application-question">Did you submit your application?</h2>
+      <p>{title} · {company}</p>
+      {note && <p>{note}</p>}
+      <p id="application-explanation" className="muted">
+        Opening the employer page does not submit an application. Confirm only
+        after you have submitted it yourself. You can also confirm later from
+        Shortlist. Choose a negative outcome only if you will not apply.
+      </p>
+      {error && (
+        <p className="error" role="alert">
+          The outcome could not be saved. The role has not been changed by this
+          action. Try again, or close this dialog to review the error.
+        </p>
+      )}
+      <div className="confirmation-actions">
+        <button type="button" disabled={saving} onClick={() => void decide('not_yet', { kind: 'not_yet' })}>
+          Not yet
+        </button>
+        <button type="button" disabled={saving} onClick={() => void decide('stale', { kind: 'dismissed', reason: 'stale' })}>
+          {pending === 'stale' ? 'Saving…' : 'No, vacancy is stale'}
+        </button>
+        <button type="button" disabled={saving} onClick={() => void decide('closed', { kind: 'dismissed', reason: 'closed' })}>
+          {pending === 'closed' ? 'Saving…' : 'No, vacancy is closed'}
+        </button>
+        <button type="button" disabled={saving} onClick={() => void decide('not_suitable', { kind: 'dismissed', reason: 'not_suitable' })}>
+          {pending === 'not_suitable' ? 'Saving…' : 'No, not suitable'}
+        </button>
+        <button type="button" className="primary" disabled={saving} onClick={() => void decide('applied', { kind: 'applied' })}>
+          {pending === 'applied' ? 'Saving…' : 'Yes, applied'}
+        </button>
       </div>
-    </div>
+    </dialog>
   )
 }
 
 interface DeleteConfirmDialogProps {
+  title: string
+  company: string
   saving: boolean
   error: string | null
   onKeep: () => void
   onDelete: () => void
 }
 
-/**
- * Permanent deletion confirmation dialog.
- * Escape is suppressed; the user must click Keep role or Permanently delete.
- */
-export function DeleteConfirmDialog({ saving, error, onKeep, onDelete }: DeleteConfirmDialogProps) {
-  function prevent(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') e.preventDefault()
-  }
+export function DeleteConfirmDialog({ title, company, saving, error, onKeep, onDelete }: DeleteConfirmDialogProps) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const pending = useRef(false)
+
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
+    dialog.current?.showModal()
+    return () => {
+      if (previous?.isConnected) previous.focus()
+    }
+  }, [])
 
   return (
-    <div className="dialog-backdrop" onKeyDown={prevent}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
-        <h3 id="delete-dialog-title" className="dialog__title">Delete this role permanently?</h3>
-        <p className="dialog__body">
-          This permanently deletes this role, its answers and application history. This cannot be
-          undone. Automatic collection will not restore it.
-        </p>
-        {error && <p className="dialog__error">{error}</p>}
-        <div className="dialog__actions">
-          <button className="btn-action" disabled={saving} onClick={onKeep}>
-            Keep role
-          </button>
-          <button
-            className="btn-action btn-action--danger"
-            disabled={saving}
-            onClick={onDelete}
-          >
-            Permanently delete
-          </button>
-        </div>
+    <dialog
+      ref={dialog}
+      className="delete-role"
+      aria-labelledby="delete-role-title"
+      onCancel={(e) => { if (pending.current) e.preventDefault(); else onKeep() }}
+    >
+      <h2 id="delete-role-title">Delete {title}?</h2>
+      <p>{company}</p>
+      <p>This permanently deletes this role, its answers and application history. This cannot be undone. Automatic collection will not restore it.</p>
+      <p className="muted">Remembered candidate facts and shared files remain available.</p>
+      {error && <p className="error" role="alert">{error}</p>}
+      <div className="draft-actions">
+        <button autoFocus disabled={saving} onClick={onKeep}>Keep role</button>
+        <button className="no-button" disabled={saving} onClick={() => { if (pending.current) return; pending.current = true; onDelete() }}>
+          {saving ? 'Deleting…' : 'Permanently delete'}
+        </button>
       </div>
-    </div>
+    </dialog>
   )
 }
