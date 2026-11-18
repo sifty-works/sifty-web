@@ -463,6 +463,16 @@ components:
                 - actions
                 - listing
             type: object
+        VersionResp:
+            properties:
+                api:
+                    type: string
+                version:
+                    type: string
+            required:
+                - version
+                - api
+            type: object
         addSourceReq:
             properties:
                 name:
@@ -785,3 +795,15 @@ paths:
                     $ref: '#/components/responses/Error'
                 "204":
                     description: No Content
+    /api/version:
+        get:
+            operationId: getApiVersion
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/VersionResp'
+                    description: OK
