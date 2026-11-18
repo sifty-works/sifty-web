@@ -4,6 +4,7 @@ import { SessionDecision } from '../state/decisions.ts'
 
 // Keys that map to keyboard shortcut hints shown as <kbd> caps.
 const KEY_HINT: Record<string, string> = { select: 'Y', dismiss: 'N', apply: 'A' }
+const GLYPH: Record<string, string> = { select: '✓', dismiss: '✕', confirm: '✓', delete: '×' }
 
 // Keys rendered as small link-buttons on a second line below main actions.
 const LINK_KEYS = new Set(['confirm', 'delete'])
@@ -32,9 +33,15 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
           <div className="role-meta">
             {view.expired && <span className="state-expired">Listing expired</span>}
             <span>{view.published}</span>
-            {view.sources?.map((s) => (
-              <span key={s} className="source-link">{s}</span>
-            ))}
+            {view.sources.map((s) =>
+              s.url ? (
+                <a key={s.name} className="source-link" href={s.url} target="_blank" rel="noreferrer" title={`Found on ${s.name}`}>
+                  {s.name}
+                </a>
+              ) : (
+                <span key={s.name} className="source-link" title={`Found on ${s.name}`}>{s.name}</span>
+              ),
+            )}
             {view.original && (
               <a href={view.original} target="_blank" rel="noreferrer">
                 Original listing ↗
@@ -67,7 +74,7 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
                     className="apply-seg-active"
                     onClick={() => onAction(applyAction.key, applyAction.url, applyAction.message)}
                   >
-                    {applyAction.label.replace(/ [A-Z]$/, '')} <kbd>A</kbd>
+                    {applyAction.label} ↗ <kbd>A</kbd>
                   </button>
                 </div>
               </div>
@@ -135,9 +142,8 @@ interface ActionButtonProps {
 
 function ActionButton({ action, onAction }: ActionButtonProps) {
   const hint = KEY_HINT[action.key]
-  // Strip the trailing single-letter keyboard hint the server appends to labels
-  // (e.g. "✓ Select Y" → "✓ Select") and render it as a <kbd> cap instead.
-  const label = hint ? action.label.replace(/ [A-Z]$/, '') : action.label
+  const glyph = GLYPH[action.key]
+  const label = glyph ? `${glyph} ${action.label}` : action.label
   const cls =
     action.key === 'select' ? 'primary'
     : action.key === 'delete' ? 'link-button split-delete'

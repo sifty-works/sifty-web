@@ -39,8 +39,13 @@ export interface VacancyListing {
   empty: string
 }
 
+export interface VacancySource {
+  name: string
+  url?: string
+}
+
 export interface VacancyView extends VacancyRow {
-  sources: string[]
+  sources: VacancySource[]
   original: string
   status: string
   actions: VacancyAction[]
