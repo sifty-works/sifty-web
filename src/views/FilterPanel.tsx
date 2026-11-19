@@ -57,7 +57,6 @@ export function FilterPanel({
     }
   }, [onClose])
 
-  // Build count lookup maps.
   const industryCountMap = useMemo(
     () => new Map(industryCounts.map((ic) => [ic.name, ic.count])),
     [industryCounts],
@@ -67,7 +66,6 @@ export function FilterPanel({
     [sourceCounts],
   )
 
-  // Show all vocabulary entries; also show any selected entry not in the vocabulary.
   const industryList = useMemo(() => {
     const extra = filters.industries.filter((n) => !allIndustries.includes(n))
     return [...allIndustries, ...extra]

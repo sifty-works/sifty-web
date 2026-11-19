@@ -32,7 +32,6 @@ type ActiveDialog =
   | { kind: 'apply'; title: string; company: string; note: string | null; outcomes: Outcome[] }
   | { kind: 'delete'; title: string; company: string }
 
-/** Returns the id of the next undecided row after currentId, wrapping around. */
 function findNextUndecided(
   currentId: number,
   list: VacancyRowData[],
@@ -83,8 +82,7 @@ export function InboxList({
   const [panelOpen, setPanelOpen] = useState(false)
   const [allSources, setAllSources] = useState<{ key: string; name: string }[]>([])
   const [allIndustries, setAllIndustries] = useState<string[]>([])
-  // Held row: the last row opened while the unread filter is on; it stays in the
-  // list even after the server stops returning it (because it is now read).
+
   const heldRowDataRef = useRef<VacancyRowData | null>(null)
   const [heldRowId, setHeldRowId] = useState<number | null>(null)
   const [pageView, setPageView] = useState<VacancyView | null>(null)
@@ -119,12 +117,10 @@ export function InboxList({
     ...filters.fit.map(() => true),
   ].filter(Boolean).length
 
-  // Reset banner dismissed state when server comes back.
   useEffect(() => {
     if (state.status === 'ok') setBannerDismissed(false)
   }, [state.status])
 
-  // Load full source and industry lists once on mount for the filter panel.
   useEffect(() => {
     void listSources().then((resp) => {
       setAllSources(resp.sources.map((s) => ({ key: s.key, name: s.name })))
@@ -134,7 +130,6 @@ export function InboxList({
     }).catch(() => {})
   }, [])
 
-  // Clear the held row when the unread filter is turned off.
   useEffect(() => {
     if (!unread) {
       heldRowDataRef.current = null
@@ -142,8 +137,6 @@ export function InboxList({
     }
   }, [unread])
 
-  // Inject session-decided rows back into the inbox list so they stay visible until reload.
-  // Also inject the held-unread row (the row being viewed while the unread filter is on).
   const displayRows = useMemo<VacancyRowData[]>(() => {
     const serverIds = new Set(rows.map((r) => r.id))
     const result: VacancyRowData[] = [...rows]
@@ -156,8 +149,7 @@ export function InboxList({
         }
       }
     }
-    // When the unread filter is on, keep the selected row visible even after the server
-    // stops returning it (because it was just marked read).
+
     if (unread && heldRowId !== null && heldRowDataRef.current !== null && !serverIds.has(heldRowId)) {
       result.push(heldRowDataRef.current)
     }
@@ -185,8 +177,7 @@ export function InboxList({
         setSeenInSession((prev) => new Set([...prev, id]))
         void markSeen(id).catch(() => {})
       }
-      // When the unread filter is on, store row data so it can be held in the list
-      // after the server stops returning it (because it was just marked read).
+
       if (unread) {
         const rowData = row ?? (heldRowDataRef.current?.id === id ? heldRowDataRef.current : null)
         heldRowDataRef.current = rowData
@@ -229,7 +220,6 @@ export function InboxList({
     if (!action) return
 
     if (key === 'apply') {
-      // Apply opens the employer URL in a new window (presentation), then shows the outcome dialog.
       let note: string | null = null
       if (!action.url) {
         note = action.message ?? 'No valid employer or original listing URL is available. The role stays in Shortlist.'
@@ -246,7 +236,6 @@ export function InboxList({
     }
 
     if (action.confirm === 'outcome') {
-      // Opens the outcome dialog directly — no URL required.
       setApplyDialogSaving(false)
       setApplyDialogError(null)
       setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note: null, outcomes: action.outcomes ?? [] })
@@ -260,7 +249,6 @@ export function InboxList({
       return
     }
 
-    // Direct stage move: to and from come from the action data.
     if (!action.to) return
     const from = pageView.stage
     const to = action.to
@@ -269,8 +257,6 @@ export function InboxList({
       const { counts: newCounts } = await postDecision(pageView.id, { profile, from, to, reason: '', confirmed: false })
       onCounts?.(newCounts)
 
-      // When moving from inbox to shortlist or dismissed, inject the row into the
-      // session list so it stays visible until reload.
       if (pageView.stage === 'inbox' && (to === 'shortlist' || to === 'dismissed')) {
         const originalRow = rows.find((r) => r.id === pageView.id) ?? {
           id: pageView.id,
@@ -301,7 +287,6 @@ export function InboxList({
           setPageView(null)
         }
       } else {
-        // Undo / return to inbox / restore: row moves back; remove from session list and reload.
         setSessionDecisions((prev) => {
           const next = new Map(prev)
           next.delete(pageView.id)
@@ -319,7 +304,6 @@ export function InboxList({
   async function handleApplyOutcome(outcome: Outcome) {
     if (!pageView || profile === null) return
     if (!outcome.to) {
-      // "Not yet" and any outcome without a stage — just close the dialog.
       setActiveDialog({ kind: 'none' })
       return
     }
@@ -372,7 +356,6 @@ export function InboxList({
 
   handleActionRef.current = (key, url, message) => void handleAction(key, url, message)
 
-  // Nav shortcuts: J/K and ↓/↑, blocked while a dialog is open.
   useEffect(() => {
     const selectNext = () => {
       if (dialogOpen || displayRows.length === 0) return
@@ -389,8 +372,6 @@ export function InboxList({
     return installNavShortcuts(selectPrev, selectNext)
   }, [displayRows, selectedId, selectRow, dialogOpen])
 
-  // Action shortcuts: Y selects (inbox), N dismisses (inbox), A applies (shortlist).
-  // Only act when the matching action is present in pageView.actions.
   useEffect(() => {
     return installActionShortcuts(
       () => {

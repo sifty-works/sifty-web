@@ -1,13 +1,10 @@
 import { CELLS } from './Logo.tsx'
 
-// Sifty brand: the cell mark plus the Tiny5 wordmark at its natural width, under one
-// left-to-right gradient in the mark's colours. While a collection run is active a light wave
-// passes over mark and word, with a pause between passes.
-const CAP = 18                        // cap height = mark height
+const CAP = 18                        
 const MARK_W = CAP * 97 / 47, GAP = 10
-const SIZE = CAP * 1024 / 640        // Tiny5: cap 640 / 1024 units
-const ADV = [640, 256, 640, 512, 512] // S I F T Y advances (units)
-const SWEEP = 1.8, PAUSE = 1.4       // seconds
+const SIZE = CAP * 1024 / 640        
+const ADV = [640, 256, 640, 512, 512] 
+const SWEEP = 1.8, PAUSE = 1.4       
 
 export function Brand({ collecting = false }: { collecting?: boolean }) {
   let x = 0

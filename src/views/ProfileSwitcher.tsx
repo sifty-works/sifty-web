@@ -46,7 +46,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       setActiveId(id)
       setMenu(false)
       onSwitch(id)
-    } catch { /* leave menu open */ }
+    } catch {  }
   }
 
   async function doCreate(e: React.FormEvent) {
@@ -61,7 +61,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       setCreateName(''); setCreating(false); setMenu(false)
       onSwitch(created.id)
       onOpenProfile(created.id)
-    } catch { /* leave form open */ } finally { setCreateBusy(false) }
+    } catch {  } finally { setCreateBusy(false) }
   }
 
   async function doRename(e: React.FormEvent, p: ProfileListItem) {
@@ -72,7 +72,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       const r = await getProfiles()
       setProfiles(r.profiles)
       setRenamingId(null)
-    } catch { /* leave open */ }
+    } catch {  }
   }
 
   async function doDelete(id: number) {
@@ -82,7 +82,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       const next = r.profiles.find((p) => p.active)
       if (next) { setActiveId(next.id); onSwitch(next.id) }
       setDeletingId(null)
-    } catch { /* leave open */ }
+    } catch {  }
   }
 
   const active = profiles.find((p) => p.id === activeId)

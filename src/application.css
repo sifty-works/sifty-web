@@ -1,4 +1,3 @@
-/* Outcome / confirmation dialog —————————————————————————————————— */
 .application-confirmation {
   border: 0;
   border-radius: 12px;
@@ -31,10 +30,6 @@
   flex: 1 1 calc(50% - 5px);
 }
 
-/* Shortlist actions layout ————————————————————————————————————————
-   .review-actions:has(.shortlist-top) switches the flex direction to
-   column so .shortlist-top and .action-links-row each occupy a full
-   row. */
 .review-actions:has(.shortlist-top) {
   flex-direction: column;
   align-items: stretch;
@@ -49,10 +44,6 @@
   align-self: flex-end;
 }
 
-/* Apply segmented control ————————————————————————————————————————
-   Active left segment: card background, ink text, matches the active
-   detail-tab style. Right segment ("via employer site") is omitted
-   until the server supplies the employer URL. */
 .apply-seg {
   display: inline-flex;
   align-items: stretch;
@@ -63,7 +54,7 @@
   flex-shrink: 0;
   align-self: stretch;
 }
-/* Override the .review-actions button height rule for inner buttons. */
+
 .detail .apply-seg button { height: auto; }
 .detail .apply-seg-active {
   background: var(--card);
@@ -78,10 +69,6 @@
 }
 .detail .apply-seg-active:hover:not(:disabled) { background: var(--card); color: var(--ink); }
 
-/* Action links row ————————————————————————————————————————————————
-   ✓ Confirm application… | × Delete role… right-aligned below the
-   main shortlist buttons, and also the standalone delete link in
-   dismissed / archive views. */
 .action-links-row {
   display: flex;
   align-items: center;
@@ -115,7 +102,6 @@
   font-size: 12px;
 }
 
-/* Delete link (standalone, outside the action-links-row) ————————— */
 .split-delete {
   font-size: 12px !important;
   height: auto !important;

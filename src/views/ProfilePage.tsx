@@ -8,8 +8,6 @@ import {
 import { useReference } from '../state/profile.ts'
 import { Icon } from './Icon.tsx'
 
-// ---- Shared helpers (exported for ProfileSearch / ProfileDetails) ----
-
 export function NotSet() { return <span className="profile-not-set">Not set</span> }
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -35,8 +33,6 @@ export function SectionShell({ id, title, description, editing, saving, error, o
   </section>
 }
 
-// TagInput: Enter / comma / Tab adds; Backspace on empty removes last; paste splits on commas or newlines.
-// When title is provided the row uses a two-column q-row layout with a white card and coloured chips (variant class).
 export function TagInput({ label, title, desc, variant, values, placeholder, onChange }: {
   label: string; title?: string; desc?: string; variant?: string; values: string[]; placeholder?: string; onChange: (v: string[]) => void
 }) {
@@ -89,7 +85,6 @@ export function TagInput({ label, title, desc, variant, values, placeholder, onC
   </div>
 }
 
-// Simple Markdown renderer: bold, italic, lists, links, paragraphs, line breaks. No innerHTML.
 export function Md({ text }: { text: string }) {
   if (!text.trim()) return null
   const lines = text.split('\n')
@@ -131,8 +126,6 @@ function MdInline({ text }: { text: string }) {
   }
   return <>{parts}</>
 }
-
-// ---- Profile page data hook ----
 
 export type ProfilePageData = {
   me: MeData | null
@@ -185,8 +178,6 @@ export function useProfilePage(profileId: number): ProfilePageData {
 
   return { me, profile, profiles, ref: refData, loading, error, reload, saveMe, saveProfile, firstProfileName, inherited }
 }
-
-// ---- Profile header ----
 
 function initials(name: string): string {
   return name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('')
@@ -312,8 +303,6 @@ function ProfileHeader({ me, profile, onClose, onReload }: {
   </header>
 }
 
-// ---- Q&A panel ----
-
 function QAPanel() {
   const [items, setItems] = useState<QAItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -395,8 +384,6 @@ function QAPanel() {
   </div>
 }
 
-// ---- Contacts and links ----
-
 const LINKEDIN_PREFIX = 'https://www.linkedin.com/in/'
 const GITHUB_PREFIX = 'https://github.com/'
 const X_PREFIX = 'https://x.com/'
@@ -474,8 +461,6 @@ function ContactsSection({ me, onSave }: { me: MeData; onSave: (patch: MePatchRe
     </div>}
   </SectionShell>
 }
-
-// ---- Main profile page ----
 
 type Tab = 'files' | 'profile' | 'qa'
 

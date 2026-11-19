@@ -24,7 +24,6 @@ const INTERVAL_OPTIONS = [
   { label: '7 days', value: '168h' },
 ]
 
-// Collection icon — three horizontal lines of decreasing width.
 const COLLECTION_ICON = <path d="M3 5h18M6 12h12M10 19h4" />
 
 export function SourcesPage({ status, applyStatus, statusText }: Props) {

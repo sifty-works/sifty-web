@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getReference, type ReferenceResp } from '../api/client.ts'
 
-// Fixed palette assigned by profile position (matches the previous version).
 export const PROFILE_COLORS = ['#3db328', '#258f99', '#2675a9', '#b2b04f']
 
 export function colorFor(index: number): string {
   return PROFILE_COLORS[index % PROFILE_COLORS.length]
 }
 
-// useReference loads the reference vocabulary once per session and caches it.
 export function useReference(): ReferenceResp | null {
   const [ref, setRef] = useState<ReferenceResp | null>(null)
   const load = useCallback(() => {
@@ -18,24 +16,20 @@ export function useReference(): ReferenceResp | null {
   return ref
 }
 
-// labelOf returns the human label for a value from an OptionItem array, or the value itself.
 export function labelOf(items: { value: string; label: string }[], value: string): string {
   return items.find((i) => i.value === value)?.label ?? value
 }
 
-// countryName returns the display name for a country code from reference data.
 export function countryName(countries: { code: string; name: string }[], code: string): string {
   return countries.find((c) => c.code === code)?.name ?? code
 }
 
-// regionLabel returns the display label for a region, e.g. "EU — European Union (27)".
 export function regionLabel(r: { name: string; aliases: string[]; size: number }): string {
   if (r.size <= 1) return r.name
   const long = r.aliases[0] ?? null
   return long ? `${r.name} — ${long} (${r.size})` : `${r.name} (${r.size})`
 }
 
-// geoLabel returns the display text for a Location {country, city}.
 export function geoLabel(
   loc: { country: string; city?: string },
   countries: { code: string; name: string }[],

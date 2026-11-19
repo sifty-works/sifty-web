@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// Copies api/openapi.yaml from a sifty-server checkout and regenerates
-// src/api/schema.gen.ts. Run via: npm run sync-api -- <path-to-server>
+
 import { copyFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join, resolve } from 'node:path'

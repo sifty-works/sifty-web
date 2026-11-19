@@ -1,4 +1,3 @@
-/** Returns true when the event should be ignored (modifier held, text field focused, IME active). */
 function shouldIgnore(e: KeyboardEvent): boolean {
   if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return true
   if (e.isComposing) return true
@@ -9,10 +8,6 @@ function shouldIgnore(e: KeyboardEvent): boolean {
     (target as HTMLElement).isContentEditable
 }
 
-/**
- * Installs the `/` key shortcut that focuses the given input element.
- * Returns a cleanup function.
- */
 export function installSearchShortcut(input: HTMLInputElement): () => void {
   function handler(e: KeyboardEvent): void {
     if (e.code !== 'Slash') return
@@ -24,11 +19,6 @@ export function installSearchShortcut(input: HTMLInputElement): () => void {
   return () => document.removeEventListener('keydown', handler)
 }
 
-/**
- * Installs J/↓ (next) and K/↑ (previous) keyboard shortcuts.
- * Uses physical key codes so the shortcut works on non-Latin layouts.
- * Returns a cleanup function.
- */
 export function installNavShortcuts(onPrev: () => void, onNext: () => void): () => void {
   function handler(e: KeyboardEvent): void {
     if (shouldIgnore(e)) return
@@ -44,11 +34,6 @@ export function installNavShortcuts(onPrev: () => void, onNext: () => void): () 
   return () => document.removeEventListener('keydown', handler)
 }
 
-/**
- * Installs Y (select), N (dismiss) and A (apply) keyboard shortcuts by physical key position.
- * The `blocked` callback returns true while a dialog or Settings is open.
- * Returns a cleanup function.
- */
 export function installActionShortcuts(
   onY: () => void,
   onN: () => void,

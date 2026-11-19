@@ -44,7 +44,6 @@ export function useExclusions() {
       const d = await removeExclusion(id)
       setState(applyResponse(d))
     } catch {
-      // ignore transient errors on remove
     }
   }, [])
 

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-// Width of the vacancy list column, adjustable by dragging its right edge. Remembered per browser.
 const KEY = 'sift.listWidth'
 export const LIST_MIN = 260
 export const LIST_MAX = 720
@@ -22,14 +21,11 @@ export function useListWidth(): [number, (value: number) => void] {
     try {
       localStorage.setItem(KEY, String(next))
     } catch {
-      // storage unavailable
     }
   }, [])
   return [width, update]
 }
 
-// Drag handle on the list's right edge. Pointer drag, arrow keys (Shift = larger steps),
-// double-click resets to the default width.
 export function ListResizer({ width, onChange }: { width: number; onChange: (value: number) => void }) {
   const start = useRef<{ x: number; width: number } | null>(null)
   const [dragging, setDragging] = useState(false)

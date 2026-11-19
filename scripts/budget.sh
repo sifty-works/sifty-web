@@ -1,22 +1,17 @@
 #!/usr/bin/env bash
-# Prints budget measures next to the targets in the architecture document and
-# exits non-zero when one is exceeded. Lines are non-blank lines that are not
-# // comments.
 set -euo pipefail
 
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 
-# Files of this working copy only: tracked and new, never other worktrees.
 files() {
   git ls-files --cached --others --exclude-standard -- "$@" || true
 }
 
 count() {
-  # Reads file names on stdin and prints their counted lines.
   local n=0 f c
   while IFS= read -r f; do
     [ -f "$f" ] || continue
-    c=$(grep -cv -e '^[[:space:]]*$' -e '^[[:space:]]*//' "$f") || c=0
+    c=$(grep -cv '^[[:space:]]*$' "$f") || c=0
     n=$((n + c))
   done
   echo "$n"

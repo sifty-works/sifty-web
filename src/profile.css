@@ -1,4 +1,3 @@
-/* Profile screen styles. */
 .profile-screen{min-height:0;overflow-y:auto;background:#f4f4f5;color:var(--ink);color-scheme:light;scrollbar-width:thin}
 .profile-inner{max-width:none;padding:24px 32px 56px}
 .profile-screen :is(.muted,.company){color:var(--ink-3)}
@@ -14,7 +13,6 @@
 .profile-screen .banner{background:var(--card);color:var(--ink);box-shadow:var(--lift)}
 .profile-screen .banner.error{background:#fbeae6;color:#b23a22}
 
-/* header / identity */
 .profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:20px}
 .profile-head h1{margin-bottom:6px;color:#111}
 .profile-identity{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:4px 0 22px}
@@ -40,14 +38,12 @@
 .profile-pencil:hover:not(:disabled){background:var(--soft)!important;color:var(--ink)!important}
 .profile-close{background:transparent!important;color:var(--ink-3)!important}
 
-/* tabs */
 .profile-tabs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px}
 .profile-tabs-seg{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:#e4e4e7}
 .profile-tabs-seg button{display:inline-flex;align-items:center;gap:8px;font-size:15px!important;font-weight:600;padding:8px 16px!important;border-radius:9px;background:transparent!important;color:var(--ink-3)!important}
 .profile-tabs-seg button:hover:not([aria-pressed=true]){background:#d4d4d8!important;color:var(--ink)!important}
 .profile-tabs-seg button[aria-pressed=true]{background:#fff!important;color:#111!important}
 
-/* cards */
 .profile-card{background:#fff;border:0;border-radius:14px;box-shadow:var(--lift);padding:16px 20px}
 .profile-card.editing{background:#eef6ec!important;box-shadow:none!important}
 .profile-card.editing .profile-card-head{position:sticky;top:40px;z-index:3;background:#eef6ec;margin:-16px -20px 0;padding:14px 20px 10px;border-radius:14px 14px 0 0}
@@ -66,7 +62,6 @@
 .profile-card-body :is(input,select,textarea):focus{outline:2px solid #4338ca;outline-offset:0;background:#fff!important}
 .profile-card-body textarea{resize:vertical}
 
-/* fields */
 .profile-fields{display:grid;gap:12px}
 .profile-fields-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .profile-field{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--ink-3)}
@@ -77,7 +72,6 @@
 .profile-field-block>input,.profile-field-block>select{width:100%}
 .profile-hint{font-size:12px;color:var(--ink-3);line-height:1.45}
 
-/* read view */
 .profile-read p{margin:0 0 8px}
 .profile-read-line{display:grid!important;grid-template-columns:150px minmax(0,1fr);gap:4px 16px;align-items:baseline;margin:0!important;padding:7px 0}
 .profile-read-line>strong{min-width:0!important;font-size:13px!important;font-weight:400!important;color:var(--ink-3)!important}
@@ -88,7 +82,6 @@
 .profile-inherited-value{color:var(--ink-4)}
 .profile-provenance{display:block;font-size:11px;color:var(--ink-4);margin-top:4px}
 
-/* tags / chips */
 .profile-tags{display:flex;flex-wrap:wrap;gap:6px}
 .profile-tags span{background:var(--soft)!important;color:var(--ink)!important;border:0!important;border-radius:7px;padding:4px 10px!important;font-size:13px!important}
 .profile-level{font-size:12px;color:var(--ink-3);background:#efeff1;border-radius:999px;padding:2px 8px}
@@ -100,7 +93,6 @@
 .profile-checks label:has(input:focus-visible){outline:2px solid #4338ca;outline-offset:2px}
 .profile-checks label:has(input:checked):before{content:'✓';margin-right:2px;font-weight:700}
 
-/* What you're looking for rows — q-row / q-card pattern */
 .profile-what-row{display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;align-items:start;margin:4px 0}
 .profile-what-op{font-size:13px;font-weight:600;color:var(--ink-3);text-align:right;padding-top:18px}
 .profile-what-box{background:var(--card,#fff);border-radius:12px;padding:16px 18px;box-shadow:var(--lift)}
@@ -121,10 +113,9 @@
 .profile-tag-add input:focus{outline:0!important}
 .profile-tag-add:focus-within{box-shadow:0 0 0 2px #4338ca}
 .profile-tag-add input::placeholder{color:var(--ink-4)}
-/* engagement group headings */
+
 .profile-group-heading{font-size:11px;font-weight:700;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 2px}
 
-/* tag input */
 .profile-tag-field{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--ink-3)}
 .profile-tag-input{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:42px;padding:6px 8px;border-radius:8px;background:#f4f4f5;cursor:text}
 .profile-card.editing .profile-tag-input{background:#fff}
@@ -136,7 +127,6 @@
 .profile-tag-input input:focus{outline:0!important}
 .profile-tag-field small{font-weight:400;font-size:11px;color:var(--ink-4)}
 
-/* list rows */
 .profile-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .profile-list li{padding-bottom:10px;border-bottom:1px solid var(--soft)}
 .profile-list li:last-child{border-bottom:0;padding-bottom:0}
@@ -167,12 +157,10 @@
 .profile-add{justify-self:start;margin-top:6px;background:transparent!important;color:#1f7a3a!important;font-weight:600;padding:6px 4px!important}
 .profile-add:hover{text-decoration:underline}
 
-/* actions */
 .profile-document-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
 .profile-document-actions button{font-size:12px;padding:6px 10px;background:var(--well);color:var(--ink)}
 .profile-document-actions button:hover:not(:disabled){background:var(--well-2)}
 
-/* date picker */
 .profile-date{display:flex;gap:6px;align-items:center;min-width:0}
 .profile-date input{flex:1;min-width:0}
 .profile-date button{white-space:nowrap;flex:none;width:36px;padding:0!important;font-size:0!important;background:#f4f4f5!important;box-shadow:none!important}
@@ -183,14 +171,12 @@
 .profile-picker-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--ink-3)}
 .profile-picker-actions .primary{margin-left:auto}
 
-/* rich text view */
 .profile-rich-view{line-height:1.55;font-size:13px;overflow-wrap:anywhere}
 .profile-rich-view p{margin:0 0 8px}
 .profile-rich-view p:last-child{margin-bottom:0}
 .profile-rich-view ul,.profile-rich-view ol{margin:0 0 8px;padding-left:22px}
 .profile-rich-view li{margin:2px 0}
 
-/* skills */
 .profile-skill-chips{display:flex;flex-wrap:wrap;gap:7px}
 .profile-skill{display:inline-flex;border-radius:7px;padding:5px 11px;font-size:13px;font-weight:500;background:var(--soft);color:var(--ink-3);cursor:default}
 .profile-skill.level-beginner{background:#f4f4f5;color:var(--ink-3);font-weight:400}
@@ -206,12 +192,10 @@
 .profile-skill-remove{border:0;background:none;padding:0 2px;font:inherit;line-height:1;color:var(--ink-3);cursor:pointer;text-decoration:none}
 .profile-skill-remove:hover{color:var(--ink,#111)}
 
-/* two-column layout */
 .profile-cols-profile{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
 .profile-col-left,.profile-col-right{display:grid;gap:12px;align-content:start}
 .profile-col-heading{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.04em;padding:0 2px}
 
-/* country typeahead */
 .country-typeahead{position:relative}
 .country-typeahead-listbox{position:absolute;z-index:20;left:0;right:0;top:100%;margin-top:2px;background:var(--card);border-radius:9px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:260px;overflow-y:auto;padding:4px 0;list-style:none;margin-left:0;margin-right:0;margin-bottom:0}
 .country-typeahead-option{padding:7px 12px;cursor:pointer;font-size:13px;font-weight:400;color:var(--ink)}
@@ -224,7 +208,6 @@
 .profile-sub-label{margin:10px 0 2px;font-size:12px;font-weight:600;color:var(--ink-3)}
 .profile-lead{font-size:18px;font-weight:600;color:#111}
 
-/* profile switcher */
 .profile-switcher{position:relative}
 .profile-switcher .profile-button{display:flex;align-items:center;gap:8px;background:transparent;color:#ececee;font-weight:600}
 .profile-switcher .profile-button:hover,.profile-switcher .profile-button[aria-expanded=true]{background:#17171a}
@@ -250,7 +233,6 @@
 .profile-menu-rename input:focus{outline:2px solid #7fd08a;outline-offset:0}
 .profile-menu-rename .primary{padding:7px 11px;font-size:13px;background:#ececee;color:#111}
 
-/* Q&A */
 .profile-qa-panel{display:grid;gap:16px;align-content:start;max-width:720px}
 .profile-qa-entry{background:var(--card,#fff);border-radius:10px;padding:14px 16px;display:grid;gap:8px}
 .profile-qa-question{margin:0;font-weight:600;font-size:14px;color:var(--ink,#111)}
@@ -261,7 +243,6 @@
 .profile-qa-add[open] summary{margin-bottom:12px}
 .profile-qa-add .profile-fields{padding-top:4px}
 
-/* responsive */
 @media(max-width:1050px){
   .profile-inner{padding:22px 18px 42px}
   .profile-identity-actions{justify-content:flex-start}

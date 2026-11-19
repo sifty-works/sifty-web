@@ -1,13 +1,11 @@
 import { Band } from '../api/client.ts'
 
-/** CSS modifier class from the server's verdict glyph (✓, ✕, ?). */
 function verdictMod(verdict: string): string {
   if (verdict === '✓') return 'ok'
   if (verdict === '✕') return 'mismatch'
   return ''
 }
 
-/** Lowercase CSS token for the bucket string the server sends (e.g. "Partial" → "partial"). */
 function bucketToken(bucket: string): string {
   return bucket.toLowerCase().replace(/\s+/g, '-')
 }

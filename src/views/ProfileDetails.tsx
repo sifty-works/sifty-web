@@ -4,8 +4,6 @@ import { labelOf } from '../state/profile.ts'
 import { MonthYearInput } from './DateInputs.tsx'
 import { type ProfilePageData, Field, Md, NotSet, SectionShell } from './ProfilePage.tsx'
 
-// ---- Markdown toolbar + textarea ----
-
 function insertMd(el: HTMLTextAreaElement, before: string, after: string, cb: (v: string) => void) {
   const { selectionStart: s, selectionEnd: e, value: v } = el
   const sel = v.slice(s, e)
@@ -38,8 +36,6 @@ function MDArea({ value, onChange }: { value: string; onChange: (v: string) => v
     <textarea ref={ref} rows={4} value={value} onChange={(e) => onChange(e.target.value)}/>
   </div>
 }
-
-// ---- Skills (unified: skills + absent skills + confirmed facts in one card) ----
 
 const SKILL_LEVEL_TIPS: Record<string, string> = {
   beginner: 'Beginner — learning, some exposure',
@@ -87,19 +83,19 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
         await patchProfile(profile.id, { keywords: [...(profile.effective.keywords ?? []), ...toAdd] })
         await data.reload()
       }
-    } catch { /* ignore */ } finally { setCopyBusy(false) }
+    } catch {  } finally { setCopyBusy(false) }
   }
 
   async function removeAbsent(i: number) {
     const next = (me?.absentSkills ?? []).filter((_, j) => j !== i)
     try { await data.saveMe({ absentSkills: next.length ? next : null } as MePatchReq) }
-    catch { /* ignore */ }
+    catch {  }
   }
 
   async function removeConfirmed(i: number) {
     const next = (me?.confirmedFacts ?? []).filter((_, j) => j !== i)
     try { await data.saveMe({ confirmedFacts: next.length ? next : null } as MePatchReq) }
-    catch { /* ignore */ }
+    catch {  }
   }
 
   function addSkill() { setSkills((s) => [...s, { name: '' }]) }
@@ -164,8 +160,6 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-// ---- Experience ----
-
 function ExperienceSection({ data }: { data: ProfilePageData }) {
   const { me } = data
   const [editing, setEditing] = useState(false)
@@ -227,8 +221,6 @@ function ExperienceSection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-// ---- Languages ----
-
 function LanguagesSection({ data }: { data: ProfilePageData }) {
   const { me, ref } = data
   const [editing, setEditing] = useState(false)
@@ -282,8 +274,6 @@ function LanguagesSection({ data }: { data: ProfilePageData }) {
     </>}
   </SectionShell>
 }
-
-// ---- Application form answers (Demographics) ----
 
 function DemographicsSection({ data }: { data: ProfilePageData }) {
   const { me, ref } = data
@@ -380,8 +370,6 @@ function DemographicsSection({ data }: { data: ProfilePageData }) {
     </div>}
   </SectionShell>
 }
-
-// ---- Main export: Personal details column ----
 
 export function DetailsColumn({ data }: { data: ProfilePageData }) {
   return <>

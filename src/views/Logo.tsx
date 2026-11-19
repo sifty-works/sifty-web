@@ -1,4 +1,3 @@
-// Sifty mark: a grid of cells sifted from coarse (left) to fine (right). Traced from the owner's logo.
 export const CELLS: [number, number, number, string][] = [
   [11, 0, 3, '#abac48'], [19, 0, 5, '#738f2d'], [28, 0, 5, '#3db328'], [37, 0, 6, '#24ab3e'], [45, 0, 8, '#23986a'], [54, 0, 7, '#23858f'], [64, 0, 6, '#2675a9'], [74, 0, 4, '#255c98'], [83, 0, 4, '#203472'], [93, 0, 2, '#1b1f4c'],
   [2, 10, 3, '#7c7441'], [11, 10, 3, '#b2b04f'], [19, 10, 5, '#718b2f'], [28, 10, 5, '#3ead27'], [37, 10, 6, '#24a93f'], [45, 10, 8, '#21986a'], [54, 10, 7, '#258f99'],

@@ -34,7 +34,6 @@ function saveQuery(q: string): void {
       localStorage.removeItem(QUERY_KEY)
     }
   } catch {
-    // storage unavailable — ignore
   }
 }
 
@@ -65,7 +64,6 @@ function saveFilters(f: VacancyFilters): void {
       localStorage.setItem(FILTERS_KEY, JSON.stringify(f))
     }
   } catch {
-    // storage unavailable — ignore
   }
 }
 
@@ -85,7 +83,6 @@ function saveUnread(v: boolean): void {
       localStorage.removeItem(UNREAD_KEY)
     }
   } catch {
-    // storage unavailable — ignore
   }
 }
 
@@ -105,7 +102,6 @@ function saveSort(v: 'fit' | 'newest'): void {
       localStorage.removeItem(SORT_KEY)
     }
   } catch {
-    // storage unavailable — ignore
   }
 }
 

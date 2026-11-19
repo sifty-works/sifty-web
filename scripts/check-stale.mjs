@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// Checks that src/api/schema.gen.ts is up to date with api/openapi.yaml.
-// Exits non-zero when it is stale. Run as part of: npm run check
+
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -27,5 +26,5 @@ try {
     process.exit(1)
   }
 } finally {
-  try { unlinkSync(tmp) } catch { /* ignore */ }
+  try { unlinkSync(tmp) } catch {  }
 }

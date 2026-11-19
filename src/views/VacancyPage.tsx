@@ -3,11 +3,9 @@ import { VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { FitBand } from './FitBand.tsx'
 
-// Keys that map to keyboard shortcut hints shown as <kbd> caps.
 const KEY_HINT: Record<string, string> = { select: 'Y', dismiss: 'N', apply: 'A' }
 const GLYPH: Record<string, string> = { select: '✓', dismiss: '✕', confirm: '✓', delete: '×' }
 
-// Keys rendered as small link-buttons on a second line below main actions.
 const LINK_KEYS = new Set(['confirm', 'delete'])
 
 interface Props {
@@ -21,11 +19,9 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
   const mainActions = view.actions?.filter((a) => !LINK_KEYS.has(a.key)) ?? []
   const linkActions = view.actions?.filter((a) => LINK_KEYS.has(a.key)) ?? []
 
-  // Shortlist layout when the server supplies an 'apply' action.
   const applyAction = mainActions.find((a) => a.key === 'apply')
   const isShortlist = applyAction != null
 
-  // Application tab is unavailable until its slice ships.
   const appAvailable = false
   const appDisabledHint = view.stage === 'inbox'
     ? 'Shortlist this role to open Application'
@@ -70,16 +66,14 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
               onUndo={() => onAction('undo')}
             />
           ) : isShortlist ? (
-            /* Shortlist: .shortlist-top + .action-links-row (see application.css) */
             <>
               <div className="shortlist-top">
-                {/* All main actions except apply render as plain buttons on the left */}
                 {mainActions
                   .filter((a) => a.key !== 'apply')
                   .map((a) => (
                     <ActionButton key={a.key} action={a} onAction={onAction} />
                   ))}
-                {/* Apply seg on the right — no "via employer site" right segment yet */}
+
                 <div className="apply-seg">
                   <button
                     className="apply-seg-active"
@@ -103,7 +97,6 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
               )}
             </>
           ) : (
-            /* Inbox / archive: plain action buttons + optional link row */
             <>
               {mainActions.map((action) => (
                 <ActionButton key={action.key} action={action} onAction={onAction} />

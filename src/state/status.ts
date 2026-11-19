@@ -8,22 +8,15 @@ export type StatusState =
 
 export interface UseStatusResult {
   state: StatusState
-  /** Replace status state with the given status data. Accepts both the full status and
-   * the smaller collect response, since they share the fields the UI uses. */
+
   applyStatus: (data: StatusExtra) => void
 }
 
-/**
- * Polls GET /api/status every 5 seconds.
- * Calls onCatalogueChange when the catalogue version advances.
- * Returns applyStatus so callers can push a collect response without waiting for the next poll.
- */
 export function useStatus(onCatalogueChange: () => void): UseStatusResult {
   const [state, setState] = useState<StatusState>({ status: 'unknown' })
   const callbackRef = useRef(onCatalogueChange)
   const prevCatalogueRef = useRef<number | null>(null)
 
-  // Keep the callback ref current without restarting the poll.
   useEffect(() => {
     callbackRef.current = onCatalogueChange
   })
@@ -58,7 +51,7 @@ export function useStatus(onCatalogueChange: () => void): UseStatusResult {
       cancelled = true
       if (timerId !== null) clearTimeout(timerId)
     }
-  }, [applyStatus]) // applyStatus is stable (useCallback empty deps)
+  }, [applyStatus]) 
 
   return { state, applyStatus }
 }

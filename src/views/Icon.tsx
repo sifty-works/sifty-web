@@ -1,4 +1,3 @@
-// Stroke geometry from the owner's Sift handoff, not the DC runtime.
 export function Icon({
   name,
   size = 16,

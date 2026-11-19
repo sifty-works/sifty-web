@@ -16,8 +16,6 @@ function fmtMoney(amount: number | null | undefined, currency: string | null | u
   catch { return `${currency} ${amount.toLocaleString()}` }
 }
 
-// ---- Country / region typeahead ----
-
 type GeoItem = { code: string; label: string; group: 'region' | 'country' }
 
 function useGeoItems(ref: ProfilePageData['ref']) {
@@ -33,12 +31,10 @@ function useGeoItems(ref: ProfilePageData['ref']) {
   }, [ref])
 }
 
-// Country / region typeahead with keyboard navigation.
 function CountryTypeahead({ value, onChange, label, allItems, placeholder }: {
   value: string; onChange: (v: string) => void; label: string; allItems: GeoItem[]; placeholder?: string
 }) {
   const [text, setText] = useState(() => {
-    // Turn a code into a label for display
     const found = allItems.find((i) => i.code === value)
     return found ? found.label : value
   })
@@ -47,7 +43,6 @@ function CountryTypeahead({ value, onChange, label, allItems, placeholder }: {
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
 
-  // Sync when value changes externally
   useEffect(() => {
     const found = allItems.find((i) => i.code === value)
     setText(found ? found.label : value)
@@ -67,7 +62,7 @@ function CountryTypeahead({ value, onChange, label, allItems, placeholder }: {
     setTimeout(() => {
       if (!listRef.current?.contains(document.activeElement)) {
         setOpen(false)
-        // If text doesn't match a known item, treat it as a raw value
+
         const found = allItems.find((i) => i.label.toLowerCase() === text.toLowerCase())
         if (found) onChange(found.code)
         else if (text.trim()) onChange(text.trim())
@@ -94,8 +89,6 @@ function CountryTypeahead({ value, onChange, label, allItems, placeholder }: {
   </div>
 }
 
-// ---- Location editor ----
-
 function LocationsEditor({ locations, onChange, label, allItems }: {
   locations: Location[]; onChange: (v: Location[]) => void; label: string; allItems: GeoItem[]
 }) {
@@ -121,8 +114,6 @@ function LocationsEditor({ locations, onChange, label, allItems }: {
     <button type="button" className="profile-add" onClick={add}>+ Add location</button>
   </div>
 }
-
-// ---- Authorization editor ----
 
 function AuthorizationEditor({ items, onChange, allItems, statusOpts }: {
   items: WorkAuthorization[]; onChange: (v: WorkAuthorization[]) => void; allItems: GeoItem[]
@@ -153,8 +144,6 @@ function AuthorizationEditor({ items, onChange, allItems, statusOpts }: {
   </div>
 }
 
-// ---- Inherited field wrapper ----
-
 function InheritedNote({ fieldName, inherited, firstProfileName }: {
   fieldName: string; inherited: Set<string>; firstProfileName: () => string
 }) {
@@ -166,8 +155,6 @@ function InheritedNote({ fieldName, inherited, firstProfileName }: {
 function inheritedClass(fieldName: string, inherited: Set<string>) {
   return inherited.has(fieldName) ? ' profile-inherited-value' : ''
 }
-
-// ---- What you're looking for ----
 
 function WhatSection({ data }: { data: ProfilePageData }) {
   const { profile, inherited, firstProfileName } = data
@@ -181,7 +168,6 @@ function WhatSection({ data }: { data: ProfilePageData }) {
   const [allOf, setAllOf] = useState<string[]>([])
   const [industries, setIndustries] = useState<string[]>([])
 
-  // Exclusions (live)
   const [exclusions, setExclusions] = useState<Exclusion[]>([])
   const [exclLoading, setExclLoading] = useState(false)
 
@@ -219,7 +205,7 @@ function WhatSection({ data }: { data: ProfilePageData }) {
     try {
       const r = await addExclusion('word', value, profile.id)
       setExclusions(r.exclusions.filter((e) => e.kind === 'word'))
-    } catch { /* leave as is */ }
+    } catch {  }
   }
 
   async function removeExcl(id: number) {
@@ -227,7 +213,7 @@ function WhatSection({ data }: { data: ProfilePageData }) {
     try {
       const r = await removeExclusion(id, profile.id)
       setExclusions(r.exclusions.filter((e) => e.kind === 'word'))
-    } catch { /* leave as is */ }
+    } catch {  }
   }
 
   const inds = eff?.targetIndustries ?? []
@@ -287,8 +273,6 @@ function ReadTags({ values }: { values: string[] }) {
   if (!values.length) return <NotSet/>
   return <div className="profile-tags">{values.map((v, i) => <span key={i}>{v}</span>)}</div>
 }
-
-// ---- Compensation ----
 
 function CompensationSection({ data }: { data: ProfilePageData }) {
   const { profile, inherited, firstProfileName, ref } = data
@@ -423,8 +407,6 @@ function CompensationSection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-// ---- Engagement, hours and work modes ----
-
 function EngagementSection({ data }: { data: ProfilePageData }) {
   const { profile, inherited, firstProfileName, ref } = data
   const eff = profile?.effective
@@ -533,8 +515,6 @@ function EngagementSection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-// ---- Geography and authorization ----
-
 function GeoSection({ data }: { data: ProfilePageData }) {
   const { profile, me, inherited, firstProfileName, ref } = data
   const eff = profile?.effective
@@ -584,7 +564,6 @@ function GeoSection({ data }: { data: ProfilePageData }) {
 
   const inh = inherited.has('preferredLocations')
 
-  // Split preferredLocations into macro regions and specific work locations for read mode.
   const prefRegions = eff?.preferredLocations?.filter((l) => ref?.regions.some((r) => r.name.toUpperCase() === l.country.toUpperCase())) ?? []
   const prefWork = eff?.preferredLocations?.filter((l) => !ref?.regions.some((r) => r.name.toUpperCase() === l.country.toUpperCase())) ?? []
 
@@ -654,8 +633,6 @@ function GeoSection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-// ---- Availability ----
-
 function AvailabilitySection({ data }: { data: ProfilePageData }) {
   const { me, ref } = data
   const [editing, setEditing] = useState(false)
@@ -721,8 +698,6 @@ function AvailabilitySection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-// ---- Other requirements ----
-
 function OtherRequirementsSection({ data }: { data: ProfilePageData }) {
   const { profile } = data
   const [editing, setEditing] = useState(false)
@@ -755,7 +730,6 @@ function OtherRequirementsSection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-// ---- Main export: Profile tab component ----
 export function ProfileTab(data: ProfilePageData) {
   return <div className="profile-cols-profile">
     <div className="profile-col-left">

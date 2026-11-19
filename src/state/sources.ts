@@ -74,7 +74,6 @@ export function useSources(): UseSourcesResult {
     }
   }, [])
 
-  // A change answers the whole list; on failure the list is loaded again.
   const change = useCallback(<A extends unknown[]>(call: (...a: A) => Promise<SourceListResponse>) =>
     async (...a: A): Promise<void> => {
       try {

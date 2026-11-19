@@ -4,7 +4,7 @@ interface Props {
   row: VacancyRowData
   selected?: boolean
   onSelect: () => void
-  /** Set when this row was decided in the current session: 'shortlist' | 'dismissed'. */
+
   decidedTo?: string | null
 }
 

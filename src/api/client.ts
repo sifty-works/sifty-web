@@ -1,7 +1,5 @@
 import type { components } from './schema.gen.ts'
 
-// Types derived from the generated schema. The aliases below keep the names
-// the rest of the application uses while the generated file stays unedited.
 export type VacancyRow = components['schemas']['Row']
 export type ProfileListItem = components['schemas']['ProfileListItem']
 export type ProfileListResp = components['schemas']['ProfileListResp']
@@ -74,7 +72,6 @@ export const DEFAULT_FILTERS: VacancyFilters = {
   fit: [],
 }
 
-/** The server returned an HTTP error with a well-formed {"error": string} body. */
 export class ServerError extends Error {
   constructor(message: string) {
     super(message)
@@ -82,7 +79,6 @@ export class ServerError extends Error {
   }
 }
 
-/** The server could not be reached, or its error response was not parseable. */
 export class OfflineError extends Error {
   constructor() {
     super('Server unreachable')
@@ -102,7 +98,6 @@ async function parseErrorBody(res: Response): Promise<string | null> {
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
   let res: Response
   try {
-    // The server requires the JSON content type on every changing request, even without a body.
     const init: RequestInit = { method }
     if (method !== 'GET') {
       init.headers = { 'Content-Type': 'application/json' }
@@ -211,7 +206,6 @@ export function deleteVacancy(id: number, profile: number): Promise<{ counts: Va
   return request<{ counts: VacancyCounts }>('DELETE', `/api/vacancies/${id}?profile=${profile}`)
 }
 
-// --- Profiles ---
 export function getProfiles(): Promise<ProfileListResp> {
   return request<ProfileListResp>('GET', '/api/profiles')
 }
@@ -230,14 +224,14 @@ export function deleteProfile(id: number): Promise<ProfileListResp> {
 export function setActiveProfile(id: number): Promise<ProfileListResp> {
   return request<ProfileListResp>('PUT', '/api/active-profile', { id })
 }
-// --- My data ---
+
 export function getMe(): Promise<MeData> {
   return request<MeData>('GET', '/api/me')
 }
 export function patchMe(req: MePatchReq): Promise<MeData> {
   return request<MeData>('PATCH', '/api/me', req)
 }
-// --- Photo: GET returns the image binary (200) or no content (204); use as <img src> ---
+
 export const PHOTO_URL = '/api/me/photo'
 export async function checkPhoto(): Promise<boolean> {
   try {
@@ -255,7 +249,7 @@ export async function uploadPhoto(file: File): Promise<void> {
 export function removePhoto(): Promise<void> {
   return request<void>('DELETE', PHOTO_URL)
 }
-// --- Reference ---
+
 let _ref: ReferenceResp | null = null
 let _refFetch: Promise<ReferenceResp> | null = null
 export function getReference(): Promise<ReferenceResp> {
@@ -263,7 +257,7 @@ export function getReference(): Promise<ReferenceResp> {
   if (!_refFetch) _refFetch = request<ReferenceResp>('GET', '/api/reference').then((r) => { _ref = r; return r })
   return _refFetch
 }
-// --- Q&A ---
+
 export function getQA(): Promise<QAListResp> {
   return request<QAListResp>('GET', '/api/qa')
 }
@@ -276,11 +270,11 @@ export function updateQA(id: number, question: string | null, answer: string | n
 export function deleteQA(id: number): Promise<void> {
   return request<void>('DELETE', '/api/qa', { id })
 }
-// --- Exclusions (profile-scoped word exclusions) ---
+
 export function getExclusions(profileId: number): Promise<ExclusionListResponse> {
   return request<ExclusionListResponse>('GET', `/api/exclusions?profile=${profileId}`)
 }
-// --- Industries ---
+
 export function getIndustries(): Promise<IndustriesResp> {
   return request<IndustriesResp>('GET', '/api/industries')
 }

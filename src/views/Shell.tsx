@@ -28,7 +28,6 @@ export function Shell() {
   const { state: statusState, applyStatus } = useStatus(handleCatalogueChange)
   const status = statusState.status === 'ok' ? statusState.data : null
 
-  // Trigger a reload when the server comes back after being offline.
   const prevStatusRef = useRef<string>('unknown')
   useEffect(() => {
     if (prevStatusRef.current === 'offline' && statusState.status === 'ok') {
@@ -54,15 +53,7 @@ export function Shell() {
 
   return (
     <div className="sift-app">
-      {/*
-       * theme.css overrides .app-header to display:grid with three columns:
-       *   col 1 (.stages):         minmax(0,1fr)  — left, flex-start
-       *   col 2 (.brand):          auto           — centre
-       *   col 3 (.header-actions): minmax(0,1fr)  — right, flex-end
-       * Use those classes and avoid adding extra children.
-       */}
       <header className="app-header">
-        {/* column 1 — stage tabs; clicking one from Settings returns to inbox */}
         <nav className="stages">
           {(['inbox', 'shortlist', 'archive'] as MainTab[]).map((t) => (
             <button
@@ -84,10 +75,8 @@ export function Shell() {
           ))}
         </nav>
 
-        {/* column 2 — brand, centred by grid */}
         <Brand collecting={collecting} />
 
-        {/* column 3 — profile switcher + settings / back, right-aligned */}
         <div className="header-actions">
           {headerText && (
             <span className="muted" style={{ fontSize: 12 }}>{headerText}</span>

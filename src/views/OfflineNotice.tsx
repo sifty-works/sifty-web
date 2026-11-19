@@ -1,5 +1,3 @@
-// Shown as the settings page fallback when the server is unreachable.
-// In the lists, the striped banner in InboxList is used instead.
 export function OfflineNotice() {
   return (
     <div className="settings-page">
