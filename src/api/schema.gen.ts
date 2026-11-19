@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/industries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiIndustries"];
+        put: operations["putApiIndustries"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -427,6 +443,23 @@ export interface components {
             weeklyMax?: number | null;
             weeklyMin?: number | null;
         };
+        IndustriesResp: {
+            industries: components["schemas"]["IndustryItem"][];
+        };
+        IndustryCount: {
+            /** Format: int64 */
+            count: number;
+            name: string;
+        };
+        IndustryItem: {
+            keywords: string[];
+            name: string;
+        };
+        InheritedSource: {
+            /** Format: int64 */
+            profileId: number;
+            profileName: string;
+        };
         Language: {
             level?: string;
             name: string;
@@ -439,6 +472,7 @@ export interface components {
         ListResp: {
             counts: components["schemas"]["Counts"];
             empty: string;
+            industryCounts: components["schemas"]["IndustryCount"][];
             /** Format: int64 */
             profile: number;
             rows: components["schemas"]["Row"][];
@@ -527,7 +561,9 @@ export interface components {
             headline: string;
             /** Format: int64 */
             id: number;
-            inherited?: string;
+            inherited?: {
+                [key: string]: components["schemas"]["InheritedSource"];
+            };
             name: string;
             own: components["schemas"]["ProfileData"];
         };
@@ -600,6 +636,7 @@ export interface components {
             relocation: components["schemas"]["OptionItem"][];
             skillLevels: components["schemas"]["OptionItem"][];
             veteranStatus: components["schemas"]["OptionItem"][];
+            workAuthorization: components["schemas"]["OptionItem"][];
             workModes: components["schemas"]["OptionItem"][];
             workingTime: components["schemas"]["OptionItem"][];
         };
@@ -627,6 +664,7 @@ export interface components {
             expired?: boolean;
             /** Format: int64 */
             id: number;
+            industries: string[];
             location: string;
             published: string;
             reason?: string;
@@ -642,6 +680,7 @@ export interface components {
         Skill: {
             level?: string;
             name: string;
+            source?: string;
         };
         Source: {
             enabled: boolean;
@@ -687,6 +726,7 @@ export interface components {
             expired?: boolean;
             /** Format: int64 */
             id: number;
+            industries: string[];
             listing: components["schemas"]["ListingView"];
             location: string;
             original: string;
@@ -888,6 +928,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreviewResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiIndustries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustriesResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    putApiIndustries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustriesResp"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndustriesResp"];
                 };
             };
             "4XX": components["responses"]["Error"];
@@ -1372,6 +1458,7 @@ export interface operations {
                 stage: "inbox" | "shortlist" | "applied" | "dismissed";
                 profile: number;
                 q: string;
+                industries?: string;
             };
             header?: never;
             path?: never;

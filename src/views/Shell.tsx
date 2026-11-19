@@ -4,14 +4,19 @@ import { useStatus } from '../state/status.ts'
 import { Brand } from './Brand.tsx'
 import { Icon } from './Icon.tsx'
 import { InboxList } from './InboxList.tsx'
+import { ProfilePage } from './ProfilePage.tsx'
+import { ProfileTab } from './ProfileSearch.tsx'
+import { ProfileSwitcher } from './ProfileSwitcher.tsx'
 import { SourcesPage } from './SourcesPage.tsx'
 
-type Page = 'inbox' | 'settings'
+type Page = 'inbox' | 'settings' | 'profile'
 type MainTab = 'inbox' | 'shortlist' | 'archive'
 type ArchiveTab = 'applied' | 'dismissed'
 
 export function Shell() {
   const [page, setPage] = useState<Page>('inbox')
+  const [profileId, setProfileId] = useState<number | null>(null)
+  const [activeProfileId, setActiveProfileId] = useState<number | null>(null)
   const [reloadCount, setReloadCount] = useState(0)
   const [mainTab, setMainTab] = useState<MainTab>('inbox')
   const [archiveTab, setArchiveTab] = useState<ArchiveTab>('applied')
@@ -82,7 +87,7 @@ export function Shell() {
         {/* column 2 — brand, centred by grid */}
         <Brand collecting={collecting} />
 
-        {/* column 3 — settings / back, right-aligned */}
+        {/* column 3 — profile switcher + settings / back, right-aligned */}
         <div className="header-actions">
           {headerText && (
             <span className="muted" style={{ fontSize: 12 }}>{headerText}</span>
@@ -96,6 +101,11 @@ export function Shell() {
               {attentionText}
             </button>
           )}
+          <ProfileSwitcher
+            profileOpen={page === 'profile'}
+            onOpenProfile={(id) => { setProfileId(id); setPage('profile') }}
+            onSwitch={(id) => { setActiveProfileId(id); setReloadCount((n) => n + 1) }}
+          />
           <button
             className={page === 'settings' ? 'settings-button active' : 'settings-button'}
             onClick={() => setPage(page === 'settings' ? 'inbox' : 'settings')}
@@ -105,7 +115,13 @@ export function Shell() {
         </div>
       </header>
 
-      {page === 'inbox' ? (
+      {page === 'profile' && profileId !== null ? (
+        <ProfilePage
+          profileId={profileId}
+          onClose={() => setPage('inbox')}
+          profileTab={ProfileTab}
+        />
+      ) : page === 'inbox' ? (
         <InboxList
           key={stage}
           stage={stage}
@@ -115,6 +131,7 @@ export function Shell() {
           mainTab={mainTab}
           archiveTab={archiveTab}
           onArchiveTab={(t) => setArchiveTab(t as ArchiveTab)}
+          profile={activeProfileId}
         />
       ) : (
         <SourcesPage status={status} applyStatus={applyStatus} statusText={headerText} />

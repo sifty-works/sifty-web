@@ -3,6 +3,32 @@ import type { components } from './schema.gen.ts'
 // Types derived from the generated schema. The aliases below keep the names
 // the rest of the application uses while the generated file stays unedited.
 export type VacancyRow = components['schemas']['Row']
+export type ProfileListItem = components['schemas']['ProfileListItem']
+export type ProfileListResp = components['schemas']['ProfileListResp']
+export type ProfileDetailResp = components['schemas']['ProfileDetailResp']
+export type ProfileData = components['schemas']['ProfileData']
+export type ProfilePatchReq = components['schemas']['ProfilePatchReq']
+export type MeData = components['schemas']['MeData']
+export type MePatchReq = components['schemas']['MePatchReq']
+export type ReferenceResp = components['schemas']['ReferenceResp']
+export type ReferenceOptions = components['schemas']['ReferenceOptions']
+export type ReferenceCountry = components['schemas']['ReferenceCountry']
+export type ReferenceRegion = components['schemas']['ReferenceRegion']
+export type ReferenceTimeZoneBand = components['schemas']['ReferenceTimeZoneBand']
+export type QAItem = components['schemas']['QAItem']
+export type QAListResp = components['schemas']['QAListResp']
+export type Skill = components['schemas']['Skill']
+export type AbsentSkill = components['schemas']['AbsentSkill']
+export type ConfirmedFact = components['schemas']['ConfirmedFact']
+export type Experience = components['schemas']['Experience']
+export type Language = components['schemas']['Language']
+export type Availability = components['schemas']['Availability']
+export type Location = components['schemas']['Location']
+export type WorkAuthorization = components['schemas']['WorkAuthorization']
+export type Compensation = components['schemas']['Compensation']
+export type DayRates = components['schemas']['DayRates']
+export type Hours = components['schemas']['Hours']
+export type Demographics = components['schemas']['Demographics']
 export type VacancyCounts = components['schemas']['Counts']
 export type VacancyListResponse = components['schemas']['ListResp']
 export type VacancyAction = components['schemas']['Action']
@@ -126,12 +152,12 @@ export function listExclusions(): Promise<ExclusionListResponse> {
   return request<ExclusionListResponse>('GET', '/api/exclusions')
 }
 
-export function addExclusion(kind: string, value: string): Promise<ExclusionListResponse> {
-  return request<ExclusionListResponse>('POST', '/api/exclusions', { kind, value })
+export function addExclusion(kind: string, value: string, profileId?: number): Promise<ExclusionListResponse> {
+  return request<ExclusionListResponse>('POST', '/api/exclusions', profileId != null ? { kind, value, profile: profileId } : { kind, value })
 }
 
-export function removeExclusion(id: number): Promise<ExclusionListResponse> {
-  return request<ExclusionListResponse>('DELETE', '/api/exclusions', { id })
+export function removeExclusion(id: number, profileId?: number): Promise<ExclusionListResponse> {
+  return request<ExclusionListResponse>('DELETE', '/api/exclusions', profileId != null ? { id, profile: profileId } : { id })
 }
 
 export function previewExclusion(kind: string, value: string): Promise<{ text: string }> {
@@ -147,4 +173,74 @@ export function postDecision(id: number, req: DecisionRequest): Promise<Decision
 
 export function deleteVacancy(id: number, profile: number): Promise<{ counts: VacancyCounts }> {
   return request<{ counts: VacancyCounts }>('DELETE', `/api/vacancies/${id}?profile=${profile}`)
+}
+
+// --- Profiles ---
+export function getProfiles(): Promise<ProfileListResp> {
+  return request<ProfileListResp>('GET', '/api/profiles')
+}
+export function createProfile(name: string): Promise<ProfileDetailResp> {
+  return request<ProfileDetailResp>('POST', '/api/profiles', { name })
+}
+export function getProfile(id: number): Promise<ProfileDetailResp> {
+  return request<ProfileDetailResp>('GET', `/api/profiles/${id}`)
+}
+export function patchProfile(id: number, req: ProfilePatchReq): Promise<ProfileDetailResp> {
+  return request<ProfileDetailResp>('PATCH', `/api/profiles/${id}`, req)
+}
+export function deleteProfile(id: number): Promise<ProfileListResp> {
+  return request<ProfileListResp>('DELETE', `/api/profiles/${id}`)
+}
+export function setActiveProfile(id: number): Promise<ProfileListResp> {
+  return request<ProfileListResp>('PUT', '/api/active-profile', { id })
+}
+// --- My data ---
+export function getMe(): Promise<MeData> {
+  return request<MeData>('GET', '/api/me')
+}
+export function patchMe(req: MePatchReq): Promise<MeData> {
+  return request<MeData>('PATCH', '/api/me', req)
+}
+// --- Photo: GET returns the image binary (200) or no content (204); use as <img src> ---
+export const PHOTO_URL = '/api/me/photo'
+export async function checkPhoto(): Promise<boolean> {
+  try {
+    const res = await fetch(PHOTO_URL, { method: 'HEAD' })
+    return res.status === 200
+  } catch { return false }
+}
+export async function uploadPhoto(file: File): Promise<void> {
+  const res = await fetch(PHOTO_URL, { method: 'PUT', body: file })
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as Record<string, unknown> | null
+    throw new ServerError(typeof body?.error === 'string' ? body.error : 'Upload failed')
+  }
+}
+export function removePhoto(): Promise<void> {
+  return request<void>('DELETE', PHOTO_URL)
+}
+// --- Reference ---
+let _ref: ReferenceResp | null = null
+let _refFetch: Promise<ReferenceResp> | null = null
+export function getReference(): Promise<ReferenceResp> {
+  if (_ref) return Promise.resolve(_ref)
+  if (!_refFetch) _refFetch = request<ReferenceResp>('GET', '/api/reference').then((r) => { _ref = r; return r })
+  return _refFetch
+}
+// --- Q&A ---
+export function getQA(): Promise<QAListResp> {
+  return request<QAListResp>('GET', '/api/qa')
+}
+export function createQA(question: string, answer: string): Promise<QAItem> {
+  return request<QAItem>('POST', '/api/qa', { question, answer })
+}
+export function updateQA(id: number, question: string | null, answer: string | null): Promise<QAItem> {
+  return request<QAItem>('PATCH', '/api/qa', { id, question, answer })
+}
+export function deleteQA(id: number): Promise<void> {
+  return request<void>('DELETE', '/api/qa', { id })
+}
+// --- Exclusions (profile-scoped word exclusions) ---
+export function getExclusions(profileId: number): Promise<ExclusionListResponse> {
+  return request<ExclusionListResponse>('GET', `/api/exclusions?profile=${profileId}`)
 }

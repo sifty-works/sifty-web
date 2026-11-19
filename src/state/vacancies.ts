@@ -44,7 +44,7 @@ export interface UseVacanciesResult {
   resetQuery: () => void
 }
 
-export function useVacancies(stage: string, reloadTrigger = 0): UseVacanciesResult {
+export function useVacancies(stage: string, reloadTrigger = 0, profile: number | null = null): UseVacanciesResult {
   const [query, setQueryState] = useState<string>(loadSavedQuery)
   const [pending, setPending] = useState<string>(loadSavedQuery)
   const [state, setState] = useState<VacancyListState>({ status: 'loading' })
@@ -78,7 +78,7 @@ export function useVacancies(stage: string, reloadTrigger = 0): UseVacanciesResu
     }
     prevQueryRef.current = query
 
-    listVacancies(null, stage, query)
+    listVacancies(profile, stage, query)
       .then((data) => {
         if (!cancelled) {
           setState({
@@ -105,7 +105,7 @@ export function useVacancies(stage: string, reloadTrigger = 0): UseVacanciesResu
     return () => {
       cancelled = true
     }
-  }, [stage, query, reloadTrigger])
+  }, [stage, query, reloadTrigger, profile])
 
   return { state, query: pending, setQuery, resetQuery }
 }

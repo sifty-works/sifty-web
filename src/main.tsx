@@ -6,6 +6,7 @@ import './role.css'
 import './application.css'
 import './theme.css'
 import './polish.css'
+import './profile.css'
 import { Shell } from './views/Shell.tsx'
 
 const root = document.getElementById('root')

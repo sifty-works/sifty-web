@@ -54,6 +54,7 @@ interface Props {
   mainTab?: string
   archiveTab?: string
   onArchiveTab?: (tab: string) => void
+  profile?: number | null
 }
 
 export function InboxList({
@@ -64,11 +65,13 @@ export function InboxList({
   mainTab,
   archiveTab,
   onArchiveTab,
+  profile: profileProp,
 }: Props) {
   const [blockCount, setBlockCount] = useState(0)
   const { state, query, setQuery, resetQuery } = useVacancies(
     stage,
     (reloadTrigger ?? 0) + blockCount,
+    profileProp ?? null,
   )
 
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -222,6 +225,7 @@ export function InboxList({
           published: pageView.published,
           unread: pageView.unread,
           stage: pageView.stage,
+          industries: pageView.industries,
         }
         const idx = displayRows.findIndex((r) => r.id === pageView.id)
         const newDecision: SessionDecision = {
