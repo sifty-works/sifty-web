@@ -48,6 +48,28 @@ export type DecisionRequest = components['schemas']['DecisionReq']
 export type DecisionResponse = components['schemas']['DecisionResp']
 export type Exclusion = components['schemas']['Exclusion']
 export type ExclusionListResponse = components['schemas']['ExclusionsResp']
+export type IndustryItem = components['schemas']['IndustryItem']
+export type IndustriesResp = components['schemas']['IndustriesResp']
+export type IndustryCount = components['schemas']['IndustryCount']
+export type SourceCount = components['schemas']['SourceCount']
+
+export interface VacancyFilters {
+  collected: '' | '7' | '30'
+  hideExpired: boolean
+  remote: boolean
+  leadership: boolean
+  industries: string[]
+  sources: string[]
+}
+
+export const DEFAULT_FILTERS: VacancyFilters = {
+  collected: '',
+  hideExpired: false,
+  remote: false,
+  leadership: false,
+  industries: [],
+  sources: [],
+}
 
 /** The server returned an HTTP error with a well-formed {"error": string} body. */
 export class ServerError extends Error {
@@ -102,10 +124,19 @@ export function listVacancies(
   profile: number | null,
   stage: string,
   q: string,
+  filters: VacancyFilters = DEFAULT_FILTERS,
+  unread = false,
 ): Promise<VacancyListResponse> {
   const params = new URLSearchParams({ stage })
   if (profile !== null) params.set('profile', String(profile))
   if (q) params.set('q', q)
+  if (filters.collected) params.set('collected', filters.collected)
+  if (filters.hideExpired) params.set('hideExpired', 'true')
+  if (filters.remote) params.set('remote', 'true')
+  if (filters.leadership) params.set('leadership', 'true')
+  if (filters.industries.length > 0) params.set('industries', filters.industries.join(','))
+  if (filters.sources.length > 0) params.set('sources', filters.sources.join(','))
+  if (unread) params.set('unread', 'true')
   return request<VacancyListResponse>('GET', `/api/vacancies?${params.toString()}`)
 }
 
@@ -243,4 +274,11 @@ export function deleteQA(id: number): Promise<void> {
 // --- Exclusions (profile-scoped word exclusions) ---
 export function getExclusions(profileId: number): Promise<ExclusionListResponse> {
   return request<ExclusionListResponse>('GET', `/api/exclusions?profile=${profileId}`)
+}
+// --- Industries ---
+export function getIndustries(): Promise<IndustriesResp> {
+  return request<IndustriesResp>('GET', '/api/industries')
+}
+export function putIndustries(industries: IndustryItem[]): Promise<IndustriesResp> {
+  return request<IndustriesResp>('PUT', '/api/industries', { industries })
 }

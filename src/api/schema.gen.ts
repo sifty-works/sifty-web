@@ -476,6 +476,9 @@ export interface components {
             /** Format: int64 */
             profile: number;
             rows: components["schemas"]["Row"][];
+            sourceCounts: components["schemas"]["SourceCount"][];
+            /** Format: int64 */
+            total: number;
         };
         ListingView: {
             empty?: string;
@@ -688,6 +691,11 @@ export interface components {
             name: string;
             status?: components["schemas"]["SourceStatus"] | null;
             url: string;
+        };
+        SourceCount: {
+            /** Format: int64 */
+            count: number;
+            name: string;
         };
         SourceStatus: {
             attention: boolean;
@@ -1459,6 +1467,12 @@ export interface operations {
                 profile: number;
                 q: string;
                 industries?: string;
+                collected?: string;
+                hideExpired?: boolean;
+                remote?: boolean;
+                leadership?: boolean;
+                sources?: string;
+                unread?: boolean;
             };
             header?: never;
             path?: never;

@@ -3,7 +3,7 @@ export function Icon({
   name,
   size = 16,
 }: {
-  name: 'search' | 'filters' | 'settings' | 'web3' | 'clock' | 'target' | 'pencil' | 'user'
+  name: 'search' | 'filters' | 'settings' | 'clock' | 'target' | 'pencil' | 'user'
   size?: number
 }) {
   return (
@@ -13,7 +13,7 @@ export function Icon({
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      stroke={name === 'web3' ? 'url(#sift-web3)' : 'currentColor'}
+      stroke="currentColor"
       strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -43,20 +43,10 @@ export function Icon({
         </>
       ) : name === 'pencil' ? (
         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-      ) : name === 'user' ? (
+      ) : (
         <>
           <circle cx="12" cy="8" r="3.5" />
           <path d="M5 20c0-3.4 3.1-5.5 7-5.5s7 2.1 7 5.5" />
-        </>
-      ) : (
-        <>
-          <defs>
-            <linearGradient id="sift-web3" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#c78bff" />
-              <stop offset="1" stopColor="#6a4bff" />
-            </linearGradient>
-          </defs>
-          <path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" />
         </>
       )}
     </svg>

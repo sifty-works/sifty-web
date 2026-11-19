@@ -28,7 +28,10 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
     <>
       <div className="detail-top">
         <div className="role-heading">
-          <p className="company">{view.company}</p>
+          <p className="company">
+            {view.industries.map((ind) => <span key={ind} className="ind-chip">{ind}</span>)}
+            {view.company}
+          </p>
           <h1>{view.title}</h1>
           <div className="role-meta">
             {view.expired && <span className="state-expired">Listing expired</span>}

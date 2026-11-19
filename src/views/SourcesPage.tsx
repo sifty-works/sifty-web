@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { previewExclusion, Source, StatusExtra, triggerCollect } from '../api/client.ts'
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
+import { IndustriesPage } from './IndustriesPage.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 
-type SettingsNav = 'sources' | 'exclusions'
+type SettingsNav = 'sources' | 'exclusions' | 'industries'
 
 interface Props {
   status: StatusExtra | null
@@ -46,21 +47,6 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
     }
   }
 
-  if (state.status === 'offline') return <OfflineNotice />
-
-  if (state.status === 'error') {
-    return (
-      <div className="settings-page">
-        <nav className="settings-nav" aria-label="Settings sections" />
-        <div className="settings-main">
-          <div className="settings-content">
-            <p className="muted">{state.message}</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   const sources = state.status === 'ok' ? state.sources : []
   const auto = state.status === 'ok' ? state.auto : false
   const interval = state.status === 'ok' ? state.interval : '3h'
@@ -94,13 +80,26 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
             >
               Exclusions
             </button>
+            <button
+              className={nav === 'industries' ? 'active' : undefined}
+              aria-current={nav === 'industries' ? 'page' : undefined}
+              onClick={() => setNav('industries')}
+            >
+              Industries
+            </button>
           </div>
         </div>
       </nav>
 
       <div className="settings-main">
         <div className="settings-content">
-          {nav === 'sources' ? (
+          {nav === 'industries' ? (
+            <IndustriesPage />
+          ) : nav === 'exclusions' ? (
+            state.status === 'offline' ? <OfflineNotice /> : <ExclusionsPanel />
+          ) : (
+            state.status === 'offline' ? <OfflineNotice /> :
+            state.status === 'error' ? <p className="muted">{state.message}</p> :
             <SourcesPanel
               sources={sources}
               auto={auto}
@@ -120,8 +119,6 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
               onUpdateSchedule={(a, i) => void updateSchedule(a, i)}
               onCollect={() => void triggerCollect(true).then(applyStatus).catch(() => {})}
             />
-          ) : (
-            <ExclusionsPanel />
           )}
         </div>
       </div>

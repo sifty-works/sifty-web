@@ -18,7 +18,10 @@ export function VacancyRow({ row, selected, onSelect, decidedTo }: Props) {
 
   return (
     <button className={classes} onClick={onSelect} aria-pressed={selected}>
-      <div className="row-company">{row.company}</div>
+      <div className="row-company">
+        {row.industries.map((ind) => <span key={ind} className="ind-badge">{ind}</span>)}
+        {row.company}
+      </div>
       <strong>
         {decidedTo === 'shortlist' && <span className="yes-check" title="Shortlisted">✓ </span>}
         {row.title}

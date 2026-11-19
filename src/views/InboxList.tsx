@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   addExclusion,
   deleteVacancy,
+  getIndustries,
   getVacancy,
+  listSources,
   markSeen,
   OfflineError,
   Outcome,
@@ -16,6 +18,8 @@ import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
+import { FilterPanel } from './FilterPanel.tsx'
+import { Icon } from './Icon.tsx'
 import { ListResizer, useListWidth } from './ListResizer.tsx'
 import { SearchField } from './SearchField.tsx'
 import { VacancyPage } from './VacancyPage.tsx'
@@ -68,7 +72,7 @@ export function InboxList({
   profile: profileProp,
 }: Props) {
   const [blockCount, setBlockCount] = useState(0)
-  const { state, query, setQuery, resetQuery } = useVacancies(
+  const { state, query, setQuery, filters, setFilters, unread, setUnread, resetAll } = useVacancies(
     stage,
     (reloadTrigger ?? 0) + blockCount,
     profileProp ?? null,
@@ -76,6 +80,13 @@ export function InboxList({
 
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [seenInSession, setSeenInSession] = useState<ReadonlySet<number>>(new Set())
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [allSources, setAllSources] = useState<{ key: string; name: string }[]>([])
+  const [allIndustries, setAllIndustries] = useState<string[]>([])
+  // Held row: the last row opened while the unread filter is on; it stays in the
+  // list even after the server stops returning it (because it is now read).
+  const heldRowDataRef = useRef<VacancyRowData | null>(null)
+  const [heldRowId, setHeldRowId] = useState<number | null>(null)
   const [pageView, setPageView] = useState<VacancyView | null>(null)
   const [pageError, setPageError] = useState<string | null>(null)
   const [listWidth, setListWidth] = useListWidth()
@@ -93,28 +104,65 @@ export function InboxList({
   const rows = state.status === 'ok' ? state.rows : []
   const counts = state.status === 'ok' ? state.counts : null
   const empty = state.status === 'ok' ? state.empty : ''
+  const total = state.status === 'ok' ? state.total : 0
+  const industryCounts = state.status === 'ok' ? state.industryCounts : []
+  const sourceCounts = state.status === 'ok' ? state.sourceCounts : []
   const loading = state.status === 'loading'
   const serverDown = state.status === 'offline'
+
+  const activeFilterCount = [
+    filters.collected !== '',
+    filters.hideExpired,
+    filters.remote,
+    filters.leadership,
+    ...filters.industries.map(() => true),
+    ...filters.sources.map(() => true),
+  ].filter(Boolean).length
 
   // Reset banner dismissed state when server comes back.
   useEffect(() => {
     if (state.status === 'ok') setBannerDismissed(false)
   }, [state.status])
 
+  // Load full source and industry lists once on mount for the filter panel.
+  useEffect(() => {
+    void listSources().then((resp) => {
+      setAllSources(resp.sources.map((s) => ({ key: s.key, name: s.name })))
+    }).catch(() => {})
+    void getIndustries().then((resp) => {
+      setAllIndustries(resp.industries.map((i) => i.name))
+    }).catch(() => {})
+  }, [])
+
+  // Clear the held row when the unread filter is turned off.
+  useEffect(() => {
+    if (!unread) {
+      heldRowDataRef.current = null
+      setHeldRowId(null)
+    }
+  }, [unread])
+
   // Inject session-decided rows back into the inbox list so they stay visible until reload.
+  // Also inject the held-unread row (the row being viewed while the unread filter is on).
   const displayRows = useMemo<VacancyRowData[]>(() => {
-    if (stage !== 'inbox') return rows
     const serverIds = new Set(rows.map((r) => r.id))
-    const decided = Array.from(sessionDecisions.values()).sort((a, b) => a.idx - b.idx)
     const result: VacancyRowData[] = [...rows]
-    for (const dec of decided) {
-      if (!serverIds.has(dec.row.id)) {
-        const pos = Math.min(dec.idx, result.length)
-        result.splice(pos, 0, dec.row)
+    if (stage === 'inbox') {
+      const decided = Array.from(sessionDecisions.values()).sort((a, b) => a.idx - b.idx)
+      for (const dec of decided) {
+        if (!serverIds.has(dec.row.id)) {
+          const pos = Math.min(dec.idx, result.length)
+          result.splice(pos, 0, dec.row)
+        }
       }
     }
+    // When the unread filter is on, keep the selected row visible even after the server
+    // stops returning it (because it was just marked read).
+    if (unread && heldRowId !== null && heldRowDataRef.current !== null && !serverIds.has(heldRowId)) {
+      result.push(heldRowDataRef.current)
+    }
     return result
-  }, [rows, sessionDecisions, stage])
+  }, [rows, sessionDecisions, stage, unread, heldRowId])
 
   const dismissedThisSession = useMemo(
     () => Array.from(sessionDecisions.values()).filter((d) => d.to === 'dismissed').length,
@@ -137,6 +185,13 @@ export function InboxList({
         setSeenInSession((prev) => new Set([...prev, id]))
         void markSeen(id).catch(() => {})
       }
+      // When the unread filter is on, store row data so it can be held in the list
+      // after the server stops returning it (because it was just marked read).
+      if (unread) {
+        const rowData = row ?? (heldRowDataRef.current?.id === id ? heldRowDataRef.current : null)
+        heldRowDataRef.current = rowData
+        setHeldRowId(id)
+      }
       void getVacancy(id, profile)
         .then((v) => setPageView(v))
         .catch((err: unknown) => {
@@ -149,7 +204,7 @@ export function InboxList({
           setPageError(msg)
         })
     },
-    [rows, seenInSession, profile],
+    [rows, seenInSession, profile, unread],
   )
 
   const handleActionRef = useRef<(key: string, url?: string, message?: string) => void>(() => {})
@@ -362,6 +417,42 @@ export function InboxList({
       <aside className="catalogue" aria-label="Vacancies">
         <ListResizer width={listWidth} onChange={setListWidth} />
         <SearchField value={query} onChange={setQuery} />
+        <div className="list-toolbar">
+          {!isArchive && (
+            <button aria-pressed={unread} onClick={() => setUnread(!unread)}>
+              Unread
+            </button>
+          )}
+          <div className="filter-box">
+            <button
+              aria-expanded={panelOpen}
+              onClick={() => setPanelOpen((p) => !p)}
+            >
+              <Icon name="filters" size={14} />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="filter-count">{activeFilterCount}</span>
+              )}
+            </button>
+            {panelOpen && (
+              <FilterPanel
+                filters={filters}
+                allIndustries={allIndustries}
+                allSources={allSources}
+                industryCounts={industryCounts}
+                sourceCounts={sourceCounts}
+                rowCount={displayRows.length}
+                total={total}
+                onChange={setFilters}
+                onReset={() => { resetAll(); setPanelOpen(false) }}
+                onClose={() => setPanelOpen(false)}
+              />
+            )}
+          </div>
+        </div>
+        {unread && !isArchive && (
+          <p className="unread-note">Opening marks a role read. It stays here until you choose another role.</p>
+        )}
         {isArchive && (
           <div className="archive-tabs">
             <button
@@ -385,8 +476,8 @@ export function InboxList({
           {loading ? null : displayRows.length === 0 ? (
             <div className="empty">
               <p>{serverDown ? SERVER_DOWN : empty}</p>
-              {!serverDown && query.trim() !== '' && (
-                <button onClick={resetQuery}>Reset filters</button>
+              {!serverDown && (query.trim() !== '' || activeFilterCount > 0 || unread) && (
+                <button onClick={resetAll}>Reset filters</button>
               )}
             </div>
           ) : (

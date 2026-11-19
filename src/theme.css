@@ -47,7 +47,6 @@
 .detail .banner.error,.collection-view .banner.error{background:#fbeae6}
 .detail pre,.collection-view pre{background:#e8e8eb;color:var(--ink-2)}
 .detail .company,.detail .role-meta{color:var(--ink-3)}
-.detail .web3-chip{background:var(--well)}
 .detail .confirm-later{color:var(--ink-2);align-self:flex-end;text-decoration:underline;text-decoration-color:var(--ink-4);text-underline-offset:3px}
 .detail .confirm-later:hover{color:var(--ink);text-decoration-color:var(--ink)}
 .detail .shortlist-state{color:var(--ink-2);font-size:13px;font-weight:500}
