@@ -19,6 +19,13 @@ interface Props {
   onClose: () => void
 }
 
+const FIT_OPTIONS = [
+  { value: 'strong', label: 'Strong 75+' },
+  { value: 'partial', label: 'Partial 55–74' },
+  { value: 'weak', label: 'Weak' },
+  { value: 'not_scored', label: 'Not scored' },
+] as const
+
 export function FilterPanel({
   filters,
   allIndustries,
@@ -74,6 +81,13 @@ export function FilterPanel({
     return [...allSources, ...extra]
   }, [allSources, filters.sources])
 
+  function toggleFit(value: string) {
+    const fit = filters.fit.includes(value)
+      ? filters.fit.filter((f) => f !== value)
+      : [...filters.fit, value]
+    onChange({ ...filters, fit })
+  }
+
   function toggleIndustry(name: string) {
     const industries = filters.industries.includes(name)
       ? filters.industries.filter((i) => i !== name)
@@ -94,6 +108,22 @@ export function FilterPanel({
   return (
     <div className="filter-popover" ref={ref}>
       <div className="fp-groups">
+        <div className="fp-group">
+          <h4>Fits you</h4>
+          <div className="fp-chips">
+            {FIT_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                className="fp-chip"
+                aria-pressed={filters.fit.includes(value)}
+                onClick={() => toggleFit(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="fp-group">
           <h4>Collected</h4>
           <div className="fp-chips">

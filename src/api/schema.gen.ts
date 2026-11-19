@@ -343,6 +343,12 @@ export interface components {
             noticeValue: number | null;
             startDate?: string;
         };
+        Band: {
+            bucket: string;
+            score: number | null;
+            text: string;
+            tiles: components["schemas"]["Tile"][];
+        };
         CollectProgress: {
             /** Format: int64 */
             done: number;
@@ -436,6 +442,12 @@ export interface components {
             start?: string;
             summary?: string;
             title: string;
+        };
+        FitMark: {
+            bucket: string;
+            dimmed: boolean;
+            score: number | null;
+            text: string;
         };
         Hours: {
             mode?: string;
@@ -665,6 +677,7 @@ export interface components {
             applied?: string;
             company: string;
             expired?: boolean;
+            fit: components["schemas"]["FitMark"];
             /** Format: int64 */
             id: number;
             industries: string[];
@@ -723,6 +736,12 @@ export interface components {
             offline: boolean;
             version: string;
         };
+        Tile: {
+            line: string;
+            name: string;
+            value: string;
+            verdict: string;
+        };
         VacancySource: {
             name: string;
             url?: string;
@@ -730,8 +749,10 @@ export interface components {
         VacancyView: {
             actions: components["schemas"]["Action"][];
             applied?: string;
+            band: components["schemas"]["Band"];
             company: string;
             expired?: boolean;
+            fit: components["schemas"]["FitMark"];
             /** Format: int64 */
             id: number;
             industries: string[];
@@ -1472,6 +1493,8 @@ export interface operations {
                 leadership?: boolean;
                 sources?: string;
                 unread?: boolean;
+                fit?: string;
+                sort?: string;
             };
             header?: never;
             path?: never;

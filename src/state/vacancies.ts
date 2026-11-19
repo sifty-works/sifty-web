@@ -16,6 +16,7 @@ const NEVER_LOADED = Symbol()
 const QUERY_KEY = 'sifty.inbox.query'
 const FILTERS_KEY = 'sifty.inbox.filters'
 const UNREAD_KEY = 'sifty.inbox.unread'
+const SORT_KEY = 'sifty.inbox.sort'
 
 function loadSavedQuery(): string {
   try {
@@ -48,6 +49,7 @@ function loadSavedFilters(): VacancyFilters {
       leadership: parsed.leadership === true,
       industries: Array.isArray(parsed.industries) ? parsed.industries.filter((v): v is string => typeof v === 'string') : [],
       sources: Array.isArray(parsed.sources) ? parsed.sources.filter((v): v is string => typeof v === 'string') : [],
+      fit: Array.isArray(parsed.fit) ? parsed.fit.filter((v): v is string => typeof v === 'string') : [],
     }
   } catch {
     return DEFAULT_FILTERS
@@ -56,7 +58,7 @@ function loadSavedFilters(): VacancyFilters {
 
 function saveFilters(f: VacancyFilters): void {
   try {
-    const isDefault = !f.collected && !f.remote && !f.leadership && f.industries.length === 0 && f.sources.length === 0
+    const isDefault = !f.collected && !f.remote && !f.leadership && f.industries.length === 0 && f.sources.length === 0 && f.fit.length === 0
     if (isDefault) {
       localStorage.removeItem(FILTERS_KEY)
     } else {
@@ -87,6 +89,26 @@ function saveUnread(v: boolean): void {
   }
 }
 
+function loadSavedSort(): 'fit' | 'newest' {
+  try {
+    return localStorage.getItem(SORT_KEY) === 'newest' ? 'newest' : 'fit'
+  } catch {
+    return 'fit'
+  }
+}
+
+function saveSort(v: 'fit' | 'newest'): void {
+  try {
+    if (v !== 'fit') {
+      localStorage.setItem(SORT_KEY, v)
+    } else {
+      localStorage.removeItem(SORT_KEY)
+    }
+  } catch {
+    // storage unavailable — ignore
+  }
+}
+
 export type VacancyListState =
   | { status: 'loading' }
   | { status: 'offline' }
@@ -110,6 +132,8 @@ export interface UseVacanciesResult {
   setFilters: (f: VacancyFilters) => void
   unread: boolean
   setUnread: (v: boolean) => void
+  sort: 'fit' | 'newest'
+  setSort: (v: 'fit' | 'newest') => void
   resetAll: () => void
 }
 
@@ -118,6 +142,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
   const [pending, setPending] = useState<string>(loadSavedQuery)
   const [filters, setFiltersState] = useState<VacancyFilters>(loadSavedFilters)
   const [unread, setUnreadState] = useState<boolean>(loadSavedUnread)
+  const [sort, setSortState] = useState<'fit' | 'newest'>(loadSavedSort)
   const [state, setState] = useState<VacancyListState>({ status: 'loading' })
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevQueryRef = useRef<string | typeof NEVER_LOADED>(NEVER_LOADED)
@@ -143,6 +168,11 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
     saveUnread(v)
   }, [])
 
+  const setSort = useCallback((v: 'fit' | 'newest') => {
+    setSortState(v)
+    saveSort(v)
+  }, [])
+
   const resetAll = useCallback(() => {
     if (debounceRef.current !== null) {
       clearTimeout(debounceRef.current)
@@ -154,6 +184,8 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
     saveFilters(DEFAULT_FILTERS)
     setUnreadState(false)
     saveUnread(false)
+    setSortState('fit')
+    saveSort('fit')
   }, [])
 
   useEffect(() => {
@@ -163,7 +195,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
     }
     prevQueryRef.current = query
 
-    listVacancies(profile, stage, query, filters, unread)
+    listVacancies(profile, stage, query, filters, unread, sort)
       .then((data) => {
         if (!cancelled) {
           setState({
@@ -193,7 +225,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
     return () => {
       cancelled = true
     }
-  }, [stage, query, filters, unread, reloadTrigger, profile])
+  }, [stage, query, filters, unread, reloadTrigger, profile, sort])
 
-  return { state, query: pending, setQuery, filters, setFilters, unread, setUnread, resetAll }
+  return { state, query: pending, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll }
 }

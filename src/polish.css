@@ -46,3 +46,8 @@
 .ind-kw-add input{flex:1;min-width:0;font-size:13px}
 .ind-kw-add button{flex:none;font-size:13px;padding:6px 11px}
 .ind-save-row{display:flex;align-items:center;gap:12px}
+/* Row company: allow badges and name to wrap as whole items; never break a word mid-character. */
+.row-company{flex-wrap:wrap;align-items:flex-start}
+.row-co-name{white-space:nowrap;overflow-wrap:normal}
+/* Band: reason text shown in the chip slot when there is no score. */
+.band-score-reason{font-size:12px;color:var(--ink-3);line-height:1.4}

@@ -52,6 +52,9 @@ export type IndustryItem = components['schemas']['IndustryItem']
 export type IndustriesResp = components['schemas']['IndustriesResp']
 export type IndustryCount = components['schemas']['IndustryCount']
 export type SourceCount = components['schemas']['SourceCount']
+export type FitMark = components['schemas']['FitMark']
+export type Band = components['schemas']['Band']
+export type Tile = components['schemas']['Tile']
 
 export interface VacancyFilters {
   collected: '' | '7' | '30'
@@ -59,6 +62,7 @@ export interface VacancyFilters {
   leadership: boolean
   industries: string[]
   sources: string[]
+  fit: string[]
 }
 
 export const DEFAULT_FILTERS: VacancyFilters = {
@@ -67,6 +71,7 @@ export const DEFAULT_FILTERS: VacancyFilters = {
   leadership: false,
   industries: [],
   sources: [],
+  fit: [],
 }
 
 /** The server returned an HTTP error with a well-formed {"error": string} body. */
@@ -124,6 +129,7 @@ export function listVacancies(
   q: string,
   filters: VacancyFilters = DEFAULT_FILTERS,
   unread = false,
+  sort = 'fit',
 ): Promise<VacancyListResponse> {
   const params = new URLSearchParams({ stage })
   if (profile !== null) params.set('profile', String(profile))
@@ -134,6 +140,8 @@ export function listVacancies(
   if (filters.industries.length > 0) params.set('industries', filters.industries.join(','))
   if (filters.sources.length > 0) params.set('sources', filters.sources.join(','))
   if (unread) params.set('unread', 'true')
+  if (filters.fit.length > 0) params.set('fit', filters.fit.join(','))
+  if (sort) params.set('sort', sort)
   return request<VacancyListResponse>('GET', `/api/vacancies?${params.toString()}`)
 }
 

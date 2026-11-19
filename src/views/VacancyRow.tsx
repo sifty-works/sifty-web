@@ -16,11 +16,23 @@ export function VacancyRow({ row, selected, onSelect, decidedTo }: Props) {
     decidedTo === 'dismissed' ? 'session-no' : '',
   ].filter(Boolean).join(' ')
 
+  const { fit } = row
+  const scoreClasses = [
+    'score',
+    fit.bucket.toLowerCase() === 'strong' ? 'strong' : '',
+    fit.dimmed ? 'previous' : '',
+  ].filter(Boolean).join(' ')
+
   return (
     <button className={classes} onClick={onSelect} aria-pressed={selected}>
       <div className="row-company">
         {row.industries.map((ind) => <span key={ind} className="ind-badge">{ind}</span>)}
-        {row.company}
+        <span className="row-co-name">{row.company}</span>
+      </div>
+      <div className="row-icons">
+        {fit.score !== null && (
+          <span className={scoreClasses} title={fit.text}>{fit.score}</span>
+        )}
       </div>
       <strong>
         {decidedTo === 'shortlist' && <span className="yes-check" title="Shortlisted">✓ </span>}

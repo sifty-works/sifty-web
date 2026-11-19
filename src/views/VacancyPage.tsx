@@ -1,6 +1,7 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
+import { FitBand } from './FitBand.tsx'
 
 // Keys that map to keyboard shortcut hints shown as <kbd> caps.
 const KEY_HINT: Record<string, string> = { select: 'Y', dismiss: 'N', apply: 'A' }
@@ -23,6 +24,13 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
   // Shortlist layout when the server supplies an 'apply' action.
   const applyAction = mainActions.find((a) => a.key === 'apply')
   const isShortlist = applyAction != null
+
+  // Application tab is unavailable until its slice ships.
+  const appAvailable = false
+  const appDisabledHint = view.stage === 'inbox'
+    ? 'Shortlist this role to open Application'
+    : 'Application is not available yet'
+  const [activeTab, setActiveTab] = useState<'overview' | 'application'>('overview')
 
   return (
     <>
@@ -120,20 +128,51 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
         </div>
       </div>
 
-      <section className="listing-panel" style={{ marginTop: 24 }}>
-        <header className="panel-head">
-          <h2>Listing text</h2>
-          {view.listing.state && <span className="panel-sub">{view.listing.state}</span>}
-        </header>
-        {view.listing.html ? (
-          <div
-            className="listing-text"
-            dangerouslySetInnerHTML={{ __html: view.listing.html }}
-          />
-        ) : (
-          <p className="listing-missing">{view.listing.empty}</p>
-        )}
-      </section>
+      <div className="detail-tabs-row">
+        <div className="detail-tabs" role="tablist">
+          <button
+            role="tab"
+            className={activeTab === 'overview' ? 'active' : undefined}
+            aria-selected={activeTab === 'overview'}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </button>
+          <button
+            role="tab"
+            className={activeTab === 'application' ? 'active' : undefined}
+            aria-selected={activeTab === 'application'}
+            disabled={!appAvailable}
+            title={appDisabledHint}
+            onClick={() => { if (appAvailable) setActiveTab('application') }}
+          >
+            Application
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'overview' && (
+        <>
+          <FitBand band={view.band} />
+
+          <div className="overview-stack">
+            <section className="listing-panel">
+              <header className="panel-head">
+                <h2>Listing text</h2>
+                {view.listing.state && <span className="panel-sub">{view.listing.state}</span>}
+              </header>
+              {view.listing.html ? (
+                <div
+                  className="listing-text"
+                  dangerouslySetInnerHTML={{ __html: view.listing.html }}
+                />
+              ) : (
+                <p className="listing-missing">{view.listing.empty}</p>
+              )}
+            </section>
+          </div>
+        </>
+      )}
     </>
   )
 }

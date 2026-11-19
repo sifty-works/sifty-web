@@ -91,6 +91,27 @@ components:
             required:
                 - noticeValue
             type: object
+        Band:
+            properties:
+                bucket:
+                    type: string
+                score:
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
+                text:
+                    type: string
+                tiles:
+                    items:
+                        $ref: '#/components/schemas/Tile'
+                    type: array
+            required:
+                - score
+                - bucket
+                - text
+                - tiles
+            type: object
         CollectProgress:
             properties:
                 done:
@@ -327,6 +348,25 @@ components:
             required:
                 - company
                 - title
+            type: object
+        FitMark:
+            properties:
+                bucket:
+                    type: string
+                dimmed:
+                    type: boolean
+                score:
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
+                text:
+                    type: string
+            required:
+                - score
+                - bucket
+                - text
+                - dimmed
             type: object
         Hours:
             properties:
@@ -1046,6 +1086,8 @@ components:
                     type: string
                 expired:
                     type: boolean
+                fit:
+                    $ref: '#/components/schemas/FitMark'
                 id:
                     format: int64
                     type: integer
@@ -1079,6 +1121,7 @@ components:
                 - industries
                 - unread
                 - stage
+                - fit
             type: object
         SetActiveReq:
             properties:
@@ -1210,6 +1253,22 @@ components:
                 - catalogue
                 - attention
             type: object
+        Tile:
+            properties:
+                line:
+                    type: string
+                name:
+                    type: string
+                value:
+                    type: string
+                verdict:
+                    type: string
+            required:
+                - name
+                - value
+                - line
+                - verdict
+            type: object
         VacancySource:
             properties:
                 name:
@@ -1227,10 +1286,14 @@ components:
                     type: array
                 applied:
                     type: string
+                band:
+                    $ref: '#/components/schemas/Band'
                 company:
                     type: string
                 expired:
                     type: boolean
+                fit:
+                    $ref: '#/components/schemas/FitMark'
                 id:
                     format: int64
                     type: integer
@@ -1274,10 +1337,12 @@ components:
                 - industries
                 - unread
                 - stage
+                - fit
                 - sources
                 - original
                 - actions
                 - listing
+                - band
             type: object
         VersionResp:
             properties:
@@ -1823,6 +1888,14 @@ paths:
                   name: unread
                   schema:
                     type: boolean
+                - in: query
+                  name: fit
+                  schema:
+                    type: string
+                - in: query
+                  name: sort
+                  schema:
+                    type: string
             responses:
                 4XX:
                     $ref: '#/components/responses/Error'

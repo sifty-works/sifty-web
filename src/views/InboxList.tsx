@@ -72,7 +72,7 @@ export function InboxList({
   profile: profileProp,
 }: Props) {
   const [blockCount, setBlockCount] = useState(0)
-  const { state, query, setQuery, filters, setFilters, unread, setUnread, resetAll } = useVacancies(
+  const { state, query, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll } = useVacancies(
     stage,
     (reloadTrigger ?? 0) + blockCount,
     profileProp ?? null,
@@ -116,6 +116,7 @@ export function InboxList({
     filters.leadership,
     ...filters.industries.map(() => true),
     ...filters.sources.map(() => true),
+    ...filters.fit.map(() => true),
   ].filter(Boolean).length
 
   // Reset banner dismissed state when server comes back.
@@ -280,6 +281,7 @@ export function InboxList({
           unread: pageView.unread,
           stage: pageView.stage,
           industries: pageView.industries,
+          fit: pageView.fit,
         }
         const idx = displayRows.findIndex((r) => r.id === pageView.id)
         const newDecision: SessionDecision = {
@@ -448,6 +450,12 @@ export function InboxList({
               />
             )}
           </div>
+          {!isArchive && (
+            <div className="sort-toggle" role="group" aria-label="Sort roles">
+              <button aria-pressed={sort === 'fit'} onClick={() => setSort('fit')}>Best fit</button>
+              <button aria-pressed={sort === 'newest'} onClick={() => setSort('newest')}>Newest</button>
+            </div>
+          )}
         </div>
         {unread && !isArchive && (
           <p className="unread-note">Opening marks a role read. It stays here until you choose another role.</p>
