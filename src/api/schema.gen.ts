@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/active-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiActive-profile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/collect": {
         parameters: {
             query?: never;
@@ -44,6 +60,102 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getApiExclusionsPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiMe"];
+        trace?: never;
+    };
+    "/api/me/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiMePhoto"];
+        put: operations["putApiMePhoto"];
+        post?: never;
+        delete: operations["deleteApiMePhoto"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiProfiles"];
+        put?: never;
+        post: operations["postApiProfiles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiProfilesId"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteApiProfilesId"];
+        options?: never;
+        head?: never;
+        patch: operations["patchApiProfilesId"];
+        trace?: never;
+    };
+    "/api/qa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiQa"];
+        put?: never;
+        post: operations["postApiQa"];
+        delete: operations["deleteApiQa"];
+        options?: never;
+        head?: never;
+        patch: operations["patchApiQa"];
+        trace?: never;
+    };
+    "/api/reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiReference"];
         put?: never;
         post?: never;
         delete?: never;
@@ -184,6 +296,9 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AbsentSkill: {
+            name: string;
+        };
         Action: {
             /** @enum {string} */
             confirm?: "outcome" | "delete";
@@ -198,6 +313,8 @@ export interface components {
         AddExclusionReq: {
             /** @enum {string} */
             kind: "word" | "company";
+            /** Format: int64 */
+            profile?: number;
             value: string;
         };
         Attention: {
@@ -205,12 +322,31 @@ export interface components {
             count: number;
             text: string;
         };
+        Availability: {
+            noticeUnit?: string;
+            noticeValue: number | null;
+            startDate?: string;
+        };
         CollectProgress: {
             /** Format: int64 */
             done: number;
             text: string;
             /** Format: int64 */
             total: number;
+        };
+        Compensation: {
+            cashMin: number | null;
+            cashTarget: number | null;
+            crypto?: string;
+            currency?: string;
+            dayRates?: components["schemas"]["DayRates"] | null;
+            equityOnTop: boolean | null;
+            grossNet?: string;
+            period?: string;
+        };
+        ConfirmedFact: {
+            have: boolean;
+            text: string;
         };
         Counts: {
             /** Format: int64 */
@@ -223,6 +359,14 @@ export interface components {
             inbox: number;
             /** Format: int64 */
             shortlist: number;
+        };
+        CreateProfileReq: {
+            name: string;
+        };
+        DayRates: {
+            currency?: string;
+            min: number | null;
+            target: number | null;
         };
         DecisionReq: {
             confirmed: boolean;
@@ -241,9 +385,21 @@ export interface components {
         DeleteExclusionReq: {
             /** Format: int64 */
             id: number;
+            /** Format: int64 */
+            profile?: number;
         };
         DeleteVacancyResp: {
             counts: components["schemas"]["Counts"];
+        };
+        Demographics: {
+            criminalRecord?: string;
+            disability?: string;
+            ethnicity?: string;
+            gender?: string;
+            genderDescription?: string;
+            race?: string[];
+            raceDescription?: string;
+            veteranStatus?: string;
         };
         Exclusion: {
             /** Format: int64 */
@@ -255,6 +411,25 @@ export interface components {
         };
         ExclusionsResp: {
             exclusions: components["schemas"]["Exclusion"][];
+        };
+        Experience: {
+            company: string;
+            current?: boolean;
+            end?: string;
+            skills?: string[];
+            start?: string;
+            summary?: string;
+            title: string;
+        };
+        Hours: {
+            mode?: string;
+            weekly?: number | null;
+            weeklyMax?: number | null;
+            weeklyMin?: number | null;
+        };
+        Language: {
+            level?: string;
+            name: string;
         };
         LastRun: {
             finished: string;
@@ -273,6 +448,52 @@ export interface components {
             html: string;
             state: string;
         };
+        Location: {
+            city?: string;
+            country: string;
+        };
+        MeData: {
+            absentSkills?: components["schemas"]["AbsentSkill"][];
+            availability?: components["schemas"]["Availability"] | null;
+            confirmedFacts?: components["schemas"]["ConfirmedFact"][];
+            currentLocation?: components["schemas"]["Location"] | null;
+            demographics?: components["schemas"]["Demographics"] | null;
+            displayName?: string;
+            email?: string;
+            experience?: components["schemas"]["Experience"][];
+            github?: string;
+            languages?: components["schemas"]["Language"][];
+            legalName?: string;
+            linkedin?: string;
+            phone?: string;
+            skills?: components["schemas"]["Skill"][];
+            website?: string;
+            workAuthorizations?: components["schemas"]["WorkAuthorization"][];
+            x?: string;
+        };
+        MePatchReq: {
+            absentSkills?: components["schemas"]["AbsentSkill"][] | null;
+            availability?: components["schemas"]["Availability"] | null;
+            confirmedFacts?: components["schemas"]["ConfirmedFact"][] | null;
+            currentLocation?: components["schemas"]["Location"] | null;
+            demographics?: components["schemas"]["Demographics"] | null;
+            displayName?: string | null;
+            email?: string | null;
+            experience?: components["schemas"]["Experience"][] | null;
+            github?: string | null;
+            languages?: components["schemas"]["Language"][] | null;
+            legalName?: string | null;
+            linkedin?: string | null;
+            phone?: string | null;
+            skills?: components["schemas"]["Skill"][] | null;
+            website?: string | null;
+            workAuthorizations?: components["schemas"]["WorkAuthorization"][] | null;
+            x?: string | null;
+        };
+        OptionItem: {
+            label: string;
+            value: string;
+        };
         Outcome: {
             confirmed?: boolean;
             key: string;
@@ -283,6 +504,122 @@ export interface components {
         };
         PreviewResp: {
             text: string;
+        };
+        ProfileData: {
+            allOf?: string[];
+            compensation?: components["schemas"]["Compensation"] | null;
+            engagement?: string[];
+            headline?: string;
+            hours?: components["schemas"]["Hours"] | null;
+            keywords?: string[];
+            name: string;
+            otherRequirements?: string;
+            preferredLocations?: components["schemas"]["Location"][];
+            relocation?: string;
+            targetIndustries?: string[];
+            targetRoles?: string[];
+            timeZones?: string[];
+            workModes?: string[];
+        };
+        ProfileDetailResp: {
+            active: boolean;
+            effective: components["schemas"]["ProfileData"];
+            headline: string;
+            /** Format: int64 */
+            id: number;
+            inherited?: string;
+            name: string;
+            own: components["schemas"]["ProfileData"];
+        };
+        ProfileListItem: {
+            active: boolean;
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
+        ProfileListResp: {
+            profiles: components["schemas"]["ProfileListItem"][];
+        };
+        ProfilePatchReq: {
+            allOf?: string[] | null;
+            compensation?: components["schemas"]["Compensation"] | null;
+            engagement?: string[] | null;
+            headline?: string | null;
+            hours?: components["schemas"]["Hours"] | null;
+            keywords?: string[] | null;
+            name?: string | null;
+            otherRequirements?: string | null;
+            preferredLocations?: components["schemas"]["Location"][] | null;
+            relocation?: string | null;
+            targetIndustries?: string[] | null;
+            targetRoles?: string[] | null;
+            timeZones?: string[] | null;
+            workModes?: string[] | null;
+        };
+        QACreateReq: {
+            answer?: string;
+            question: string;
+        };
+        QADeleteReq: {
+            /** Format: int64 */
+            id: number;
+        };
+        QAItem: {
+            answer: string;
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            question: string;
+            updatedAt: string;
+        };
+        QAListResp: {
+            items: components["schemas"]["QAItem"][];
+        };
+        QAPatchReq: {
+            answer?: string | null;
+            /** Format: int64 */
+            id: number;
+            question?: string | null;
+        };
+        ReferenceCountry: {
+            code: string;
+            name: string;
+        };
+        ReferenceOptions: {
+            criminalRecord: components["schemas"]["OptionItem"][];
+            currencies: components["schemas"]["OptionItem"][];
+            disability: components["schemas"]["OptionItem"][];
+            engagement: components["schemas"]["OptionItem"][];
+            ethnicity: components["schemas"]["OptionItem"][];
+            gender: components["schemas"]["OptionItem"][];
+            languageLevels: components["schemas"]["OptionItem"][];
+            noticeUnits: components["schemas"]["OptionItem"][];
+            paymentMethods: components["schemas"]["OptionItem"][];
+            periods: components["schemas"]["OptionItem"][];
+            race: components["schemas"]["OptionItem"][];
+            relocation: components["schemas"]["OptionItem"][];
+            skillLevels: components["schemas"]["OptionItem"][];
+            veteranStatus: components["schemas"]["OptionItem"][];
+            workModes: components["schemas"]["OptionItem"][];
+            workingTime: components["schemas"]["OptionItem"][];
+        };
+        ReferenceRegion: {
+            aliases: string[];
+            code: string;
+            countries: string[];
+            name: string;
+            /** Format: int64 */
+            size: number;
+        };
+        ReferenceResp: {
+            countries: components["schemas"]["ReferenceCountry"][];
+            options: components["schemas"]["ReferenceOptions"];
+            regions: components["schemas"]["ReferenceRegion"][];
+            timeZoneBands: components["schemas"]["ReferenceTimeZoneBand"][];
+        };
+        ReferenceTimeZoneBand: {
+            code: string;
+            label: string;
         };
         Row: {
             applied?: string;
@@ -297,6 +634,14 @@ export interface components {
             stage: "inbox" | "shortlist" | "applied" | "dismissed";
             title: string;
             unread: boolean;
+        };
+        SetActiveReq: {
+            /** Format: int64 */
+            id: number;
+        };
+        Skill: {
+            level?: string;
+            name: string;
         };
         Source: {
             enabled: boolean;
@@ -358,6 +703,10 @@ export interface components {
             api: string;
             version: string;
         };
+        WorkAuthorization: {
+            country: string;
+            status?: string;
+        };
         addSourceReq: {
             name: string;
             url: string;
@@ -397,6 +746,31 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    "putApiActive-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetActiveReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
     postApiCollect: {
         parameters: {
             query?: never;
@@ -424,7 +798,9 @@ export interface operations {
     };
     getApiExclusions: {
         parameters: {
-            query?: never;
+            query?: {
+                profile?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -512,6 +888,337 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreviewResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeData"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    patchApiMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MePatchReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeData"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiMePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    putApiMePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    deleteApiMePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProfileReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileDetailResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiProfilesId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileDetailResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    deleteApiProfilesId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    patchApiProfilesId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfilePatchReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileDetailResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiQa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QAListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiQa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QACreateReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QAItem"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    deleteApiQa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QADeleteReq"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    patchApiQa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QAPatchReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QAItem"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferenceResp"];
                 };
             };
             "4XX": components["responses"]["Error"];

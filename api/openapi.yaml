@@ -13,6 +13,13 @@ components:
                         type: object
             description: Error
     schemas:
+        AbsentSkill:
+            properties:
+                name:
+                    type: string
+            required:
+                - name
+            type: object
         Action:
             properties:
                 confirm:
@@ -50,6 +57,9 @@ components:
                         - word
                         - company
                     type: string
+                profile:
+                    format: int64
+                    type: integer
                 value:
                     type: string
             required:
@@ -67,6 +77,20 @@ components:
                 - count
                 - text
             type: object
+        Availability:
+            properties:
+                noticeUnit:
+                    type: string
+                noticeValue:
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
+                startDate:
+                    type: string
+            required:
+                - noticeValue
+            type: object
         CollectProgress:
             properties:
                 done:
@@ -81,6 +105,49 @@ components:
                 - done
                 - total
                 - text
+            type: object
+        Compensation:
+            properties:
+                cashMin:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
+                cashTarget:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
+                crypto:
+                    type: string
+                currency:
+                    type: string
+                dayRates:
+                    oneOf:
+                        - $ref: '#/components/schemas/DayRates'
+                        - type: "null"
+                equityOnTop:
+                    oneOf:
+                        - type: boolean
+                        - type: "null"
+                grossNet:
+                    type: string
+                period:
+                    type: string
+            required:
+                - cashMin
+                - cashTarget
+                - equityOnTop
+            type: object
+        ConfirmedFact:
+            properties:
+                have:
+                    type: boolean
+                text:
+                    type: string
+            required:
+                - text
+                - have
             type: object
         Counts:
             properties:
@@ -105,6 +172,31 @@ components:
                 - applied
                 - dismissed
                 - archive
+            type: object
+        CreateProfileReq:
+            properties:
+                name:
+                    type: string
+            required:
+                - name
+            type: object
+        DayRates:
+            properties:
+                currency:
+                    type: string
+                min:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
+                target:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
+            required:
+                - min
+                - target
             type: object
         DecisionReq:
             properties:
@@ -151,6 +243,9 @@ components:
                 id:
                     format: int64
                     type: integer
+                profile:
+                    format: int64
+                    type: integer
             required:
                 - id
             type: object
@@ -160,6 +255,27 @@ components:
                     $ref: '#/components/schemas/Counts'
             required:
                 - counts
+            type: object
+        Demographics:
+            properties:
+                criminalRecord:
+                    type: string
+                disability:
+                    type: string
+                ethnicity:
+                    type: string
+                gender:
+                    type: string
+                genderDescription:
+                    type: string
+                race:
+                    items:
+                        type: string
+                    type: array
+                raceDescription:
+                    type: string
+                veteranStatus:
+                    type: string
             type: object
         Exclusion:
             properties:
@@ -189,6 +305,57 @@ components:
                     type: array
             required:
                 - exclusions
+            type: object
+        Experience:
+            properties:
+                company:
+                    type: string
+                current:
+                    type: boolean
+                end:
+                    type: string
+                skills:
+                    items:
+                        type: string
+                    type: array
+                start:
+                    type: string
+                summary:
+                    type: string
+                title:
+                    type: string
+            required:
+                - company
+                - title
+            type: object
+        Hours:
+            properties:
+                mode:
+                    type: string
+                weekly:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
+                weeklyMax:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
+                weeklyMin:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
+            type: object
+        Language:
+            properties:
+                level:
+                    type: string
+                name:
+                    type: string
+            required:
+                - name
             type: object
         LastRun:
             properties:
@@ -234,6 +401,163 @@ components:
                 - state
                 - html
             type: object
+        Location:
+            properties:
+                city:
+                    type: string
+                country:
+                    type: string
+            required:
+                - country
+            type: object
+        MeData:
+            properties:
+                absentSkills:
+                    items:
+                        $ref: '#/components/schemas/AbsentSkill'
+                    type: array
+                availability:
+                    oneOf:
+                        - $ref: '#/components/schemas/Availability'
+                        - type: "null"
+                confirmedFacts:
+                    items:
+                        $ref: '#/components/schemas/ConfirmedFact'
+                    type: array
+                currentLocation:
+                    oneOf:
+                        - $ref: '#/components/schemas/Location'
+                        - type: "null"
+                demographics:
+                    oneOf:
+                        - $ref: '#/components/schemas/Demographics'
+                        - type: "null"
+                displayName:
+                    type: string
+                email:
+                    type: string
+                experience:
+                    items:
+                        $ref: '#/components/schemas/Experience'
+                    type: array
+                github:
+                    type: string
+                languages:
+                    items:
+                        $ref: '#/components/schemas/Language'
+                    type: array
+                legalName:
+                    type: string
+                linkedin:
+                    type: string
+                phone:
+                    type: string
+                skills:
+                    items:
+                        $ref: '#/components/schemas/Skill'
+                    type: array
+                website:
+                    type: string
+                workAuthorizations:
+                    items:
+                        $ref: '#/components/schemas/WorkAuthorization'
+                    type: array
+                x:
+                    type: string
+            type: object
+        MePatchReq:
+            properties:
+                absentSkills:
+                    oneOf:
+                        - items:
+                            $ref: '#/components/schemas/AbsentSkill'
+                          type: array
+                        - type: "null"
+                availability:
+                    oneOf:
+                        - $ref: '#/components/schemas/Availability'
+                        - type: "null"
+                confirmedFacts:
+                    oneOf:
+                        - items:
+                            $ref: '#/components/schemas/ConfirmedFact'
+                          type: array
+                        - type: "null"
+                currentLocation:
+                    oneOf:
+                        - $ref: '#/components/schemas/Location'
+                        - type: "null"
+                demographics:
+                    oneOf:
+                        - $ref: '#/components/schemas/Demographics'
+                        - type: "null"
+                displayName:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                email:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                experience:
+                    oneOf:
+                        - items:
+                            $ref: '#/components/schemas/Experience'
+                          type: array
+                        - type: "null"
+                github:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                languages:
+                    oneOf:
+                        - items:
+                            $ref: '#/components/schemas/Language'
+                          type: array
+                        - type: "null"
+                legalName:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                linkedin:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                phone:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                skills:
+                    oneOf:
+                        - items:
+                            $ref: '#/components/schemas/Skill'
+                          type: array
+                        - type: "null"
+                website:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                workAuthorizations:
+                    oneOf:
+                        - items:
+                            $ref: '#/components/schemas/WorkAuthorization'
+                          type: array
+                        - type: "null"
+                x:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+            type: object
+        OptionItem:
+            properties:
+                label:
+                    type: string
+                value:
+                    type: string
+            required:
+                - value
+                - label
+            type: object
         Outcome:
             properties:
                 confirmed:
@@ -261,6 +585,394 @@ components:
                     type: string
             required:
                 - text
+            type: object
+        ProfileData:
+            properties:
+                allOf:
+                    items:
+                        type: string
+                    type: array
+                compensation:
+                    oneOf:
+                        - $ref: '#/components/schemas/Compensation'
+                        - type: "null"
+                engagement:
+                    items:
+                        type: string
+                    type: array
+                headline:
+                    type: string
+                hours:
+                    oneOf:
+                        - $ref: '#/components/schemas/Hours'
+                        - type: "null"
+                keywords:
+                    items:
+                        type: string
+                    type: array
+                name:
+                    type: string
+                otherRequirements:
+                    type: string
+                preferredLocations:
+                    items:
+                        $ref: '#/components/schemas/Location'
+                    type: array
+                relocation:
+                    type: string
+                targetIndustries:
+                    items:
+                        type: string
+                    type: array
+                targetRoles:
+                    items:
+                        type: string
+                    type: array
+                timeZones:
+                    items:
+                        type: string
+                    type: array
+                workModes:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - name
+            type: object
+        ProfileDetailResp:
+            properties:
+                active:
+                    type: boolean
+                effective:
+                    $ref: '#/components/schemas/ProfileData'
+                headline:
+                    type: string
+                id:
+                    format: int64
+                    type: integer
+                inherited:
+                    type: string
+                name:
+                    type: string
+                own:
+                    $ref: '#/components/schemas/ProfileData'
+            required:
+                - id
+                - name
+                - active
+                - own
+                - effective
+                - headline
+            type: object
+        ProfileListItem:
+            properties:
+                active:
+                    type: boolean
+                id:
+                    format: int64
+                    type: integer
+                name:
+                    type: string
+            required:
+                - id
+                - name
+                - active
+            type: object
+        ProfileListResp:
+            properties:
+                profiles:
+                    items:
+                        $ref: '#/components/schemas/ProfileListItem'
+                    type: array
+            required:
+                - profiles
+            type: object
+        ProfilePatchReq:
+            properties:
+                allOf:
+                    oneOf:
+                        - items:
+                            type: string
+                          type: array
+                        - type: "null"
+                compensation:
+                    oneOf:
+                        - $ref: '#/components/schemas/Compensation'
+                        - type: "null"
+                engagement:
+                    oneOf:
+                        - items:
+                            type: string
+                          type: array
+                        - type: "null"
+                headline:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                hours:
+                    oneOf:
+                        - $ref: '#/components/schemas/Hours'
+                        - type: "null"
+                keywords:
+                    oneOf:
+                        - items:
+                            type: string
+                          type: array
+                        - type: "null"
+                name:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                otherRequirements:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                preferredLocations:
+                    oneOf:
+                        - items:
+                            $ref: '#/components/schemas/Location'
+                          type: array
+                        - type: "null"
+                relocation:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                targetIndustries:
+                    oneOf:
+                        - items:
+                            type: string
+                          type: array
+                        - type: "null"
+                targetRoles:
+                    oneOf:
+                        - items:
+                            type: string
+                          type: array
+                        - type: "null"
+                timeZones:
+                    oneOf:
+                        - items:
+                            type: string
+                          type: array
+                        - type: "null"
+                workModes:
+                    oneOf:
+                        - items:
+                            type: string
+                          type: array
+                        - type: "null"
+            type: object
+        QACreateReq:
+            properties:
+                answer:
+                    type: string
+                question:
+                    type: string
+            required:
+                - question
+            type: object
+        QADeleteReq:
+            properties:
+                id:
+                    format: int64
+                    type: integer
+            required:
+                - id
+            type: object
+        QAItem:
+            properties:
+                answer:
+                    type: string
+                createdAt:
+                    type: string
+                id:
+                    format: int64
+                    type: integer
+                question:
+                    type: string
+                updatedAt:
+                    type: string
+            required:
+                - id
+                - question
+                - answer
+                - createdAt
+                - updatedAt
+            type: object
+        QAListResp:
+            properties:
+                items:
+                    items:
+                        $ref: '#/components/schemas/QAItem'
+                    type: array
+            required:
+                - items
+            type: object
+        QAPatchReq:
+            properties:
+                answer:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+                id:
+                    format: int64
+                    type: integer
+                question:
+                    oneOf:
+                        - type: string
+                        - type: "null"
+            required:
+                - id
+            type: object
+        ReferenceCountry:
+            properties:
+                code:
+                    type: string
+                name:
+                    type: string
+            required:
+                - code
+                - name
+            type: object
+        ReferenceOptions:
+            properties:
+                criminalRecord:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                currencies:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                disability:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                engagement:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                ethnicity:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                gender:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                languageLevels:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                noticeUnits:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                paymentMethods:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                periods:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                race:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                relocation:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                skillLevels:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                veteranStatus:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                workModes:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+                workingTime:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
+            required:
+                - skillLevels
+                - languageLevels
+                - currencies
+                - periods
+                - paymentMethods
+                - engagement
+                - workingTime
+                - workModes
+                - relocation
+                - noticeUnits
+                - gender
+                - race
+                - ethnicity
+                - disability
+                - veteranStatus
+                - criminalRecord
+            type: object
+        ReferenceRegion:
+            properties:
+                aliases:
+                    items:
+                        type: string
+                    type: array
+                code:
+                    type: string
+                countries:
+                    items:
+                        type: string
+                    type: array
+                name:
+                    type: string
+                size:
+                    format: int64
+                    type: integer
+            required:
+                - code
+                - name
+                - size
+                - aliases
+                - countries
+            type: object
+        ReferenceResp:
+            properties:
+                countries:
+                    items:
+                        $ref: '#/components/schemas/ReferenceCountry'
+                    type: array
+                options:
+                    $ref: '#/components/schemas/ReferenceOptions'
+                regions:
+                    items:
+                        $ref: '#/components/schemas/ReferenceRegion'
+                    type: array
+                timeZoneBands:
+                    items:
+                        $ref: '#/components/schemas/ReferenceTimeZoneBand'
+                    type: array
+            required:
+                - countries
+                - regions
+                - timeZoneBands
+                - options
+            type: object
+        ReferenceTimeZoneBand:
+            properties:
+                code:
+                    type: string
+                label:
+                    type: string
+            required:
+                - code
+                - label
             type: object
         Row:
             properties:
@@ -298,6 +1010,23 @@ components:
                 - published
                 - unread
                 - stage
+            type: object
+        SetActiveReq:
+            properties:
+                id:
+                    format: int64
+                    type: integer
+            required:
+                - id
+            type: object
+        Skill:
+            properties:
+                level:
+                    type: string
+                name:
+                    type: string
+            required:
+                - name
             type: object
         Source:
             properties:
@@ -473,6 +1202,15 @@ components:
                 - version
                 - api
             type: object
+        WorkAuthorization:
+            properties:
+                country:
+                    type: string
+                status:
+                    type: string
+            required:
+                - country
+            type: object
         addSourceReq:
             properties:
                 name:
@@ -522,6 +1260,24 @@ info:
     version: dev
 openapi: 3.1.0
 paths:
+    /api/active-profile:
+        put:
+            operationId: putApiActive-profile
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SetActiveReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProfileListResp'
+                    description: OK
     /api/collect:
         post:
             operationId: postApiCollect
@@ -560,6 +1316,12 @@ paths:
                     description: OK
         get:
             operationId: getApiExclusions
+            parameters:
+                - in: query
+                  name: profile
+                  schema:
+                    format: int64
+                    type: integer
             responses:
                 4XX:
                     $ref: '#/components/responses/Error'
@@ -611,6 +1373,197 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PreviewResp'
+                    description: OK
+    /api/me:
+        get:
+            operationId: getApiMe
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MeData'
+                    description: OK
+        patch:
+            operationId: patchApiMe
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MePatchReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MeData'
+                    description: OK
+    /api/me/photo:
+        delete:
+            operationId: deleteApiMePhoto
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+        get:
+            operationId: getApiMePhoto
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+        put:
+            operationId: putApiMePhoto
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+    /api/profiles:
+        get:
+            operationId: getApiProfiles
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProfileListResp'
+                    description: OK
+        post:
+            operationId: postApiProfiles
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateProfileReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProfileDetailResp'
+                    description: OK
+    /api/profiles/{id}:
+        delete:
+            operationId: deleteApiProfilesId
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProfileListResp'
+                    description: OK
+        get:
+            operationId: getApiProfilesId
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProfileDetailResp'
+                    description: OK
+        patch:
+            operationId: patchApiProfilesId
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProfilePatchReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProfileDetailResp'
+                    description: OK
+    /api/qa:
+        delete:
+            operationId: deleteApiQa
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/QADeleteReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+        get:
+            operationId: getApiQa
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/QAListResp'
+                    description: OK
+        patch:
+            operationId: patchApiQa
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/QAPatchReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/QAItem'
+                    description: OK
+        post:
+            operationId: postApiQa
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/QACreateReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/QAItem'
+                    description: OK
+    /api/reference:
+        get:
+            operationId: getApiReference
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ReferenceResp'
                     description: OK
     /api/sources:
         delete:
