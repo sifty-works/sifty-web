@@ -117,13 +117,6 @@ export function FilterPanel({
                 30 days
               </button>
             </div>
-            <button
-              className="fp-chip"
-              aria-pressed={filters.hideExpired}
-              onClick={() => onChange({ ...filters, hideExpired: !filters.hideExpired })}
-            >
-              Hide expired
-            </button>
           </div>
         </div>
 

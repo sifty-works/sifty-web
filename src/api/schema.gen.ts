@@ -1468,7 +1468,6 @@ export interface operations {
                 q: string;
                 industries?: string;
                 collected?: string;
-                hideExpired?: boolean;
                 remote?: boolean;
                 leadership?: boolean;
                 sources?: string;

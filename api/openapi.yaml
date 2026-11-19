@@ -1808,10 +1808,6 @@ paths:
                   schema:
                     type: string
                 - in: query
-                  name: hideExpired
-                  schema:
-                    type: boolean
-                - in: query
                   name: remote
                   schema:
                     type: boolean

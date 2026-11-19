@@ -112,7 +112,6 @@ export function InboxList({
 
   const activeFilterCount = [
     filters.collected !== '',
-    filters.hideExpired,
     filters.remote,
     filters.leadership,
     ...filters.industries.map(() => true),

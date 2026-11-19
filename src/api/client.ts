@@ -55,7 +55,6 @@ export type SourceCount = components['schemas']['SourceCount']
 
 export interface VacancyFilters {
   collected: '' | '7' | '30'
-  hideExpired: boolean
   remote: boolean
   leadership: boolean
   industries: string[]
@@ -64,7 +63,6 @@ export interface VacancyFilters {
 
 export const DEFAULT_FILTERS: VacancyFilters = {
   collected: '',
-  hideExpired: false,
   remote: false,
   leadership: false,
   industries: [],
@@ -131,7 +129,6 @@ export function listVacancies(
   if (profile !== null) params.set('profile', String(profile))
   if (q) params.set('q', q)
   if (filters.collected) params.set('collected', filters.collected)
-  if (filters.hideExpired) params.set('hideExpired', 'true')
   if (filters.remote) params.set('remote', 'true')
   if (filters.leadership) params.set('leadership', 'true')
   if (filters.industries.length > 0) params.set('industries', filters.industries.join(','))
