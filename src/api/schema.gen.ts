@@ -601,6 +601,16 @@ export interface components {
                 [key: string]: components["schemas"]["ProviderState"];
             };
         };
+        OfferTile: {
+            key: string;
+            label: string;
+            value: string;
+        };
+        OfferView: {
+            empty?: string;
+            items: string[];
+            tiles: components["schemas"]["OfferTile"][];
+        };
         OptionItem: {
             label: string;
             value: string;
@@ -857,6 +867,7 @@ export interface components {
             industries: string[];
             listing: components["schemas"]["ListingView"];
             location: string;
+            offer: components["schemas"]["OfferView"];
             original: string;
             published: string;
             reason?: string;

@@ -675,6 +675,35 @@ components:
             required:
                 - paused
             type: object
+        OfferTile:
+            properties:
+                key:
+                    type: string
+                label:
+                    type: string
+                value:
+                    type: string
+            required:
+                - key
+                - label
+                - value
+            type: object
+        OfferView:
+            properties:
+                empty:
+                    type: string
+                items:
+                    items:
+                        type: string
+                    type: array
+                tiles:
+                    items:
+                        $ref: '#/components/schemas/OfferTile'
+                    type: array
+            required:
+                - tiles
+                - items
+            type: object
         OptionItem:
             properties:
                 label:
@@ -1434,6 +1463,8 @@ components:
                     $ref: '#/components/schemas/ListingView'
                 location:
                     type: string
+                offer:
+                    $ref: '#/components/schemas/OfferView'
                 original:
                     type: string
                 published:
@@ -1472,6 +1503,7 @@ components:
                 - actions
                 - listing
                 - band
+                - offer
             type: object
         VersionResp:
             properties:

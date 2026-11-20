@@ -3,6 +3,7 @@ import { VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { FitBand } from './FitBand.tsx'
 import { WhatTheyAsk } from './WhatTheyAsk.tsx'
+import { WhatTheyOffer } from './WhatTheyOffer.tsx'
 
 const KEY_HINT: Record<string, string> = { select: 'Y', dismiss: 'N', apply: 'A' }
 const GLYPH: Record<string, string> = { select: '✓', dismiss: '✕', confirm: '✓', delete: '×' }
@@ -163,6 +164,7 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
 
           <div className="what-cards" style={{ marginTop: 14 }}>
             <WhatTheyAsk band={view.band} onDecision={onSkillDecision} />
+            <WhatTheyOffer offer={view.offer} />
           </div>
 
           <div className="overview-stack">
