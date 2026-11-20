@@ -846,6 +846,7 @@ export interface components {
             version: string;
         };
         Tile: {
+            converted?: string;
             line: string;
             name: string;
             value: string;
