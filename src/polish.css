@@ -35,17 +35,6 @@
 
 .ind-chip{display:inline-flex;align-items:center;background:var(--well,#e8e8eb);color:var(--ink-2,#55555b);border-radius:5px;font-size:11px;font-weight:700;padding:2px 8px;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase}
 
-.ind-row{margin-bottom:12px}
-.ind-row-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.ind-name{font-size:14px;font-weight:600;flex:1;min-width:0;background:var(--well);color:var(--ink);border-radius:7px;padding:6px 10px}
-.kw-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;min-height:28px}
-.kw-chip{display:inline-flex;align-items:center;gap:0;background:var(--well);color:var(--ink);border-radius:6px;padding:3px 4px 3px 9px;font-size:13px}
-.kw-chip button{background:transparent;padding:0;min-width:0;width:20px;height:20px;border-radius:4px;font-size:13px;line-height:1;color:var(--ink-3);display:flex;align-items:center;justify-content:center}
-.kw-chip button:hover{background:var(--well-2);color:var(--ink)}
-.ind-kw-add{display:flex;gap:6px}
-.ind-kw-add input{flex:1;min-width:0;font-size:13px}
-.ind-kw-add button{flex:none;font-size:13px;padding:6px 11px}
-.ind-save-row{display:flex;align-items:center;gap:12px}
 
 .row-company{flex-wrap:wrap;align-items:flex-start}
 .row-co-name{white-space:nowrap;overflow-wrap:normal}

@@ -76,7 +76,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getApiIndustries"];
-        put: operations["putApiIndustries"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/models/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiModelsPause"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profiles": {
         parameters: {
             query?: never;
@@ -146,6 +162,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["patchApiProfilesId"];
+        trace?: never;
+    };
+    "/api/providers/{name}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiProvidersNameCheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/qa": {
@@ -464,7 +496,6 @@ export interface components {
             name: string;
         };
         IndustryItem: {
-            keywords: string[];
             name: string;
         };
         InheritedSource: {
@@ -496,6 +527,10 @@ export interface components {
             empty?: string;
             html: string;
             state: string;
+        };
+        LoadingInfo: {
+            model: string;
+            startedAt: string;
         };
         Location: {
             city?: string;
@@ -538,6 +573,12 @@ export interface components {
             website?: string | null;
             workAuthorizations?: components["schemas"]["WorkAuthorization"][] | null;
             x?: string | null;
+        };
+        ModelsStatus: {
+            paused: boolean;
+            providers?: {
+                [key: string]: components["schemas"]["ProviderState"];
+            };
         };
         OptionItem: {
             label: string;
@@ -607,6 +648,10 @@ export interface components {
             timeZones?: string[] | null;
             workModes?: string[] | null;
         };
+        ProviderState: {
+            loading?: components["schemas"]["LoadingInfo"] | null;
+            state: string;
+        };
         QACreateReq: {
             answer?: string;
             question: string;
@@ -631,6 +676,11 @@ export interface components {
             /** Format: int64 */
             id: number;
             question?: string | null;
+        };
+        RecoveredFile: {
+            broken: string;
+            err: string;
+            file: string;
         };
         ReferenceCountry: {
             code: string;
@@ -733,7 +783,9 @@ export interface components {
             collecting: components["schemas"]["CollectProgress"] | null;
             debug: boolean;
             lastRun: components["schemas"]["LastRun"] | null;
+            models?: components["schemas"]["ModelsStatus"] | null;
             offline: boolean;
+            recovered: components["schemas"]["RecoveredFile"][];
             version: string;
         };
         Tile: {
@@ -780,8 +832,14 @@ export interface components {
             name: string;
             url: string;
         };
+        checkResp: {
+            state: string;
+        };
         collectReq: {
             force: boolean;
+        };
+        pauseReq: {
+            paused: boolean;
         };
         removeSourceReq: {
             key: string;
@@ -983,31 +1041,6 @@ export interface operations {
             "4XX": components["responses"]["Error"];
         };
     };
-    putApiIndustries: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IndustriesResp"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IndustriesResp"];
-                };
-            };
-            "4XX": components["responses"]["Error"];
-        };
-    };
     getApiMe: {
         parameters: {
             query?: never;
@@ -1100,6 +1133,29 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    putApiModelsPause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["pauseReq"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {
@@ -1219,6 +1275,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileDetailResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiProvidersNameCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["checkResp"];
                 };
             };
             "4XX": components["responses"]["Error"];

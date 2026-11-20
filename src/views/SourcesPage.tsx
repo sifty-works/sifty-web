@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import { previewExclusion, Source, StatusExtra, triggerCollect } from '../api/client.ts'
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
-import { IndustriesPage } from './IndustriesPage.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 
-type SettingsNav = 'sources' | 'exclusions' | 'industries'
+type SettingsNav = 'sources' | 'exclusions'
 
 interface Props {
   status: StatusExtra | null
@@ -79,22 +78,13 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
             >
               Exclusions
             </button>
-            <button
-              className={nav === 'industries' ? 'active' : undefined}
-              aria-current={nav === 'industries' ? 'page' : undefined}
-              onClick={() => setNav('industries')}
-            >
-              Industries
-            </button>
           </div>
         </div>
       </nav>
 
       <div className="settings-main">
         <div className="settings-content">
-          {nav === 'industries' ? (
-            <IndustriesPage />
-          ) : nav === 'exclusions' ? (
+          {nav === 'exclusions' ? (
             state.status === 'offline' ? <OfflineNotice /> : <ExclusionsPanel />
           ) : (
             state.status === 'offline' ? <OfflineNotice /> :

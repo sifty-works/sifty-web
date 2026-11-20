@@ -46,7 +46,6 @@ export type DecisionRequest = components['schemas']['DecisionReq']
 export type DecisionResponse = components['schemas']['DecisionResp']
 export type Exclusion = components['schemas']['Exclusion']
 export type ExclusionListResponse = components['schemas']['ExclusionsResp']
-export type IndustryItem = components['schemas']['IndustryItem']
 export type IndustriesResp = components['schemas']['IndustriesResp']
 export type IndustryCount = components['schemas']['IndustryCount']
 export type SourceCount = components['schemas']['SourceCount']
@@ -277,7 +276,4 @@ export function getExclusions(profileId: number): Promise<ExclusionListResponse>
 
 export function getIndustries(): Promise<IndustriesResp> {
   return request<IndustriesResp>('GET', '/api/industries')
-}
-export function putIndustries(industries: IndustryItem[]): Promise<IndustriesResp> {
-  return request<IndustriesResp>('PUT', '/api/industries', { industries })
 }

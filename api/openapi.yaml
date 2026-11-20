@@ -409,15 +409,10 @@ components:
             type: object
         IndustryItem:
             properties:
-                keywords:
-                    items:
-                        type: string
-                    type: array
                 name:
                     type: string
             required:
                 - name
-                - keywords
             type: object
         InheritedSource:
             properties:
@@ -496,6 +491,16 @@ components:
             required:
                 - state
                 - html
+            type: object
+        LoadingInfo:
+            properties:
+                model:
+                    type: string
+                startedAt:
+                    type: string
+            required:
+                - model
+                - startedAt
             type: object
         Location:
             properties:
@@ -643,6 +648,17 @@ components:
                     oneOf:
                         - type: string
                         - type: "null"
+            type: object
+        ModelsStatus:
+            properties:
+                paused:
+                    type: boolean
+                providers:
+                    additionalProperties:
+                        $ref: '#/components/schemas/ProviderState'
+                    type: object
+            required:
+                - paused
             type: object
         OptionItem:
             properties:
@@ -860,6 +876,17 @@ components:
                           type: array
                         - type: "null"
             type: object
+        ProviderState:
+            properties:
+                loading:
+                    oneOf:
+                        - $ref: '#/components/schemas/LoadingInfo'
+                        - type: "null"
+                state:
+                    type: string
+            required:
+                - state
+            type: object
         QACreateReq:
             properties:
                 answer:
@@ -921,6 +948,19 @@ components:
                         - type: "null"
             required:
                 - id
+            type: object
+        RecoveredFile:
+            properties:
+                broken:
+                    type: string
+                err:
+                    type: string
+                file:
+                    type: string
+            required:
+                - file
+                - err
+                - broken
             type: object
         ReferenceCountry:
             properties:
@@ -1239,8 +1279,16 @@ components:
                     oneOf:
                         - $ref: '#/components/schemas/LastRun'
                         - type: "null"
+                models:
+                    oneOf:
+                        - $ref: '#/components/schemas/ModelsStatus'
+                        - type: "null"
                 offline:
                     type: boolean
+                recovered:
+                    items:
+                        $ref: '#/components/schemas/RecoveredFile'
+                    type: array
                 version:
                     type: string
             required:
@@ -1251,6 +1299,7 @@ components:
                 - lastRun
                 - catalogue
                 - attention
+                - recovered
             type: object
         Tile:
             properties:
@@ -1372,12 +1421,26 @@ components:
                 - name
                 - url
             type: object
+        checkResp:
+            properties:
+                state:
+                    type: string
+            required:
+                - state
+            type: object
         collectReq:
             properties:
                 force:
                     type: boolean
             required:
                 - force
+            type: object
+        pauseReq:
+            properties:
+                paused:
+                    type: boolean
+            required:
+                - paused
             type: object
         removeSourceReq:
             properties:
@@ -1537,23 +1600,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/IndustriesResp'
                     description: OK
-        put:
-            operationId: putApiIndustries
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/IndustriesResp'
-                required: true
-            responses:
-                4XX:
-                    $ref: '#/components/responses/Error'
-                "200":
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/IndustriesResp'
-                    description: OK
     /api/me:
         get:
             operationId: getApiMe
@@ -1600,6 +1646,20 @@ paths:
                     description: No Content
         put:
             operationId: putApiMePhoto
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+    /api/models/pause:
+        put:
+            operationId: putApiModelsPause
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/pauseReq'
+                required: true
             responses:
                 4XX:
                     $ref: '#/components/responses/Error'
@@ -1673,6 +1733,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ProfileDetailResp'
+                    description: OK
+    /api/providers/{name}/check:
+        post:
+            operationId: postApiProvidersNameCheck
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/checkResp'
                     description: OK
     /api/qa:
         delete:
