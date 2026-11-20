@@ -122,6 +122,15 @@ function AskRow({ item, onDecision }: AskRowProps) {
               </button>
             ))}
             <button
+              className="add"
+              disabled={!!busy}
+              onClick={() => void handleAdd()}
+              title="I have this"
+              aria-label="I have this"
+            >
+              {busy === 'add' ? '…' : '+'}
+            </button>
+            <button
               className="dismiss"
               disabled={!!busy}
               onClick={() => void handleDismiss()}
