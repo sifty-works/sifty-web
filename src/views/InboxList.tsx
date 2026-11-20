@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   addExclusion,
   deleteVacancy,
+  FitMark,
   getIndustries,
   getVacancy,
   listSources,
@@ -9,6 +10,7 @@ import {
   OfflineError,
   Outcome,
   postDecision,
+  postSkillsDecision,
   ServerError,
   VacancyCounts,
   VacancyRow as VacancyRowData,
@@ -90,6 +92,8 @@ export function InboxList({
   const [listWidth, setListWidth] = useListWidth()
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
   const [actionError, setActionError] = useState<string | null>(null)
+  const [skillNotice, setSkillNotice] = useState<string | null>(null)
+  const [rowFitUpdates, setRowFitUpdates] = useState<Map<number, FitMark>>(new Map())
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>({ kind: 'none' })
   const [applyDialogSaving, setApplyDialogSaving] = useState(false)
   const [applyDialogError, setApplyDialogError] = useState<string | null>(null)
@@ -171,6 +175,7 @@ export function InboxList({
       setPageView(null)
       setPageError(null)
       setActionError(null)
+      setSkillNotice(null)
       const row = rows.find((r) => r.id === id)
       const isUnread = row ? row.unread && !seenInSession.has(id) : false
       if (isUnread) {
@@ -356,6 +361,27 @@ export function InboxList({
 
   handleActionRef.current = (key, url, message) => void handleAction(key, url, message)
 
+  async function handleSkillDecision(index: number, have: boolean, chosenSkill?: string): Promise<void> {
+    if (!pageView) return
+    try {
+      const { notice, vacancyView } = await postSkillsDecision({
+        vacancyId: pageView.id,
+        requirementIndex: index,
+        have,
+        chosenSkill,
+      })
+      setPageView(vacancyView)
+      setSkillNotice(notice)
+      setRowFitUpdates((prev) => {
+        const next = new Map(prev)
+        next.set(vacancyView.id, vacancyView.fit)
+        return next
+      })
+    } catch (err) {
+      setActionError(err instanceof ServerError ? err.message : 'Could not save decision')
+    }
+  }
+
   useEffect(() => {
     const selectNext = () => {
       if (dialogOpen || displayRows.length === 0) return
@@ -469,15 +495,19 @@ export function InboxList({
               )}
             </div>
           ) : (
-            displayRows.map((row) => (
-              <VacancyRow
-                key={row.id}
-                row={{ ...row, unread: row.unread && !seenInSession.has(row.id) }}
-                selected={row.id === selectedId}
-                onSelect={() => selectRow(row.id)}
-                decidedTo={sessionDecisions.get(row.id)?.to ?? null}
-              />
-            ))
+            displayRows.map((row) => {
+              const fitOverride = rowFitUpdates.get(row.id)
+              const displayRow = fitOverride ? { ...row, fit: fitOverride } : row
+              return (
+                <VacancyRow
+                  key={row.id}
+                  row={{ ...displayRow, unread: row.unread && !seenInSession.has(row.id) }}
+                  selected={row.id === selectedId}
+                  onSelect={() => selectRow(row.id)}
+                  decidedTo={sessionDecisions.get(row.id)?.to ?? null}
+                />
+              )
+            })
           )}
         </div>
 
@@ -504,7 +534,10 @@ export function InboxList({
               view={pageView}
               sessionDecision={sessionDecisions.get(pageView.id) ?? null}
               actionError={actionError}
+              notice={skillNotice}
               onAction={(key, url, message) => void handleAction(key, url, message)}
+              onClearNotice={() => setSkillNotice(null)}
+              onSkillDecision={(index, have, chosenSkill) => handleSkillDecision(index, have, chosenSkill)}
             />
           ) : (
             <div className="empty">

@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react'
 import { VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { FitBand } from './FitBand.tsx'
+import { WhatTheyAsk } from './WhatTheyAsk.tsx'
 
 const KEY_HINT: Record<string, string> = { select: 'Y', dismiss: 'N', apply: 'A' }
 const GLYPH: Record<string, string> = { select: '✓', dismiss: '✕', confirm: '✓', delete: '×' }
@@ -12,10 +13,13 @@ interface Props {
   view: VacancyView
   sessionDecision?: SessionDecision | null
   actionError?: string | null
+  notice?: string | null
   onAction: (key: string, url?: string, message?: string) => void
+  onClearNotice?: () => void
+  onSkillDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
 }
 
-export function VacancyPage({ view, sessionDecision, actionError, onAction }: Props) {
+export function VacancyPage({ view, sessionDecision, actionError, notice, onAction, onClearNotice, onSkillDecision }: Props) {
   const mainActions = view.actions?.filter((a) => !LINK_KEYS.has(a.key)) ?? []
   const linkActions = view.actions?.filter((a) => LINK_KEYS.has(a.key)) ?? []
 
@@ -146,7 +150,20 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction }: Pr
 
       {activeTab === 'overview' && (
         <>
+          {notice && (
+            <div className="banner" role="status">
+              {notice}
+              {onClearNotice && (
+                <button aria-label="Dismiss" onClick={onClearNotice}>×</button>
+              )}
+            </div>
+          )}
+
           <FitBand band={view.band} />
+
+          <div className="what-cards" style={{ marginTop: 14 }}>
+            <WhatTheyAsk band={view.band} onDecision={onSkillDecision} />
+          </div>
 
           <div className="overview-stack">
             <section className="listing-panel">

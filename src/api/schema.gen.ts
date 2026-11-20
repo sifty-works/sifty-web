@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiMeSkills"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/models/pause": {
         parameters: {
             query?: never;
@@ -377,6 +393,9 @@ export interface components {
         };
         Band: {
             bucket: string;
+            groups: components["schemas"]["RequirementGroup"][];
+            /** Format: int64 */
+            requirementCount: number;
             requirementsText: string;
             score: number | null;
             text: string;
@@ -725,6 +744,20 @@ export interface components {
             code: string;
             label: string;
         };
+        RequirementGroup: {
+            items: components["schemas"]["RequirementLine"][];
+            label: string;
+        };
+        RequirementLine: {
+            alts?: string[];
+            evidence?: string;
+            /** Format: int64 */
+            index: number;
+            level: string;
+            namedSkills?: string[];
+            text: string;
+            verdict: string;
+        };
         Row: {
             applied?: string;
             company: string;
@@ -749,6 +782,18 @@ export interface components {
             level?: string;
             name: string;
             source?: string;
+        };
+        SkillsDecisionReq: {
+            chosenSkill?: string;
+            have: boolean;
+            /** Format: int64 */
+            requirementIndex: number;
+            /** Format: int64 */
+            vacancyId: number;
+        };
+        SkillsDecisionResp: {
+            notice: string;
+            vacancyView: components["schemas"]["VacancyView"];
         };
         Source: {
             enabled: boolean;
@@ -1142,6 +1187,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiMeSkills: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkillsDecisionReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillsDecisionResp"];
+                };
             };
             "4XX": components["responses"]["Error"];
         };

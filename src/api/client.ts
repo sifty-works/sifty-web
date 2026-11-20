@@ -52,6 +52,10 @@ export type SourceCount = components['schemas']['SourceCount']
 export type FitMark = components['schemas']['FitMark']
 export type Band = components['schemas']['Band']
 export type Tile = components['schemas']['Tile']
+export type RequirementGroup = components['schemas']['RequirementGroup']
+export type RequirementLine = components['schemas']['RequirementLine']
+export type SkillsDecisionReq = components['schemas']['SkillsDecisionReq']
+export type SkillsDecisionResp = components['schemas']['SkillsDecisionResp']
 
 export interface VacancyFilters {
   collected: '' | '7' | '30'
@@ -276,4 +280,8 @@ export function getExclusions(profileId: number): Promise<ExclusionListResponse>
 
 export function getIndustries(): Promise<IndustriesResp> {
   return request<IndustriesResp>('GET', '/api/industries')
+}
+
+export function postSkillsDecision(req: SkillsDecisionReq): Promise<SkillsDecisionResp> {
+  return request<SkillsDecisionResp>('POST', '/api/me/skills', req)
 }

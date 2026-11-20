@@ -94,6 +94,13 @@ components:
             properties:
                 bucket:
                     type: string
+                groups:
+                    items:
+                        $ref: '#/components/schemas/RequirementGroup'
+                    type: array
+                requirementCount:
+                    format: int64
+                    type: integer
                 requirementsText:
                     type: string
                 score:
@@ -113,6 +120,8 @@ components:
                 - text
                 - tiles
                 - requirementsText
+                - requirementCount
+                - groups
             type: object
         CollectProgress:
             properties:
@@ -1123,6 +1132,45 @@ components:
                 - code
                 - label
             type: object
+        RequirementGroup:
+            properties:
+                items:
+                    items:
+                        $ref: '#/components/schemas/RequirementLine'
+                    type: array
+                label:
+                    type: string
+            required:
+                - label
+                - items
+            type: object
+        RequirementLine:
+            properties:
+                alts:
+                    items:
+                        type: string
+                    type: array
+                evidence:
+                    type: string
+                index:
+                    format: int64
+                    type: integer
+                level:
+                    type: string
+                namedSkills:
+                    items:
+                        type: string
+                    type: array
+                text:
+                    type: string
+                verdict:
+                    type: string
+            required:
+                - index
+                - text
+                - level
+                - verdict
+            type: object
         Row:
             properties:
                 applied:
@@ -1186,6 +1234,33 @@ components:
                     type: string
             required:
                 - name
+            type: object
+        SkillsDecisionReq:
+            properties:
+                chosenSkill:
+                    type: string
+                have:
+                    type: boolean
+                requirementIndex:
+                    format: int64
+                    type: integer
+                vacancyId:
+                    format: int64
+                    type: integer
+            required:
+                - vacancyId
+                - requirementIndex
+                - have
+            type: object
+        SkillsDecisionResp:
+            properties:
+                notice:
+                    type: string
+                vacancyView:
+                    $ref: '#/components/schemas/VacancyView'
+            required:
+                - notice
+                - vacancyView
             type: object
         Source:
             properties:
@@ -1657,6 +1732,24 @@ paths:
                     $ref: '#/components/responses/Error'
                 "204":
                     description: No Content
+    /api/me/skills:
+        post:
+            operationId: postApiMeSkills
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SkillsDecisionReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SkillsDecisionResp'
+                    description: OK
     /api/models/pause:
         put:
             operationId: putApiModelsPause
