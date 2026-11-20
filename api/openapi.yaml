@@ -94,6 +94,8 @@ components:
             properties:
                 bucket:
                     type: string
+                requirementsText:
+                    type: string
                 score:
                     oneOf:
                         - format: int64
@@ -110,6 +112,7 @@ components:
                 - bucket
                 - text
                 - tiles
+                - requirementsText
             type: object
         CollectProgress:
             properties:
@@ -354,6 +357,8 @@ components:
                     type: string
                 dimmed:
                     type: boolean
+                requirementsText:
+                    type: string
                 score:
                     oneOf:
                         - format: int64
@@ -366,6 +371,7 @@ components:
                 - bucket
                 - text
                 - dimmed
+                - requirementsText
             type: object
         Hours:
             properties:

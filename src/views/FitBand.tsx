@@ -31,6 +31,9 @@ export function FitBand({ band }: Props) {
         ) : (
           <span className="band-score-reason">{band.text}</span>
         )}
+        {band.requirementsText && (
+          <span className="band-req">{band.requirementsText}</span>
+        )}
       </div>
       <div className="band-tiles">
         {band.tiles.map((tile) => {

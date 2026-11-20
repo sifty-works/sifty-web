@@ -377,6 +377,7 @@ export interface components {
         };
         Band: {
             bucket: string;
+            requirementsText: string;
             score: number | null;
             text: string;
             tiles: components["schemas"]["Tile"][];
@@ -478,6 +479,7 @@ export interface components {
         FitMark: {
             bucket: string;
             dimmed: boolean;
+            requirementsText: string;
             score: number | null;
             text: string;
         };
