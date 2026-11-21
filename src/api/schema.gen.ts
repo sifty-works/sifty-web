@@ -36,6 +36,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiDocuments"];
+        put?: never;
+        post: operations["postApiDocuments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteApiDocumentsId"];
+        options?: never;
+        head?: never;
+        patch: operations["patchApiDocumentsId"];
+        trace?: never;
+    };
+    "/api/documents/{id}/original": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiDocumentsIdOriginal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiDocumentsIdText"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/exclusions": {
         parameters: {
             query?: never;
@@ -474,6 +538,24 @@ export interface components {
             race?: string[];
             raceDescription?: string;
             veteranStatus?: string;
+        };
+        DocumentItem: {
+            /** Format: int64 */
+            charCount: number;
+            createdAt: string;
+            evidence: boolean;
+            /** Format: int64 */
+            id: number;
+            kind: string;
+            name: string;
+            state: string;
+            stateReason?: string;
+        };
+        DocumentListResp: {
+            documents: components["schemas"]["DocumentItem"][];
+        };
+        DocumentPatchReq: {
+            evidence?: boolean | null;
         };
         Exclusion: {
             /** Format: int64 */
@@ -1005,6 +1087,128 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["StatusExtra"];
                 };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiDocuments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiDocuments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    deleteApiDocumentsId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    patchApiDocumentsId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentPatchReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentItem"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiDocumentsIdOriginal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiDocumentsIdText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             "4XX": components["responses"]["Error"];
         };

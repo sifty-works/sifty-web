@@ -309,6 +309,51 @@ components:
                 veteranStatus:
                     type: string
             type: object
+        DocumentItem:
+            properties:
+                charCount:
+                    format: int64
+                    type: integer
+                createdAt:
+                    type: string
+                evidence:
+                    type: boolean
+                id:
+                    format: int64
+                    type: integer
+                kind:
+                    type: string
+                name:
+                    type: string
+                state:
+                    type: string
+                stateReason:
+                    type: string
+            required:
+                - id
+                - name
+                - kind
+                - charCount
+                - state
+                - evidence
+                - createdAt
+            type: object
+        DocumentListResp:
+            properties:
+                documents:
+                    items:
+                        $ref: '#/components/schemas/DocumentItem'
+                    type: array
+            required:
+                - documents
+            type: object
+        DocumentPatchReq:
+            properties:
+                evidence:
+                    oneOf:
+                        - type: boolean
+                        - type: "null"
+            type: object
         Exclusion:
             properties:
                 id:
@@ -1700,6 +1745,66 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/StatusExtra'
                     description: OK
+    /api/documents:
+        get:
+            operationId: getApiDocuments
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DocumentListResp'
+                    description: OK
+        post:
+            operationId: postApiDocuments
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+    /api/documents/{id}:
+        delete:
+            operationId: deleteApiDocumentsId
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+        patch:
+            operationId: patchApiDocumentsId
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DocumentPatchReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DocumentItem'
+                    description: OK
+    /api/documents/{id}/original:
+        get:
+            operationId: getApiDocumentsIdOriginal
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
+    /api/documents/{id}/text:
+        get:
+            operationId: getApiDocumentsIdText
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
     /api/exclusions:
         delete:
             operationId: deleteApiExclusions
