@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { previewExclusion, Source, StatusExtra, triggerCollect } from '../api/client.ts'
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
+import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 
-type SettingsNav = 'sources' | 'exclusions'
+type SettingsNav = 'sources' | 'exclusions' | 'models'
 
 interface Props {
   status: StatusExtra | null
@@ -24,6 +25,13 @@ const INTERVAL_OPTIONS = [
 ]
 
 const COLLECTION_ICON = <path d="M3 5h18M6 12h12M10 19h4" />
+
+const MODELS_ICON = (
+  <>
+    <rect x="6" y="6" width="12" height="12" rx="2" />
+    <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+  </>
+)
 
 export function SourcesPage({ status, applyStatus, statusText }: Props) {
   const { state, add, toggle, remove, updateSchedule, addError } = useSources()
@@ -80,11 +88,31 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
             </button>
           </div>
         </div>
+
+        <div className="settings-group">
+          <h2>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {MODELS_ICON}
+            </svg>
+            Models
+          </h2>
+          <div className="settings-group-items">
+            <button
+              className={nav === 'models' ? 'active' : undefined}
+              aria-current={nav === 'models' ? 'page' : undefined}
+              onClick={() => setNav('models')}
+            >
+              Models
+            </button>
+          </div>
+        </div>
       </nav>
 
       <div className="settings-main">
         <div className="settings-content">
-          {nav === 'exclusions' ? (
+          {nav === 'models' ? (
+            state.status === 'offline' ? <OfflineNotice /> : <ModelsPanel />
+          ) : nav === 'exclusions' ? (
             state.status === 'offline' ? <OfflineNotice /> : <ExclusionsPanel />
           ) : (
             state.status === 'offline' ? <OfflineNotice /> :

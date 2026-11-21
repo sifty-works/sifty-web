@@ -25,7 +25,7 @@ export function Shell() {
   const stage = mainTab === 'archive' ? archiveTab : mainTab
 
   const handleCatalogueChange = useCallback(() => setReloadCount((n) => n + 1), [])
-  const { state: statusState, applyStatus } = useStatus(handleCatalogueChange)
+  const { state: statusState, recovered, applyStatus } = useStatus(handleCatalogueChange)
   const status = statusState.status === 'ok' ? statusState.data : null
 
   const prevStatusRef = useRef<string>('unknown')
@@ -103,6 +103,14 @@ export function Shell() {
           </button>
         </div>
       </header>
+
+      {recovered.length > 0 && (
+        <div className="app-recovered">
+          {recovered.map((f) => (
+            <p key={f.file}>A file could not be read and was restored from a backup: {f.file}.</p>
+          ))}
+        </div>
+      )}
 
       {page === 'profile' && profileId !== null ? (
         <ProfilePage

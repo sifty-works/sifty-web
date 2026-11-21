@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getStatus, StatusExtra } from '../api/client.ts'
+import { getStatus, RecoveredFile, StatusExtra } from '../api/client.ts'
 
 export type StatusState =
   | { status: 'unknown' }
@@ -8,12 +8,14 @@ export type StatusState =
 
 export interface UseStatusResult {
   state: StatusState
+  recovered: RecoveredFile[]
 
   applyStatus: (data: StatusExtra) => void
 }
 
 export function useStatus(onCatalogueChange: () => void): UseStatusResult {
   const [state, setState] = useState<StatusState>({ status: 'unknown' })
+  const [recovered, setRecovered] = useState<RecoveredFile[]>([])
   const callbackRef = useRef(onCatalogueChange)
   const prevCatalogueRef = useRef<number | null>(null)
 
@@ -36,7 +38,10 @@ export function useStatus(onCatalogueChange: () => void): UseStatusResult {
     async function poll() {
       try {
         const data = await getStatus()
-        if (!cancelled) applyStatus(data)
+        if (!cancelled) {
+          setRecovered(data.recovered)
+          applyStatus(data)
+        }
       } catch {
         if (!cancelled) setState({ status: 'offline' })
       }
@@ -53,5 +58,5 @@ export function useStatus(onCatalogueChange: () => void): UseStatusResult {
     }
   }, [applyStatus]) 
 
-  return { state, applyStatus }
+  return { state, recovered, applyStatus }
 }

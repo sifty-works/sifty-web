@@ -1550,12 +1550,72 @@ components:
             required:
                 - force
             type: object
-        pauseReq:
+        modelsPatch:
             properties:
+                allowPaidBulk:
+                    oneOf:
+                        - type: boolean
+                        - type: "null"
+                dailyLimit:
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
+                paused:
+                    oneOf:
+                        - type: boolean
+                        - type: "null"
+                work:
+                    additionalProperties:
+                        type: string
+                    type: object
+            type: object
+        modelsResp:
+            properties:
+                allowPaidBulk:
+                    type: boolean
+                dailyLimit:
+                    format: int64
+                    type: integer
                 paused:
                     type: boolean
+                providers:
+                    items:
+                        $ref: '#/components/schemas/providerView'
+                    type: array
+                todayCalls:
+                    format: int64
+                    type: integer
+                work:
+                    items:
+                        $ref: '#/components/schemas/workView'
+                    type: array
             required:
+                - providers
+                - work
+                - allowPaidBulk
                 - paused
+                - dailyLimit
+                - todayCalls
+            type: object
+        providerView:
+            properties:
+                cost:
+                    type: string
+                kind:
+                    type: string
+                model:
+                    type: string
+                name:
+                    type: string
+                state:
+                    type: string
+            required:
+                - name
+                - kind
+                - model
+                - cost
+                - state
             type: object
         removeSourceReq:
             properties:
@@ -1583,6 +1643,21 @@ components:
             required:
                 - key
                 - enabled
+            type: object
+        workView:
+            properties:
+                choices:
+                    items:
+                        type: string
+                    type: array
+                kind:
+                    type: string
+                provider:
+                    type: string
+            required:
+                - kind
+                - provider
+                - choices
             type: object
 info:
     title: Sifty API
@@ -1784,20 +1859,35 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/SkillsDecisionResp'
                     description: OK
-    /api/models/pause:
-        put:
-            operationId: putApiModelsPause
+    /api/models:
+        get:
+            operationId: getApiModels
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/modelsResp'
+                    description: OK
+        patch:
+            operationId: patchApiModels
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/pauseReq'
+                            $ref: '#/components/schemas/modelsPatch'
                 required: true
             responses:
                 4XX:
                     $ref: '#/components/responses/Error'
-                "204":
-                    description: No Content
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/modelsResp'
+                    description: OK
     /api/profiles:
         get:
             operationId: getApiProfiles

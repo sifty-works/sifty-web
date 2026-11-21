@@ -132,20 +132,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/models/pause": {
+    "/api/models": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put: operations["putApiModelsPause"];
+        get: operations["getApiModels"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["patchApiModels"];
         trace?: never;
     };
     "/api/profiles": {
@@ -897,8 +897,30 @@ export interface components {
         collectReq: {
             force: boolean;
         };
-        pauseReq: {
+        modelsPatch: {
+            allowPaidBulk?: boolean | null;
+            dailyLimit?: number | null;
+            paused?: boolean | null;
+            work?: {
+                [key: string]: string;
+            };
+        };
+        modelsResp: {
+            allowPaidBulk: boolean;
+            /** Format: int64 */
+            dailyLimit: number;
             paused: boolean;
+            providers: components["schemas"]["providerView"][];
+            /** Format: int64 */
+            todayCalls: number;
+            work: components["schemas"]["workView"][];
+        };
+        providerView: {
+            cost: string;
+            kind: string;
+            model: string;
+            name: string;
+            state: string;
         };
         removeSourceReq: {
             key: string;
@@ -910,6 +932,11 @@ export interface components {
         toggleSourceReq: {
             enabled: boolean;
             key: string;
+        };
+        workView: {
+            choices: string[];
+            kind: string;
+            provider: string;
         };
     };
     responses: {
@@ -1228,7 +1255,28 @@ export interface operations {
             "4XX": components["responses"]["Error"];
         };
     };
-    putApiModelsPause: {
+    getApiModels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["modelsResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    patchApiModels: {
         parameters: {
             query?: never;
             header?: never;
@@ -1237,16 +1285,18 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["pauseReq"];
+                "application/json": components["schemas"]["modelsPatch"];
             };
         };
         responses: {
-            /** @description No Content */
-            204: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["modelsResp"];
+                };
             };
             "4XX": components["responses"]["Error"];
         };

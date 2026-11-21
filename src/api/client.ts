@@ -56,6 +56,12 @@ export type RequirementGroup = components['schemas']['RequirementGroup']
 export type RequirementLine = components['schemas']['RequirementLine']
 export type SkillsDecisionReq = components['schemas']['SkillsDecisionReq']
 export type SkillsDecisionResp = components['schemas']['SkillsDecisionResp']
+export type ModelsResponse = components['schemas']['modelsResp']
+export type ModelsPatch = components['schemas']['modelsPatch']
+export type ProviderView = components['schemas']['providerView']
+export type WorkView = components['schemas']['workView']
+export type CheckResponse = components['schemas']['checkResp']
+export type RecoveredFile = components['schemas']['RecoveredFile']
 
 export interface VacancyFilters {
   collected: '' | '7' | '30'
@@ -284,4 +290,16 @@ export function getIndustries(): Promise<IndustriesResp> {
 
 export function postSkillsDecision(req: SkillsDecisionReq): Promise<SkillsDecisionResp> {
   return request<SkillsDecisionResp>('POST', '/api/me/skills', req)
+}
+
+export function getModels(): Promise<ModelsResponse> {
+  return request<ModelsResponse>('GET', '/api/models')
+}
+
+export function patchModels(patch: ModelsPatch): Promise<ModelsResponse> {
+  return request<ModelsResponse>('PATCH', '/api/models', patch)
+}
+
+export function checkProvider(name: string): Promise<CheckResponse> {
+  return request<CheckResponse>('POST', `/api/providers/${encodeURIComponent(name)}/check`)
 }

@@ -41,3 +41,8 @@
 
 .band-score-reason{font-size:12px;color:var(--ink-3);line-height:1.4}
 .band-req{font:12px/1.4 'IBM Plex Mono',monospace;color:var(--ink-3)}
+
+.app-recovered{background:#2b2419;color:#e0b45a;padding:10px 24px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.app-recovered p{margin:0}
+.sift-app:has(>.app-recovered){grid-template-rows:56px auto minmax(0,1fr)}
+@media(min-width:768px){.sift-app:has(>.app-recovered){grid-template-rows:64px auto minmax(0,1fr)}}
