@@ -7,7 +7,7 @@ import {
 } from '../api/client.ts'
 import { geoLabel, labelOf, regionLabel } from '../state/profile.ts'
 import { DateInput } from './DateInputs.tsx'
-import { type ProfilePageData, Field, NotSet, SectionShell, TagInput } from './ProfilePage.tsx'
+import { type ProfilePageData, Field, NotSet, SectionShell, TagInput, useSectionEditor } from './ProfilePage.tsx'
 
 function fmtMoney(amount: number | null | undefined, currency: string | null | undefined): string {
   if (amount == null) return ''
@@ -159,9 +159,6 @@ function inheritedClass(fieldName: string, inherited: Set<string>) {
 function WhatSection({ data }: { data: ProfilePageData }) {
   const { profile, inherited, firstProfileName } = data
   const eff = profile?.effective
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
 
   const [roles, setRoles] = useState<string[]>([])
   const [keywords, setKeywords] = useState<string[]>([])
@@ -182,23 +179,19 @@ function WhatSection({ data }: { data: ProfilePageData }) {
     setKeywords(eff?.keywords ?? [])
     setAllOf(eff?.allOf ?? [])
     setIndustries(eff?.targetIndustries ?? [])
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      const patch: ProfilePatchReq = {
-        targetRoles: roles.length ? roles : null,
-        keywords: keywords.length ? keywords : null,
-        allOf: allOf.length ? allOf : null,
-        targetIndustries: industries.length ? industries : null,
-      }
-      await data.saveProfile(patch)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    const patch: ProfilePatchReq = {
+      targetRoles: roles.length ? roles : null,
+      keywords: keywords.length ? keywords : null,
+      allOf: allOf.length ? allOf : null,
+      targetIndustries: industries.length ? industries : null,
+    }
+    await data.saveProfile(patch)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   async function addExcl(value: string) {
     if (!profile) return
@@ -220,9 +213,8 @@ function WhatSection({ data }: { data: ProfilePageData }) {
   const inh = inherited.has('targetIndustries')
 
   return <SectionShell title="What you're looking for"
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <div className="profile-fields">
+    {...editor}>
+    {editor.editing ? <div className="profile-fields">
       <TagInput label="Roles" title="Target roles — looked for in the title" variant="roles" values={roles} placeholder="Add a role…" onChange={setRoles}/>
       <TagInput label="Words" title="Words — anywhere in the listing" desc="at least one must appear; when target roles are set, the title must also hold one" variant="any" values={keywords} placeholder="Add a word…" onChange={setKeywords}/>
       <TagInput label="All of these" title="All of these" desc="every term must appear in the listing" variant="all" values={allOf} placeholder="Add a term…" onChange={setAllOf}/>
@@ -277,9 +269,6 @@ function ReadTags({ values }: { values: string[] }) {
 function CompensationSection({ data }: { data: ProfilePageData }) {
   const { profile, inherited, firstProfileName, ref } = data
   const eff = profile?.effective
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const opts = ref?.options
 
   type C = { cashMin: string; cashTarget: string; currency: string; period: string; grossNet: string; payment: string; equityOnTop: boolean; drMin: string; drTarget: string; drCurrency: string }
@@ -302,43 +291,39 @@ function CompensationSection({ data }: { data: ProfilePageData }) {
   }
 
   function beginEdit() {
-    setD(compToState(eff?.compensation)); setError(''); setEditing(true)
+    setD(compToState(eff?.compensation))
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      const cashMin = d.cashMin ? Number(d.cashMin) : null
-      const cashTarget = d.cashTarget ? Number(d.cashTarget) : null
-      const drMin = d.drMin ? Number(d.drMin) : null
-      const drTarget = d.drTarget ? Number(d.drTarget) : null
-      const hasComp = cashMin != null || cashTarget != null || d.currency || d.period
-      const hasDR = drMin != null || drTarget != null
-      const patch: ProfilePatchReq = {
-        compensation: hasComp ? {
-          cashMin, cashTarget,
-          currency: d.currency || undefined,
-          period: d.period || undefined,
-          grossNet: d.grossNet || undefined,
-          crypto: d.payment || undefined,
-          equityOnTop: d.equityOnTop || null,
-          dayRates: hasDR ? { min: drMin, target: drTarget, currency: d.drCurrency || undefined } : null,
-        } : null,
-      }
-      await data.saveProfile(patch)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    const cashMin = d.cashMin ? Number(d.cashMin) : null
+    const cashTarget = d.cashTarget ? Number(d.cashTarget) : null
+    const drMin = d.drMin ? Number(d.drMin) : null
+    const drTarget = d.drTarget ? Number(d.drTarget) : null
+    const hasComp = cashMin != null || cashTarget != null || d.currency || d.period
+    const hasDR = drMin != null || drTarget != null
+    const patch: ProfilePatchReq = {
+      compensation: hasComp ? {
+        cashMin, cashTarget,
+        currency: d.currency || undefined,
+        period: d.period || undefined,
+        grossNet: d.grossNet || undefined,
+        crypto: d.payment || undefined,
+        equityOnTop: d.equityOnTop || null,
+        dayRates: hasDR ? { min: drMin, target: drTarget, currency: d.drCurrency || undefined } : null,
+      } : null,
+    }
+    await data.saveProfile(patch)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   const c = eff?.compensation
   const inh = inherited.has('compensation')
 
   return <SectionShell title="Compensation"
     description="Amounts are compared by Fits you. Currency is EUR or USD; an unset currency or period is not assumed."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <div className={`profile-fields${inh ? ' profile-inherited-value' : ''}`}>
+    {...editor}>
+    {editor.editing ? <div className={`profile-fields${inh ? ' profile-inherited-value' : ''}`}>
       <div className="profile-fields-grid">
         <Field label="Minimum compensation"><input type="number" min={0} value={d.cashMin} onChange={(e) => setD({ ...d, cashMin: e.target.value })}/></Field>
         <Field label="Desired compensation"><input type="number" min={0} value={d.cashTarget} onChange={(e) => setD({ ...d, cashTarget: e.target.value })}/></Field>
@@ -410,9 +395,6 @@ function CompensationSection({ data }: { data: ProfilePageData }) {
 function EngagementSection({ data }: { data: ProfilePageData }) {
   const { profile, inherited, firstProfileName, ref } = data
   const eff = profile?.effective
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const opts = ref?.options
 
   const [engagement, setEngagement] = useState<string[]>([])
@@ -429,28 +411,24 @@ function EngagementSection({ data }: { data: ProfilePageData }) {
     setWeekly(eff?.hours?.weekly != null ? String(eff.hours.weekly) : '')
     setWeeklyMin(eff?.hours?.weeklyMin != null ? String(eff.hours.weeklyMin) : '')
     setWeeklyMax(eff?.hours?.weeklyMax != null ? String(eff.hours.weeklyMax) : '')
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      const isPartTime = hoursMode === 'part_time'
-      const patch: ProfilePatchReq = {
-        engagement: engagement.length ? engagement : null,
-        workModes: workModes.length ? workModes : null,
-        hours: hoursMode ? {
-          mode: hoursMode,
-          weekly: isPartTime && weekly ? Number(weekly) : null,
-          weeklyMin: isPartTime && weeklyMin ? Number(weeklyMin) : null,
-          weeklyMax: isPartTime && weeklyMax ? Number(weeklyMax) : null,
-        } : null,
-      }
-      await data.saveProfile(patch)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    const isPartTime = hoursMode === 'part_time'
+    const patch: ProfilePatchReq = {
+      engagement: engagement.length ? engagement : null,
+      workModes: workModes.length ? workModes : null,
+      hours: hoursMode ? {
+        mode: hoursMode,
+        weekly: isPartTime && weekly ? Number(weekly) : null,
+        weeklyMin: isPartTime && weeklyMin ? Number(weeklyMin) : null,
+        weeklyMax: isPartTime && weeklyMax ? Number(weeklyMax) : null,
+      } : null,
+    }
+    await data.saveProfile(patch)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   function toggleArr(arr: string[], v: string): string[] {
     return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]
@@ -462,9 +440,8 @@ function EngagementSection({ data }: { data: ProfilePageData }) {
 
   return <SectionShell title="Engagement, hours and work modes"
     description="Used by Fits you. Employment and Contract may both be acceptable."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <div className="profile-fields">
+    {...editor}>
+    {editor.editing ? <div className="profile-fields">
       <p className="profile-group-heading">Engagement</p>
       <div className={`profile-checks${inhEng ? ' profile-inherited-value' : ''}`}>
         {opts?.engagement.map((o) => <label key={o.value}>
@@ -518,9 +495,6 @@ function EngagementSection({ data }: { data: ProfilePageData }) {
 function GeoSection({ data }: { data: ProfilePageData }) {
   const { profile, me, inherited, firstProfileName, ref } = data
   const eff = profile?.effective
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const opts = ref?.options
   const allItems = useGeoItems(ref)
 
@@ -536,27 +510,23 @@ function GeoSection({ data }: { data: ProfilePageData }) {
     setTimeZones(eff?.timeZones ?? [])
     setCurLoc(me?.currentLocation ?? null)
     setAuthorizations(me?.workAuthorizations ?? [])
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      await Promise.all([
-        data.saveProfile({
-          preferredLocations: locations.length ? locations : null,
-          relocation: relocation || null,
-          timeZones: timeZones.length ? timeZones : null,
-        } as ProfilePatchReq),
-        data.saveMe({
-          currentLocation: curLoc?.country ? curLoc : null,
-          workAuthorizations: authorizations.length ? authorizations : null,
-        } as MePatchReq),
-      ])
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    await Promise.all([
+      data.saveProfile({
+        preferredLocations: locations.length ? locations : null,
+        relocation: relocation || null,
+        timeZones: timeZones.length ? timeZones : null,
+      } as ProfilePatchReq),
+      data.saveMe({
+        currentLocation: curLoc?.country ? curLoc : null,
+        workAuthorizations: authorizations.length ? authorizations : null,
+      } as MePatchReq),
+    ])
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   function toggleTZ(code: string) {
     setTimeZones((z) => z.includes(code) ? z.filter((x) => x !== code) : [...z, code])
@@ -569,9 +539,8 @@ function GeoSection({ data }: { data: ProfilePageData }) {
 
   return <SectionShell title="Geography and authorization"
     description="Used by the detailed assessment and preparation; not the quick score. No stated eligibility is not ineligibility, and current residence does not prove work authorization."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <div className="profile-fields">
+    {...editor}>
+    {editor.editing ? <div className="profile-fields">
       <p className="profile-group-heading">Current location</p>
       <div className="profile-fields-grid">
         <div className="profile-field-block"><span>Country</span>
@@ -635,9 +604,6 @@ function GeoSection({ data }: { data: ProfilePageData }) {
 
 function AvailabilitySection({ data }: { data: ProfilePageData }) {
   const { me, ref } = data
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const opts = ref?.options
 
   const [noticeValue, setNoticeValue] = useState('')
@@ -649,31 +615,26 @@ function AvailabilitySection({ data }: { data: ProfilePageData }) {
     setNoticeValue(a?.noticeValue != null ? String(a.noticeValue) : '')
     setNoticeUnit(a?.noticeUnit ?? '')
     setStartDate(a?.startDate ?? '')
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      const nv = noticeValue !== '' ? Number(noticeValue) : null
-      const patch: MePatchReq = {
-        availability: (nv != null || noticeUnit || startDate) ? {
-          noticeValue: nv, noticeUnit: noticeUnit || undefined, startDate: startDate || undefined,
-        } : null,
-      }
-      await data.saveMe(patch)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    const nv = noticeValue !== '' ? Number(noticeValue) : null
+    const patch: MePatchReq = {
+      availability: (nv != null || noticeUnit || startDate) ? {
+        noticeValue: nv, noticeUnit: noticeUnit || undefined, startDate: startDate || undefined,
+      } : null,
+    }
+    await data.saveMe(patch)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   const a = me?.availability
 
   return <SectionShell title="Availability"
     description="Notice period and earliest start date, stored in My data."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <div className="profile-fields">
+    {...editor}>
+    {editor.editing ? <div className="profile-fields">
       <div className="profile-fields-grid">
         <Field label="Notice">
           <input type="number" min={0} value={noticeValue} placeholder="e.g. 2" onChange={(e) => setNoticeValue(e.target.value)}/>
@@ -700,29 +661,22 @@ function AvailabilitySection({ data }: { data: ProfilePageData }) {
 
 function OtherRequirementsSection({ data }: { data: ProfilePageData }) {
   const { profile } = data
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const [text, setText] = useState('')
 
   function beginEdit() {
-    setText(profile?.effective.otherRequirements ?? ''); setError(''); setEditing(true)
+    setText(profile?.effective.otherRequirements ?? '')
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      await data.saveProfile({ otherRequirements: text.trim() || null } as ProfilePatchReq)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    await data.saveProfile({ otherRequirements: text.trim() || null } as ProfilePatchReq)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   return <SectionShell title="Other requirements"
     description="Plain text with Markdown. Used by the Shortlist check and preparation; Fits you does not interpret this text."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing
+    {...editor}>
+    {editor.editing
       ? <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder="Enter any other requirements…"/>
       : profile?.effective.otherRequirements
         ? <p className="profile-rich-view" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{profile.effective.otherRequirements}</p>

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { patchProfile, type Demographics, type Experience, type Language, type MePatchReq, type Skill } from '../api/client.ts'
 import { labelOf } from '../state/profile.ts'
 import { MonthYearInput } from './DateInputs.tsx'
-import { type ProfilePageData, Field, Md, NotSet, SectionShell } from './ProfilePage.tsx'
+import { type ProfilePageData, Field, Md, NotSet, SectionShell, useSectionEditor } from './ProfilePage.tsx'
 
 function insertMd(el: HTMLTextAreaElement, before: string, after: string, cb: (v: string) => void) {
   const { selectionStart: s, selectionEnd: e, value: v } = el
@@ -52,26 +52,19 @@ function SkillChip({ skill }: { skill: Skill }) {
 
 function SkillsSection({ data }: { data: ProfilePageData }) {
   const { me, profile, ref } = data
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const [skills, setSkills] = useState<Skill[]>([])
   const [copyBusy, setCopyBusy] = useState(false)
   const opts = ref?.options
 
   function beginEdit() {
     setSkills(me?.skills?.map((s) => ({ ...s })) ?? [])
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      await data.saveMe({ skills: skills.length ? skills : null } as MePatchReq)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    await data.saveMe({ skills: skills.length ? skills : null } as MePatchReq)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   async function copyToSearch() {
     if (!profile) return
@@ -106,9 +99,8 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
   const absentSkills = me?.absentSkills ?? []
   const confirmedFacts = me?.confirmedFacts ?? []
 
-  return <SectionShell title="Skills" editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <>
+  return <SectionShell title="Skills" {...editor}>
+    {editor.editing ? <>
       <div className="profile-rows">
         {skills.map((sk, i) => <div key={i} className="profile-row profile-row-skill">
           <Field label={i === 0 ? 'Name' : undefined as unknown as string}>
@@ -162,24 +154,17 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
 
 function ExperienceSection({ data }: { data: ProfilePageData }) {
   const { me } = data
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const [roles, setRoles] = useState<Experience[]>([])
 
   function beginEdit() {
     setRoles(me?.experience?.map((r) => ({ ...r })) ?? [])
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      await data.saveMe({ experience: roles.length ? roles : null } as MePatchReq)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    await data.saveMe({ experience: roles.length ? roles : null } as MePatchReq)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   function addRole() { setRoles((r) => [...r, { title: '', company: '' }]) }
   function removeRole(i: number) { setRoles((r) => r.filter((_, j) => j !== i)) }
@@ -189,9 +174,8 @@ function ExperienceSection({ data }: { data: ProfilePageData }) {
 
   return <SectionShell title="Experience"
     description="Used by the detailed assessment and preparation; not part of the quick score. Dates are month/year and never invent a day."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <>
+    {...editor}>
+    {editor.editing ? <>
       {roles.map((r, i) => <div key={i} className="profile-row profile-row-experience">
         <Field label="Company"><input value={r.company} onChange={(e) => updateRole(i, { ...r, company: e.target.value })}/></Field>
         <Field label="Role"><input value={r.title} onChange={(e) => updateRole(i, { ...r, title: e.target.value })}/></Field>
@@ -223,25 +207,18 @@ function ExperienceSection({ data }: { data: ProfilePageData }) {
 
 function LanguagesSection({ data }: { data: ProfilePageData }) {
   const { me, ref } = data
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const [langs, setLangs] = useState<Language[]>([])
   const opts = ref?.options
 
   function beginEdit() {
     setLangs(me?.languages?.map((l) => ({ ...l })) ?? [])
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      await data.saveMe({ languages: langs.length ? langs : null } as MePatchReq)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    await data.saveMe({ languages: langs.length ? langs : null } as MePatchReq)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   function add() { setLangs((l) => [...l, { name: '' }]) }
   function remove(i: number) { setLangs((l) => l.filter((_, j) => j !== i)) }
@@ -251,9 +228,8 @@ function LanguagesSection({ data }: { data: ProfilePageData }) {
 
   return <SectionShell title="Languages"
     description="Used by the detailed assessment and preparation; not part of the quick score. Pre-A1 is an honest beginner label, not CEFR A0."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <>
+    {...editor}>
+    {editor.editing ? <>
       <div className="profile-rows">
         {langs.map((lang, i) => <div key={i} className="profile-row profile-row-language">
           <Field label={i === 0 ? 'Language' : undefined as unknown as string}>
@@ -277,9 +253,6 @@ function LanguagesSection({ data }: { data: ProfilePageData }) {
 
 function DemographicsSection({ data }: { data: ProfilePageData }) {
   const { me, ref } = data
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
   const opts = ref?.options
 
   const blank = (): Demographics => ({ gender: undefined, genderDescription: undefined, race: undefined, raceDescription: undefined, ethnicity: undefined, disability: undefined, veteranStatus: undefined, criminalRecord: undefined })
@@ -287,18 +260,14 @@ function DemographicsSection({ data }: { data: ProfilePageData }) {
 
   function beginEdit() {
     setD(me?.demographics ? { ...me.demographics } : blank())
-    setError(''); setEditing(true)
   }
 
   async function save() {
-    setSaving(true); setError('')
-    try {
-      const hasAny = !!(d.gender || d.race?.length || d.ethnicity || d.disability || d.veteranStatus || d.criminalRecord)
-      await data.saveMe({ demographics: hasAny ? d : null } as MePatchReq)
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
+    const hasAny = !!(d.gender || d.race?.length || d.ethnicity || d.disability || d.veteranStatus || d.criminalRecord)
+    await data.saveMe({ demographics: hasAny ? d : null } as MePatchReq)
   }
+
+  const editor = useSectionEditor(beginEdit, save)
 
   function toggleRace(v: string) {
     const cur = d.race ?? []
@@ -311,9 +280,8 @@ function DemographicsSection({ data }: { data: ProfilePageData }) {
 
   return <SectionShell title="Application form answers"
     description="Used only to fill application forms, never sent to a model."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <div className="profile-fields">
+    {...editor}>
+    {editor.editing ? <div className="profile-fields">
       <Field label="Gender">
         <select value={d.gender ?? ''} onChange={(e) => setD({ ...d, gender: e.target.value || undefined })}>
           <option value="">Prefer not to say</option>
