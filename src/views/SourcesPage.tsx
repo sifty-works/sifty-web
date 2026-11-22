@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { previewExclusion, Source, StatusExtra, triggerCollect } from '../api/client.ts'
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
-import type { Note } from '../state/messages.ts'
+import { failure, type Note } from '../state/messages.ts'
 import { Message } from './Messages.tsx'
 import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
@@ -41,6 +41,7 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
   const [urlVal, setUrlVal] = useState('')
   const [busy, setBusy] = useState(false)
   const [nav, setNav] = useState<SettingsNav>('sources')
+  const [collectNote, setCollectNote] = useState<Note | null>(null)
 
   const isCollecting = status?.collecting != null
 
@@ -53,6 +54,11 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
       setNameVal('')
       setUrlVal('')
     }
+  }
+
+  function collect() {
+    setCollectNote(null)
+    triggerCollect(true).then(applyStatus).catch((e: unknown) => setCollectNote(failure(e, 'Could not start collection')))
   }
 
   const sources = state.status === 'ok' ? state.sources : []
@@ -130,13 +136,14 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
               nameVal={nameVal}
               urlVal={urlVal}
               addNote={addNote}
+              collectNote={collectNote}
               onToggle={(key, enabled) => void toggle(key, enabled)}
               onRemove={(key) => void remove(key)}
               onAdd={(e) => void handleAdd(e)}
               onNameChange={setNameVal}
               onUrlChange={setUrlVal}
               onUpdateSchedule={(a, i) => void updateSchedule(a, i)}
-              onCollect={() => void triggerCollect(true).then(applyStatus).catch(() => {})}
+              onCollect={collect}
             />
           )}
         </div>
@@ -156,6 +163,7 @@ interface SourcesPanelProps {
   nameVal: string
   urlVal: string
   addNote: Note | null
+  collectNote: Note | null
   onToggle: (key: string, enabled: boolean) => void
   onRemove: (key: string) => void
   onAdd: (e: React.FormEvent) => void
@@ -167,7 +175,7 @@ interface SourcesPanelProps {
 
 function SourcesPanel({
   sources, auto, interval, intervalOpts, busy, isCollecting, statusText,
-  nameVal, urlVal, addNote,
+  nameVal, urlVal, addNote, collectNote,
   onToggle, onRemove, onAdd, onNameChange, onUrlChange, onUpdateSchedule, onCollect,
 }: SourcesPanelProps) {
   return (
@@ -288,6 +296,7 @@ function SourcesPanel({
           </button>
           {statusText && <span className="muted" style={{ marginLeft: 10 }}>{statusText}</span>}
         </div>
+        <Message note={collectNote} />
       </section>
     </>
   )

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createProfile, deleteProfile, getProfiles, patchProfile, setActiveProfile, type ProfileListItem } from '../api/client.ts'
+import { failure, type Note, silent } from '../state/messages.ts'
 import { colorFor } from '../state/profile.ts'
 import { Icon } from './Icon.tsx'
+import { Message } from './Messages.tsx'
 
 export { colorFor }
 
@@ -19,6 +21,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
   const [renamingId, setRenamingId] = useState<number | null>(null)
   const [renameDraft, setRenameDraft] = useState('')
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [note, setNote] = useState<Note | null>(null)
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -26,11 +29,11 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       setProfiles(r.profiles)
       const active = r.profiles.find((p) => p.active)
       if (active) setActiveId(active.id)
-    }).catch(() => {})
+    }).catch(silent('the profile list is optional: the switcher shows the default name'))
   }, [])
 
   useEffect(() => {
-    if (!menu) { setCreating(false); setRenamingId(null); setDeletingId(null); return }
+    if (!menu) { setCreating(false); setRenamingId(null); setDeletingId(null); setNote(null); return }
     const outside = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setMenu(false) }
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenu(false) }
     document.addEventListener('pointerdown', outside)
@@ -46,13 +49,13 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       setActiveId(id)
       setMenu(false)
       onSwitch(id)
-    } catch {  }
+    } catch (e) { setNote(failure(e, 'Could not switch profile')) }
   }
 
   async function doCreate(e: React.FormEvent) {
     e.preventDefault()
     const name = createName.trim(); if (!name) return
-    setCreateBusy(true)
+    setCreateBusy(true); setNote(null)
     try {
       const created = await createProfile(name)
       const r = await setActiveProfile(created.id)
@@ -61,7 +64,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       setCreateName(''); setCreating(false); setMenu(false)
       onSwitch(created.id)
       onOpenProfile(created.id)
-    } catch {  } finally { setCreateBusy(false) }
+    } catch (e) { setNote(failure(e, 'Could not create profile')) } finally { setCreateBusy(false) }
   }
 
   async function doRename(e: React.FormEvent, p: ProfileListItem) {
@@ -72,7 +75,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       const r = await getProfiles()
       setProfiles(r.profiles)
       setRenamingId(null)
-    } catch {  }
+    } catch (e) { setNote(failure(e, 'Could not rename profile')) }
   }
 
   async function doDelete(id: number) {
@@ -82,7 +85,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       const next = r.profiles.find((p) => p.active)
       if (next) { setActiveId(next.id); onSwitch(next.id) }
       setDeletingId(null)
-    } catch {  }
+    } catch (e) { setNote(failure(e, 'Could not delete profile')) }
   }
 
   const active = profiles.find((p) => p.id === activeId)
@@ -98,6 +101,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
     </button>
     {menu ? <div className="profile-menu" role="menu" aria-label="Profiles">
       <p className="profile-menu-title">Profiles</p>
+      <Message note={note}/>
       {profiles.map((p, i) => renamingId === p.id
         ? <form key={p.id} className="profile-menu-rename" onSubmit={(e) => void doRename(e, p)}>
             <i className="profile-dot" style={{ background: colorFor(i) }} aria-hidden="true"/>

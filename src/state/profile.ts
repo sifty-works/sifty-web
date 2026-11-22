@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getReference, type ReferenceResp } from '../api/client.ts'
+import { silent } from './messages.ts'
 
 export const PROFILE_COLORS = ['#3db328', '#258f99', '#2675a9', '#b2b04f']
 
@@ -10,7 +11,7 @@ export function colorFor(index: number): string {
 export function useReference(): ReferenceResp | null {
   const [ref, setRef] = useState<ReferenceResp | null>(null)
   const load = useCallback(() => {
-    void getReference().then(setRef).catch(() => {})
+    void getReference().then(setRef).catch(silent('reference data is optional: forms fall back to raw values'))
   }, [])
   useEffect(() => { load() }, [load])
   return ref

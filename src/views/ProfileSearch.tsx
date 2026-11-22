@@ -5,8 +5,10 @@ import {
   type Compensation, type Exclusion, type Location, type MePatchReq,
   type ProfilePatchReq, type WorkAuthorization,
 } from '../api/client.ts'
+import { failure, type Note } from '../state/messages.ts'
 import { geoLabel, labelOf, regionLabel } from '../state/profile.ts'
 import { DateInput } from './DateInputs.tsx'
+import { Message } from './Messages.tsx'
 import { type ProfilePageData, Field, NotSet, SectionShell, TagInput, useSectionEditor } from './ProfilePage.tsx'
 
 function fmtMoney(amount: number | null | undefined, currency: string | null | undefined): string {
@@ -167,6 +169,7 @@ function WhatSection({ data }: { data: ProfilePageData }) {
 
   const [exclusions, setExclusions] = useState<Exclusion[]>([])
   const [exclLoading, setExclLoading] = useState(false)
+  const [exclNote, setExclNote] = useState<Note | null>(null)
 
   useEffect(() => {
     if (!profile) return
@@ -197,16 +200,16 @@ function WhatSection({ data }: { data: ProfilePageData }) {
     if (!profile) return
     try {
       const r = await addExclusion('word', value, profile.id)
-      setExclusions(r.exclusions.filter((e) => e.kind === 'word'))
-    } catch {  }
+      setExclusions(r.exclusions.filter((e) => e.kind === 'word')); setExclNote(null)
+    } catch (e) { setExclNote(failure(e, 'Could not add the word')) }
   }
 
   async function removeExcl(id: number) {
     if (!profile) return
     try {
       const r = await removeExclusion(id, profile.id)
-      setExclusions(r.exclusions.filter((e) => e.kind === 'word'))
-    } catch {  }
+      setExclusions(r.exclusions.filter((e) => e.kind === 'word')); setExclNote(null)
+    } catch (e) { setExclNote(failure(e, 'Could not remove the word')) }
   }
 
   const inds = eff?.targetIndustries ?? []
@@ -230,6 +233,7 @@ function WhatSection({ data }: { data: ProfilePageData }) {
             </span>)}
             <label className="profile-tag-add"><span aria-hidden="true">+</span><ExclInput onAdd={(v) => void addExcl(v)} disabled={exclLoading}/></label>
           </div>
+          <Message note={exclNote}/>
         </div>
       </div>
       <TagInput label="Industries" title="Industries" variant="any" values={industries} placeholder="Add an industry…" onChange={setIndustries}/>

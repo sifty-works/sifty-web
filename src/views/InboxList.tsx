@@ -18,7 +18,7 @@ import {
 } from '../api/client.ts'
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { SessionDecision } from '../state/decisions.ts'
-import { failure, type Note, report } from '../state/messages.ts'
+import { failure, type Note, report, silent } from '../state/messages.ts'
 import { useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { FilterPanel } from './FilterPanel.tsx'
@@ -126,10 +126,10 @@ export function InboxList({
   useEffect(() => {
     void listSources().then((resp) => {
       setAllSources(resp.sources.map((s) => ({ key: s.key, name: s.name })))
-    }).catch(() => {})
+    }).catch(silent('the source filter list is optional: the filter stays empty'))
     void getIndustries().then((resp) => {
       setAllIndustries(resp.industries.map((i) => i.name))
-    }).catch(() => {})
+    }).catch(silent('the industry filter list is optional: the filter stays empty'))
   }, [])
 
   useEffect(() => {
@@ -178,7 +178,7 @@ export function InboxList({
       const isUnread = row ? row.unread && !seenInSession.has(id) : false
       if (isUnread) {
         setSeenInSession((prev) => new Set([...prev, id]))
-        void markSeen(id).catch(() => {})
+        void markSeen(id).catch(silent('the read mark is bookkeeping: the role stays unread until the next visit'))
       }
 
       if (unread) {

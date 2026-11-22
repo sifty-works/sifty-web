@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { triggerCollect, VacancyCounts } from '../api/client.ts'
+import { silent } from '../state/messages.ts'
 import { useStatus } from '../state/status.ts'
 import { Brand } from './Brand.tsx'
 import { Icon } from './Icon.tsx'
@@ -42,7 +43,7 @@ export function Shell() {
   }
 
   useEffect(() => {
-    void triggerCollect(false).then(applyStatus).catch(() => {})
+    void triggerCollect(false).then(applyStatus).catch(silent('automatic collection on start was not asked for by the user'))
   }, [applyStatus])
 
   const collecting = status?.collecting != null

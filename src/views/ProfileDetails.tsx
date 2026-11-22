@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { patchProfile, type Demographics, type Experience, type Language, type MePatchReq, type Skill } from '../api/client.ts'
+import { failure, type Note } from '../state/messages.ts'
 import { labelOf } from '../state/profile.ts'
 import { MonthYearInput } from './DateInputs.tsx'
+import { Message } from './Messages.tsx'
 import { type ProfilePageData, Field, Md, NotSet, SectionShell, useSectionEditor } from './ProfilePage.tsx'
 
 function insertMd(el: HTMLTextAreaElement, before: string, after: string, cb: (v: string) => void) {
@@ -54,6 +56,7 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
   const { me, profile, ref } = data
   const [skills, setSkills] = useState<Skill[]>([])
   const [copyBusy, setCopyBusy] = useState(false)
+  const [note, setNote] = useState<Note | null>(null)
   const opts = ref?.options
 
   function beginEdit() {
@@ -68,7 +71,7 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
 
   async function copyToSearch() {
     if (!profile) return
-    setCopyBusy(true)
+    setCopyBusy(true); setNote(null)
     try {
       const existing = new Set((profile.effective.keywords ?? []).map((k) => k.toLowerCase()))
       const toAdd = (me?.skills ?? []).map((s) => s.name).filter((n) => !existing.has(n.toLowerCase()))
@@ -76,19 +79,19 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
         await patchProfile(profile.id, { keywords: [...(profile.effective.keywords ?? []), ...toAdd] })
         await data.reload()
       }
-    } catch {  } finally { setCopyBusy(false) }
+    } catch (e) { setNote(failure(e, 'Could not copy skills to search')) } finally { setCopyBusy(false) }
   }
 
   async function removeAbsent(i: number) {
     const next = (me?.absentSkills ?? []).filter((_, j) => j !== i)
-    try { await data.saveMe({ absentSkills: next.length ? next : null } as MePatchReq) }
-    catch {  }
+    try { await data.saveMe({ absentSkills: next.length ? next : null } as MePatchReq); setNote(null) }
+    catch (e) { setNote(failure(e, 'Could not remove the skill')) }
   }
 
   async function removeConfirmed(i: number) {
     const next = (me?.confirmedFacts ?? []).filter((_, j) => j !== i)
-    try { await data.saveMe({ confirmedFacts: next.length ? next : null } as MePatchReq) }
-    catch {  }
+    try { await data.saveMe({ confirmedFacts: next.length ? next : null } as MePatchReq); setNote(null) }
+    catch (e) { setNote(failure(e, 'Could not remove the fact')) }
   }
 
   function addSkill() { setSkills((s) => [...s, { name: '' }]) }
@@ -117,6 +120,7 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
       </div>
       <button type="button" className="profile-add" onClick={addSkill}>+ Add skill</button>
     </> : <>
+      <Message note={note}/>
       {displaySkills.length ? <div className="profile-skill-chips">
         {displaySkills.map((sk, i) => <SkillChip key={i} skill={sk}/>)}
       </div> : <NotSet/>}
