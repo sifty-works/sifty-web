@@ -10,8 +10,6 @@
 .profile-screen :is(input,select,textarea){background:var(--well);color:var(--ink)}
 .profile-screen :is(input,textarea)::placeholder{color:#8c8c93}
 .profile-screen :focus-visible{outline-color:var(--accent-ink)}
-.profile-screen .banner{background:var(--card);color:var(--ink);box-shadow:var(--lift)}
-.profile-screen .banner.error{background:#fbeae6;color:#b23a22}
 
 .profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:20px}
 .profile-head h1{margin-bottom:6px;color:#111}
