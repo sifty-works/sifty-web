@@ -311,6 +311,8 @@ components:
             type: object
         DocumentItem:
             properties:
+                address:
+                    type: string
                 charCount:
                     format: int64
                     type: integer
@@ -968,6 +970,8 @@ components:
         ProposalItem:
             properties:
                 createdAt:
+                    type: string
+                current:
                     type: string
                 documentId:
                     format: int64
@@ -2137,6 +2141,30 @@ paths:
     /api/proposals:
         get:
             operationId: getApiProposals
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProposalListResp'
+                    description: OK
+    /api/proposals/{id}/accept:
+        post:
+            operationId: postApiProposalsIdAccept
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProposalListResp'
+                    description: OK
+    /api/proposals/{id}/reject:
+        post:
+            operationId: postApiProposalsIdReject
             responses:
                 4XX:
                     $ref: '#/components/responses/Error'

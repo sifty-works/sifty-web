@@ -308,6 +308,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/proposals/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiProposalsIdAccept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/proposals/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiProposalsIdReject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/providers/{name}/check": {
         parameters: {
             query?: never;
@@ -604,6 +636,7 @@ export interface components {
             veteranStatus?: string;
         };
         DocumentItem: {
+            address?: string;
             /** Format: int64 */
             charCount: number;
             createdAt: string;
@@ -827,6 +860,7 @@ export interface components {
         };
         ProposalItem: {
             createdAt: string;
+            current?: string;
             /** Format: int64 */
             documentId: number;
             documentName: string;
@@ -1760,6 +1794,48 @@ export interface operations {
         };
     };
     getApiProposals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiProposalsIdAccept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiProposalsIdReject: {
         parameters: {
             query?: never;
             header?: never;
