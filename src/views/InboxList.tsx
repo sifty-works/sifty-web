@@ -94,7 +94,7 @@ export function InboxList({
   const [pageError, setPageError] = useState<Note | null>(null)
   const [listWidth, setListWidth] = useListWidth()
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
-  const [actionError, setActionError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<Note | null>(null)
   const [skillNotice, setSkillNotice] = useState<Note | null>(null)
   const [rowFitUpdates, setRowFitUpdates] = useState<Map<number, FitMark>>(new Map())
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>({ kind: 'none' })
@@ -208,7 +208,7 @@ export function InboxList({
         setSelectedId(null)
         setPageView(null)
       } catch (err) {
-        setActionError(err instanceof ServerError ? err.message : 'Could not block company')
+        setActionError(failure(err instanceof ServerError ? err : null, 'Could not block company'))
       }
       return
     }
@@ -294,7 +294,7 @@ export function InboxList({
         setPageView(null)
       }
     } catch (err) {
-      setActionError(err instanceof ServerError ? err.message : 'Could not save decision')
+      setActionError(failure(err instanceof ServerError ? err : null, 'Could not save decision'))
     }
   }
 
@@ -370,7 +370,7 @@ export function InboxList({
         return next
       })
     } catch (err) {
-      setActionError(err instanceof ServerError ? err.message : 'Could not save decision')
+      setActionError(failure(err instanceof ServerError ? err : null, 'Could not save decision'))
     }
   }
 

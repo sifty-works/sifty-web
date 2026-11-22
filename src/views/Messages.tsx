@@ -14,6 +14,7 @@ function dismissNewest(e: KeyboardEvent) {
 interface Props {
   note: Note | null | undefined
   visual?: Visual
+  inline?: boolean
   className?: string
   onDismiss?: () => void
 }
@@ -23,7 +24,7 @@ export function Message({ note, ...rest }: Props) {
   return <Standing key={`${note.id ?? ''}|${note.kind}|${note.text}`} note={note} {...rest} />
 }
 
-function Standing({ note, visual, className, onDismiss }: Props & { note: Note }) {
+function Standing({ note, visual, inline, className, onDismiss }: Props & { note: Note }) {
   const [gone, setGone] = useState(false)
   const notify = useRef(onDismiss)
   notify.current = onDismiss
@@ -43,7 +44,7 @@ function Standing({ note, visual, className, onDismiss }: Props & { note: Note }
   if (gone) return null
   const shape = visual ?? (note.kind === 'failure' ? 'retry' : 'info')
   return (
-    <div className={`msg ${shape}${className ? ` ${className}` : ''}`} role={note.kind === 'failure' ? 'alert' : 'status'}>
+    <div className={`msg ${shape}${inline ? ' inline' : ''}${className ? ` ${className}` : ''}`} role={note.kind === 'failure' ? 'alert' : 'status'}>
       {note.text.trim() || EMPTY_TEXT}
       <button type="button" aria-label="Dismiss" onClick={() => { setGone(true); notify.current?.() }}>×</button>
     </div>

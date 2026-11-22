@@ -303,7 +303,7 @@ function SourcesPanel({
 }
 
 function ExclusionsPanel() {
-  const { state, add, remove, addNote } = useExclusions()
+  const { state, add, remove, note } = useExclusions()
   const [kind, setKind] = useState<'word' | 'company'>('word')
   const [value, setValue] = useState('')
   const [preview, setPreview] = useState('')
@@ -346,7 +346,7 @@ function ExclusionsPanel() {
         />
         <button type="submit">Add</button>
         {preview && <p className="muted">{preview}</p>}
-        <Message note={addNote} />
+        <Message note={note} />
       </form>
 
       {exclusions.length > 0 && (

@@ -15,7 +15,7 @@ const LINK_KEYS = new Set(['confirm', 'delete'])
 interface Props {
   view: VacancyView
   sessionDecision?: SessionDecision | null
-  actionError?: string | null
+  actionError?: Note | null
   notice?: Note | null
   onAction: (key: string, url?: string, message?: string) => void
   onClearNotice: () => void
@@ -122,9 +122,7 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
               )}
             </>
           )}
-          {actionError && (
-            <span className="danger" style={{ fontSize: 13 }}>{actionError}</span>
-          )}
+          <Message note={actionError} inline />
         </div>
       </div>
 

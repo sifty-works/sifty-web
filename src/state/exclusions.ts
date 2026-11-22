@@ -20,7 +20,7 @@ function applyResponse(d: ExclusionListResponse): ExclusionState {
 
 export function useExclusions() {
   const [state, setState] = useState<ExclusionState>({ status: 'loading' })
-  const [addNote, setAddNote] = useState<Note | null>(null)
+  const [note, setNote] = useState<Note | null>(null)
 
   useEffect(() => {
     listExclusions()
@@ -29,24 +29,26 @@ export function useExclusions() {
   }, [])
 
   const add = useCallback(async (kind: string, value: string): Promise<boolean> => {
-    setAddNote(null)
+    setNote(null)
     try {
       const d = await addExclusion(kind, value)
       setState(applyResponse(d))
       return true
     } catch (err) {
-      setAddNote(failure(err instanceof ServerError ? err : null, 'Could not add exclusion.'))
+      setNote(failure(err instanceof ServerError ? err : null, 'Could not add exclusion.'))
       return false
     }
   }, [])
 
   const remove = useCallback(async (id: number): Promise<void> => {
+    setNote(null)
     try {
       const d = await removeExclusion(id)
       setState(applyResponse(d))
-    } catch {
+    } catch (err) {
+      setNote(failure(err instanceof ServerError ? err : null, 'Could not remove exclusion.'))
     }
   }, [])
 
-  return { state, add, remove, addNote }
+  return { state, add, remove, note }
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { silent } from '../state/messages.ts'
 
 const KEY = 'sift.listWidth'
 export const LIST_MIN = 260
@@ -21,6 +22,7 @@ export function useListWidth(): [number, (value: number) => void] {
     try {
       localStorage.setItem(KEY, String(next))
     } catch {
+      silent('the saved list width is a convenience: the page works without it')()
     }
   }, [])
   return [width, update]

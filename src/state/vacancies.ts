@@ -10,6 +10,7 @@ import {
   VacancyFilters,
   VacancyRow,
 } from '../api/client.ts'
+import { silent } from './messages.ts'
 
 const NEVER_LOADED = Symbol()
 
@@ -34,6 +35,7 @@ function saveQuery(q: string): void {
       localStorage.removeItem(QUERY_KEY)
     }
   } catch {
+    silent('the saved query is a convenience: the page works without it')()
   }
 }
 
@@ -64,6 +66,7 @@ function saveFilters(f: VacancyFilters): void {
       localStorage.setItem(FILTERS_KEY, JSON.stringify(f))
     }
   } catch {
+    silent('the saved filters is a convenience: the page works without it')()
   }
 }
 
@@ -83,6 +86,7 @@ function saveUnread(v: boolean): void {
       localStorage.removeItem(UNREAD_KEY)
     }
   } catch {
+    silent('the saved Unread flag is a convenience: the page works without it')()
   }
 }
 
@@ -102,6 +106,7 @@ function saveSort(v: 'fit' | 'newest'): void {
       localStorage.removeItem(SORT_KEY)
     }
   } catch {
+    silent('the saved sort order is a convenience: the page works without it')()
   }
 }
 
