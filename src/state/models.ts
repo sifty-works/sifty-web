@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   checkProvider,
   getModels,
@@ -29,28 +29,43 @@ function failure(err: unknown): string {
 export function useModels(): UseModelsResult {
   const [state, setState] = useState<ModelsState>({ status: 'loading' })
   const [error, setError] = useState<string | null>(null)
+  const chain = useRef<Promise<void>>(Promise.resolve())
+  const checkSeq = useRef(new Map<string, number>())
 
   useEffect(() => {
     let cancelled = false
-    getModels()
-      .then((models) => { if (!cancelled) setState({ status: 'ok', models }) })
-      .catch(() => { if (!cancelled) setState({ status: 'offline' }) })
+    chain.current = chain.current.then(async () => {
+      try {
+        const models = await getModels()
+        if (!cancelled) setState({ status: 'ok', models })
+      } catch {
+        if (!cancelled) setState({ status: 'offline' })
+      }
+    })
     return () => { cancelled = true }
   }, [])
 
-  const save = useCallback(async (patch: ModelsPatch): Promise<void> => {
-    setError(null)
-    try {
-      setState({ status: 'ok', models: await patchModels(patch) })
-    } catch (err) {
-      setError(failure(err))
-    }
+  const save = useCallback((patch: ModelsPatch): Promise<void> => {
+    const run = chain.current.then(async () => {
+      try {
+        const models = await patchModels(patch)
+        setState({ status: 'ok', models })
+        setError(null)
+      } catch (err) {
+        setError(failure(err))
+        await getModels().then((models) => setState({ status: 'ok', models }), () => {})
+      }
+    })
+    chain.current = run
+    return run
   }, [])
 
   const check = useCallback(async (name: string): Promise<void> => {
-    setError(null)
+    const seq = (checkSeq.current.get(name) ?? 0) + 1
+    checkSeq.current.set(name, seq)
     try {
       const answer = await checkProvider(name)
+      if (seq !== checkSeq.current.get(name)) return
       setState((prev) => prev.status !== 'ok' ? prev : {
         status: 'ok',
         models: {
@@ -60,8 +75,9 @@ export function useModels(): UseModelsResult {
           ),
         },
       })
+      setError(null)
     } catch (err) {
-      setError(failure(err))
+      if (seq === checkSeq.current.get(name)) setError(failure(err))
     }
   }, [])
 
