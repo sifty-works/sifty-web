@@ -26,7 +26,7 @@ import { Icon } from './Icon.tsx'
 import { ListResizer, useListWidth } from './ListResizer.tsx'
 import { Message } from './Messages.tsx'
 import { SearchField } from './SearchField.tsx'
-import { VacancyPage } from './VacancyPage.tsx'
+import { ACTIONS, VacancyPage } from './VacancyPage.tsx'
 import { VacancyRow } from './VacancyRow.tsx'
 
 const SERVER_DOWN = 'Sifty server is not responding. Retrying…'
@@ -195,9 +195,9 @@ export function InboxList({
     [rows, seenInSession, profile, unread],
   )
 
-  const handleActionRef = useRef<(key: string, url?: string, message?: string) => void>(() => {})
+  const handleActionRef = useRef<(key: string) => void>(() => {})
 
-  async function handleAction(key: string, _url?: string, _message?: string) {
+  async function handleAction(key: string) {
     if (!pageView || profile === null) return
     setActionError(null)
 
@@ -352,7 +352,7 @@ export function InboxList({
     }
   }
 
-  handleActionRef.current = (key, url, message) => void handleAction(key, url, message)
+  handleActionRef.current = (key) => void handleAction(key)
 
   async function handleSkillDecision(index: number, have: boolean, chosenSkill?: string): Promise<void> {
     if (!pageView) return
@@ -392,24 +392,15 @@ export function InboxList({
   }, [displayRows, selectedId, selectRow, dialogOpen])
 
   useEffect(() => {
-    return installActionShortcuts(
-      () => {
-        if (stage === 'inbox' && selectedId !== null && pageView?.actions?.some((a) => a.key === 'select'))
-          handleActionRef.current('select')
-      },
-      () => {
-        if (stage === 'inbox' && selectedId !== null && pageView?.actions?.some((a) => a.key === 'dismiss'))
-          handleActionRef.current('dismiss')
-      },
-      () => {
-        if (stage === 'shortlist' && selectedId !== null && pageView) {
-          const a = pageView.actions?.find((x) => x.key === 'apply')
-          if (a) handleActionRef.current('apply', a.url, a.message)
-        }
-      },
-      () => dialogOpen || (settingsOpen ?? false),
-    )
-  }, [stage, selectedId, pageView, dialogOpen, settingsOpen])
+    return installActionShortcuts((code) => {
+      if (dialogOpen || (settingsOpen ?? false) || !pageView) return false
+      if (sessionDecisions.get(pageView.id) != null) return false
+      const key = Object.keys(ACTIONS).find((k) => ACTIONS[k].code === code)
+      if (!key || !pageView.actions?.some((a) => a.key === key)) return false
+      handleActionRef.current(key)
+      return true
+    })
+  }, [pageView, sessionDecisions, dialogOpen, settingsOpen])
 
   const isArchive = mainTab === 'archive'
 
@@ -523,7 +514,7 @@ export function InboxList({
               sessionDecision={sessionDecisions.get(pageView.id) ?? null}
               actionError={actionError}
               notice={skillNotice}
-              onAction={(key, url, message) => void handleAction(key, url, message)}
+              onAction={(key) => void handleAction(key)}
               onClearNotice={() => setSkillNotice(null)}
               onSkillDecision={(index, have, chosenSkill) => handleSkillDecision(index, have, chosenSkill)}
             />

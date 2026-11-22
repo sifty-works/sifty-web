@@ -34,18 +34,10 @@ export function installNavShortcuts(onPrev: () => void, onNext: () => void): () 
   return () => document.removeEventListener('keydown', handler)
 }
 
-export function installActionShortcuts(
-  onY: () => void,
-  onN: () => void,
-  onA: () => void,
-  blocked: () => boolean,
-): () => void {
+export function installActionShortcuts(onKey: (code: string) => boolean): () => void {
   function handler(e: KeyboardEvent): void {
     if (shouldIgnore(e)) return
-    if (blocked()) return
-    if (e.code === 'KeyY') { e.preventDefault(); onY() }
-    else if (e.code === 'KeyN') { e.preventDefault(); onN() }
-    else if (e.code === 'KeyA') { e.preventDefault(); onA() }
+    if (onKey(e.code)) e.preventDefault()
   }
   document.addEventListener('keydown', handler)
   return () => document.removeEventListener('keydown', handler)

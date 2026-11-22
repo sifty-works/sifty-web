@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import { VacancyView } from '../api/client.ts'
+import { VacancyAction, VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import type { Note } from '../state/messages.ts'
 import { FitBand } from './FitBand.tsx'
@@ -7,27 +7,39 @@ import { Message } from './Messages.tsx'
 import { WhatTheyAsk } from './WhatTheyAsk.tsx'
 import { WhatTheyOffer } from './WhatTheyOffer.tsx'
 
-const KEY_HINT: Record<string, string> = { select: 'Y', dismiss: 'N', apply: 'A' }
-const GLYPH: Record<string, string> = { select: '✓', dismiss: '✕', confirm: '✓', delete: '×' }
+type Place = 'main' | 'links' | 'segment'
+interface ActionStyle { lead?: string; trail?: string; code?: string; cls?: string; place?: Place }
 
-const LINK_KEYS = new Set(['confirm', 'delete'])
+export const ACTIONS: Record<string, ActionStyle> = {
+  block: {},
+  dismiss: { lead: '✕', code: 'KeyN', cls: 'no-button' },
+  select: { lead: '✓', code: 'KeyY', cls: 'primary' },
+  inbox: {},
+  apply: { trail: '↗', code: 'KeyA', cls: 'apply-seg-active', place: 'segment' },
+  confirm: { lead: '✓', cls: 'link-button', place: 'links' },
+  delete: { lead: '×', cls: 'link-button split-delete', place: 'links' },
+  undo: {},
+  restore: {},
+}
 
 interface Props {
   view: VacancyView
   sessionDecision?: SessionDecision | null
   actionError?: Note | null
   notice?: Note | null
-  onAction: (key: string, url?: string, message?: string) => void
+  onAction: (key: string) => void
   onClearNotice: () => void
   onSkillDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
 }
 
 export function VacancyPage({ view, sessionDecision, actionError, notice, onAction, onClearNotice, onSkillDecision }: Props) {
-  const mainActions = view.actions?.filter((a) => !LINK_KEYS.has(a.key)) ?? []
-  const linkActions = view.actions?.filter((a) => LINK_KEYS.has(a.key)) ?? []
-
-  const applyAction = mainActions.find((a) => a.key === 'apply')
-  const isShortlist = applyAction != null
+  const placed = (place: Place) =>
+    (view.actions ?? []).filter((a) => (ACTIONS[a.key]?.place ?? 'main') === place)
+  const buttons = (list: VacancyAction[]) =>
+    list.map((a) => <ActionButton key={a.key} action={a} onAction={onAction} />)
+  const mainRow = buttons(placed('main'))
+  const segment = placed('segment')
+  const links = placed('links')
 
   const appAvailable = false
   const appDisabledHint = view.stage === 'inbox'
@@ -72,49 +84,19 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
               decision={sessionDecision}
               onUndo={() => onAction('undo')}
             />
-          ) : isShortlist ? (
-            <>
-              <div className="shortlist-top">
-                {mainActions
-                  .filter((a) => a.key !== 'apply')
-                  .map((a) => (
-                    <ActionButton key={a.key} action={a} onAction={onAction} />
-                  ))}
-
-                <div className="apply-seg">
-                  <button
-                    className="apply-seg-active"
-                    onClick={() => onAction(applyAction.key, applyAction.url, applyAction.message)}
-                  >
-                    {applyAction.label} ↗ <kbd>A</kbd>
-                  </button>
-                </div>
-              </div>
-              {linkActions.length > 0 && (
-                <div className="action-links-row">
-                  {linkActions.map((action, i) => (
-                    <Fragment key={action.key}>
-                      {i > 0 && (
-                        <span className="action-links-sep" aria-hidden="true">|</span>
-                      )}
-                      <ActionButton action={action} onAction={onAction} />
-                    </Fragment>
-                  ))}
-                </div>
-              )}
-            </>
           ) : (
             <>
-              {mainActions.map((action) => (
-                <ActionButton key={action.key} action={action} onAction={onAction} />
-              ))}
-              {linkActions.length > 0 && (
+              {segment.length > 0 ? (
+                <div className="shortlist-top">
+                  {mainRow}
+                  <div className="apply-seg">{buttons(segment)}</div>
+                </div>
+              ) : mainRow}
+              {links.length > 0 && (
                 <div className="action-links-row">
-                  {linkActions.map((action, i) => (
+                  {links.map((action, i) => (
                     <Fragment key={action.key}>
-                      {i > 0 && (
-                        <span className="action-links-sep" aria-hidden="true">|</span>
-                      )}
+                      {i > 0 && <span className="action-links-sep" aria-hidden="true">|</span>}
                       <ActionButton action={action} onAction={onAction} />
                     </Fragment>
                   ))}
@@ -183,26 +165,19 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
 }
 
 interface ActionButtonProps {
-  action: { key: string; label: string; url?: string; message?: string }
-  onAction: (key: string, url?: string, message?: string) => void
+  action: VacancyAction
+  onAction: (key: string) => void
 }
 
 function ActionButton({ action, onAction }: ActionButtonProps) {
-  const hint = KEY_HINT[action.key]
-  const glyph = GLYPH[action.key]
-  const label = glyph ? `${glyph} ${action.label}` : action.label
-  const cls =
-    action.key === 'select' ? 'primary'
-    : action.key === 'delete' ? 'link-button split-delete'
-    : action.key === 'dismiss' ? 'no-button'
-    : action.key === 'confirm' ? 'link-button'
-    : ''
+  const { lead, trail, code, cls } = ACTIONS[action.key] ?? {}
+  const text = `${lead ? `${lead} ` : ''}${action.label}${trail ? ` ${trail} ` : ''}`
   return (
     <button
-      className={cls || undefined}
-      onClick={() => onAction(action.key, action.url, action.message)}
+      className={cls}
+      onClick={() => onAction(action.key)}
     >
-      {label}{hint && <kbd>{hint}</kbd>}
+      {text}{code && <kbd>{code.replace('Key', '')}</kbd>}
     </button>
   )
 }
