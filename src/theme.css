@@ -553,7 +553,10 @@ html .profile-screen,html .settings-page>.settings-main,html .workspace>.detail{
 .ask-actions button{width:32px;height:32px;padding:0;border:0;border-radius:8px;background:var(--vc-ns-bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;line-height:1}
 .ask-actions button.add{color:var(--ok-ink)}
 .ask-actions button.dismiss{color:var(--warn-ink)}
-.ask-alts{flex-wrap:wrap}.ask-alts button{width:auto;padding:0 8px;font-size:12px;white-space:nowrap}
+.ask-choice{position:relative;display:flex}
+.ask-actions .ask-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:8;min-width:180px;max-width:280px;display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:10px;background:var(--card);border:1px solid var(--well-2);box-shadow:0 6px 20px #00000033}
+.ask-actions .ask-menu button{width:100%;height:auto;min-height:32px;padding:6px 10px;justify-content:flex-start;text-align:left;background:transparent;color:var(--ink);font-size:13px;font-weight:500;line-height:18px}
+.ask-actions .ask-menu button:hover,.ask-actions .ask-menu button:focus-visible{background:var(--well)}
 .ask-not-found{font-size:13px;color:var(--ink-3);margin:0}
 
 .offer-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Band, RequirementLine } from '../api/client.ts'
 
 interface Props {
@@ -69,26 +69,112 @@ interface AskRowProps {
   onDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
 }
 
+type Answer = 'add' | 'dismiss'
+
+const ANSWERS = {
+  add: {
+    glyph: '+',
+    label: 'I have this',
+    skillLine: (skill: string) => `I have ${skill}`,
+    wholeLine: 'I have this requirement',
+  },
+  dismiss: {
+    glyph: '−',
+    label: 'I do not have this',
+    skillLine: (skill: string) => `I do not have ${skill}`,
+    wholeLine: 'I do not have this requirement',
+  },
+}
+
+interface AnswerControlProps {
+  kind: Answer
+  skills: string[]
+  busy: Answer | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onChoose: (chosenSkill?: string) => void
+}
+
+function AnswerControl({ kind, skills, busy, open, onOpenChange, onChoose }: AnswerControlProps) {
+  const hostRef = useRef<HTMLSpanElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const copy = ANSWERS[kind]
+  const hasList = skills.length > 1
+
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(e: PointerEvent) {
+      if (hostRef.current && !hostRef.current.contains(e.target as Node)) onOpenChange(false)
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      onOpenChange(false)
+      buttonRef.current?.focus()
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown, true)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown, true)
+    }
+  }, [open, onOpenChange])
+
+  function choose(chosenSkill?: string) {
+    onOpenChange(false)
+    onChoose(chosenSkill)
+  }
+
+  const button = (
+    <button
+      ref={buttonRef}
+      className={kind}
+      disabled={!!busy}
+      onClick={() => (hasList ? onOpenChange(!open) : onChoose(kind === 'add' ? skills[0] : undefined))}
+      aria-label={copy.label}
+      {...(hasList ? { 'aria-haspopup': 'menu' as const, 'aria-expanded': open } : {})}
+    >
+      {busy === kind ? '…' : copy.glyph}
+    </button>
+  )
+
+  if (!hasList) return button
+
+  return (
+    <span className="ask-choice" ref={hostRef}>
+      {button}
+      {open && (
+        <div className="ask-menu" role="menu">
+          {skills.map((skill) => (
+            <button key={skill} role="menuitem" onClick={() => choose(skill)}>
+              {copy.skillLine(skill)}
+            </button>
+          ))}
+          <button role="menuitem" onClick={() => choose()}>
+            {copy.wholeLine}
+          </button>
+        </div>
+      )}
+    </span>
+  )
+}
+
 function AskRow({ item, onDecision }: AskRowProps) {
-  const [busy, setBusy] = useState<'add' | 'dismiss' | null>(null)
+  const [busy, setBusy] = useState<Answer | null>(null)
+  const [openList, setOpenList] = useState<Answer | null>(null)
 
   const isUnknown = item.verdict === '?'
   const namedSkills = item.namedSkills ?? []
-  const hasMultipleSkills = isUnknown && namedSkills.length > 1
 
-  async function handleAdd(chosenSkill?: string) {
+  async function answer(kind: Answer, chosenSkill?: string) {
     if (busy) return
-    setBusy('add')
-    try { await onDecision(item.index, true, chosenSkill) }
+    setBusy(kind)
+    try { await onDecision(item.index, kind === 'add', chosenSkill) }
     finally { setBusy(null) }
   }
 
-  async function handleDismiss() {
-    if (busy) return
-    setBusy('dismiss')
-    try { await onDecision(item.index, false) }
-    finally { setBusy(null) }
-  }
+  const setListOpen = (kind: Answer) => (open: boolean) =>
+    setOpenList((current) => (open ? kind : current === kind ? null : current))
 
   const mark = item.verdict === '✓' ? '✓' : item.verdict === '✕' ? '✕' : '?'
   const rowCls = item.verdict === '✓' ? 'match' : item.verdict === '✕' ? 'no' : 'unknown'
@@ -108,57 +194,19 @@ function AskRow({ item, onDecision }: AskRowProps) {
         <span className="ask-evidence">{item.evidence}</span>
       )}
       {isUnknown && (
-        hasMultipleSkills ? (
-          <div className="ask-actions ask-alts">
-            {namedSkills.map((skill) => (
-              <button
-                key={skill}
-                className="add"
-                disabled={!!busy}
-                onClick={() => void handleAdd(skill)}
-                aria-label={`Add ${skill}`}
-              >
-                {busy === 'add' ? '…' : `+ ${skill}`}
-              </button>
-            ))}
-            <button
-              className="add"
-              disabled={!!busy}
-              onClick={() => void handleAdd()}
-              title="I have this"
-              aria-label="I have this"
-            >
-              {busy === 'add' ? '…' : '+'}
-            </button>
-            <button
-              className="dismiss"
-              disabled={!!busy}
-              onClick={() => void handleDismiss()}
-              aria-label="I do not have this"
-            >
-              {busy === 'dismiss' ? '…' : '−'}
-            </button>
-          </div>
-        ) : (
-          <div className="ask-actions">
-            <button
-              className="add"
-              disabled={!!busy}
-              onClick={() => void handleAdd(namedSkills[0])}
-              aria-label="I have this"
-            >
-              {busy === 'add' ? '…' : '+'}
-            </button>
-            <button
-              className="dismiss"
-              disabled={!!busy}
-              onClick={() => void handleDismiss()}
-              aria-label="I do not have this"
-            >
-              {busy === 'dismiss' ? '…' : '−'}
-            </button>
-          </div>
-        )
+        <div className="ask-actions">
+          {(['add', 'dismiss'] as const).map((kind) => (
+            <AnswerControl
+              key={kind}
+              kind={kind}
+              skills={namedSkills}
+              busy={busy}
+              open={openList === kind}
+              onOpenChange={setListOpen(kind)}
+              onChoose={(chosenSkill) => void answer(kind, chosenSkill)}
+            />
+          ))}
+        </div>
       )}
     </li>
   )
