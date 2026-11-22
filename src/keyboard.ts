@@ -8,17 +8,6 @@ function shouldIgnore(e: KeyboardEvent): boolean {
     (target as HTMLElement).isContentEditable
 }
 
-export function installSearchShortcut(input: HTMLInputElement): () => void {
-  function handler(e: KeyboardEvent): void {
-    if (e.code !== 'Slash') return
-    if (shouldIgnore(e)) return
-    e.preventDefault()
-    input.focus()
-  }
-  document.addEventListener('keydown', handler)
-  return () => document.removeEventListener('keydown', handler)
-}
-
 export function installNavShortcuts(onPrev: () => void, onNext: () => void): () => void {
   function handler(e: KeyboardEvent): void {
     if (shouldIgnore(e)) return
