@@ -30,6 +30,10 @@ export function ApplyOutcomeDialog({ title, company, note, outcomes, saving, mes
     }
   }, [])
 
+  useEffect(() => {
+    if (!saving) setPending(null)
+  }, [saving, message])
+
   async function decide(outcome: Outcome) {
     if (pending !== null) return
     setPending(outcome.key)
