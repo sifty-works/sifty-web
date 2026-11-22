@@ -7,8 +7,6 @@ import { Message } from './Messages.tsx'
 import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 
-type SettingsNav = 'sources' | 'exclusions' | 'models'
-
 interface Props {
   status: StatusExtra | null
   applyStatus: (data: StatusExtra) => void
@@ -40,7 +38,7 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
   const [nameVal, setNameVal] = useState('')
   const [urlVal, setUrlVal] = useState('')
   const [busy, setBusy] = useState(false)
-  const [nav, setNav] = useState<SettingsNav>('sources')
+  const [nav, setNav] = useState('sources')
   const [collectNote, setCollectNote] = useState<Note | null>(null)
 
   const isCollecting = status?.collecting != null
@@ -69,83 +67,82 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
     ? INTERVAL_OPTIONS
     : [...INTERVAL_OPTIONS, { label: interval, value: interval }]
 
+  const groups = [
+    {
+      title: 'Collection',
+      icon: COLLECTION_ICON,
+      panels: [
+        {
+          id: 'sources',
+          label: 'Sources',
+          body:
+            state.status === 'error' ? (
+              <p className="muted">{state.message}</p>
+            ) : (
+              <SourcesPanel
+                sources={sources}
+                auto={auto}
+                interval={interval}
+                intervalOpts={intervalOpts}
+                busy={busy}
+                isCollecting={isCollecting}
+                statusText={statusText}
+                nameVal={nameVal}
+                urlVal={urlVal}
+                addNote={addNote}
+                collectNote={collectNote}
+                onToggle={(key, enabled) => void toggle(key, enabled)}
+                onRemove={(key) => void remove(key)}
+                onAdd={(e) => void handleAdd(e)}
+                onNameChange={setNameVal}
+                onUrlChange={setUrlVal}
+                onUpdateSchedule={(a, i) => void updateSchedule(a, i)}
+                onCollect={collect}
+              />
+            ),
+        },
+        { id: 'exclusions', label: 'Exclusions', body: <ExclusionsPanel /> },
+      ],
+    },
+    {
+      title: 'Models',
+      icon: MODELS_ICON,
+      panels: [{ id: 'models', label: 'Models', body: <ModelsPanel /> }],
+    },
+  ]
+  const panels = groups.flatMap((g) => g.panels)
+  const active = panels.find((p) => p.id === nav) ?? panels[0]
+
   return (
     <div className="settings-page">
       <nav className="settings-nav" aria-label="Settings sections">
-        <div className="settings-group">
-          <h2>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {COLLECTION_ICON}
-            </svg>
-            Collection
-          </h2>
-          <div className="settings-group-items">
-            <button
-              className={nav === 'sources' ? 'active' : undefined}
-              aria-current={nav === 'sources' ? 'page' : undefined}
-              onClick={() => setNav('sources')}
-            >
-              Sources
-            </button>
-            <button
-              className={nav === 'exclusions' ? 'active' : undefined}
-              aria-current={nav === 'exclusions' ? 'page' : undefined}
-              onClick={() => setNav('exclusions')}
-            >
-              Exclusions
-            </button>
+        {groups.map((g) => (
+          <div className="settings-group" key={g.title}>
+            <h2>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                {g.icon}
+              </svg>
+              {g.title}
+            </h2>
+            <div className="settings-group-items">
+              {g.panels.map((p) => (
+                <button
+                  key={p.id}
+                  className={active.id === p.id ? 'active' : undefined}
+                  aria-current={active.id === p.id ? 'page' : undefined}
+                  onClick={() => setNav(p.id)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-
-        <div className="settings-group">
-          <h2>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {MODELS_ICON}
-            </svg>
-            Models
-          </h2>
-          <div className="settings-group-items">
-            <button
-              className={nav === 'models' ? 'active' : undefined}
-              aria-current={nav === 'models' ? 'page' : undefined}
-              onClick={() => setNav('models')}
-            >
-              Models
-            </button>
-          </div>
-        </div>
+        ))}
       </nav>
 
       <div className="settings-main">
         <div className="settings-content">
-          {nav === 'models' ? (
-            state.status === 'offline' ? <OfflineNotice /> : <ModelsPanel />
-          ) : nav === 'exclusions' ? (
-            state.status === 'offline' ? <OfflineNotice /> : <ExclusionsPanel />
-          ) : (
-            state.status === 'offline' ? <OfflineNotice /> :
-            state.status === 'error' ? <p className="muted">{state.message}</p> :
-            <SourcesPanel
-              sources={sources}
-              auto={auto}
-              interval={interval}
-              intervalOpts={intervalOpts}
-              busy={busy}
-              isCollecting={isCollecting}
-              statusText={statusText}
-              nameVal={nameVal}
-              urlVal={urlVal}
-              addNote={addNote}
-              collectNote={collectNote}
-              onToggle={(key, enabled) => void toggle(key, enabled)}
-              onRemove={(key) => void remove(key)}
-              onAdd={(e) => void handleAdd(e)}
-              onNameChange={setNameVal}
-              onUrlChange={setUrlVal}
-              onUpdateSchedule={(a, i) => void updateSchedule(a, i)}
-              onCollect={collect}
-            />
-          )}
+          {state.status === 'offline' ? <OfflineNotice /> : active.body}
         </div>
       </div>
     </div>
