@@ -8,6 +8,7 @@ const REPORT_MS = 5000
 const standing: { dismiss: () => void }[] = []
 
 function dismissNewest(e: KeyboardEvent) {
+  if (e.defaultPrevented) return
   if (e.key === 'Escape') standing[standing.length - 1]?.dismiss()
 }
 
@@ -32,12 +33,12 @@ function Standing({ note, visual, inline, className, onDismiss }: Props & { note
   useEffect(() => {
     if (gone) return
     const entry = { dismiss: () => { setGone(true); notify.current?.() } }
-    if (standing.push(entry) === 1) document.addEventListener('keydown', dismissNewest)
+    if (standing.push(entry) === 1) window.addEventListener('keydown', dismissNewest)
     const timer = note.kind === 'report' ? setTimeout(entry.dismiss, REPORT_MS) : undefined
     return () => {
       clearTimeout(timer)
       standing.splice(standing.indexOf(entry), 1)
-      if (standing.length === 0) document.removeEventListener('keydown', dismissNewest)
+      if (standing.length === 0) window.removeEventListener('keydown', dismissNewest)
     }
   }, [gone, note.kind])
 

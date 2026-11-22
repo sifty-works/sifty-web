@@ -35,7 +35,7 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
   useEffect(() => {
     if (!menu) { setCreating(false); setRenamingId(null); setDeletingId(null); setNote(null); return }
     const outside = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setMenu(false) }
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenu(false) }
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); setMenu(false) } }
     document.addEventListener('pointerdown', outside)
     document.addEventListener('keydown', esc)
     return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', esc) }

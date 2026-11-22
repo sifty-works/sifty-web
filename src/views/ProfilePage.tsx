@@ -300,7 +300,7 @@ function ProfileHeader({ me, profile, onClose, onReload }: {
         {headlineEditing ? <div className="profile-headline-editor">
           <input className="profile-headline-input" value={headlineDraft} maxLength={160} aria-label="Headline"
             onChange={(e) => setHeadlineDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveHeadline() } if (e.key === 'Escape') setHeadlineEditing(false) }}/>
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveHeadline() } if (e.key === 'Escape') { e.preventDefault(); setHeadlineEditing(false) } }}/>
           <Message note={hlNote}/>
           <div className="profile-headline-actions">
             <button type="button" onClick={() => setHeadlineEditing(false)} disabled={savingHL}>Cancel</button>
