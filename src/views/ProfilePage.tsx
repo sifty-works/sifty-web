@@ -33,6 +33,26 @@ export function SectionShell({ id, title, description, editing, saving, error, o
   </section>
 }
 
+export function useSectionEditor(fill: () => void, commit: () => Promise<unknown>) {
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function save() {
+    setSaving(true); setError('')
+    try { await commit(); setEditing(false) }
+    catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
+    finally { setSaving(false) }
+  }
+
+  return {
+    editing, saving, error,
+    onEdit: () => { fill(); setError(''); setEditing(true) },
+    onCancel: () => setEditing(false),
+    onSave: () => void save(),
+  }
+}
+
 export function TagInput({ label, title, desc, variant, values, placeholder, onChange }: {
   label: string; title?: string; desc?: string; variant?: string; values: string[]; placeholder?: string; onChange: (v: string[]) => void
 }) {
@@ -398,35 +418,24 @@ function toUrl(handle: string, prefix: string): string {
 }
 
 function ContactsSection({ me, onSave }: { me: MeData; onSave: (patch: MePatchReq) => Promise<void> }) {
-  const [editing, setEditing] = useState(false)
   const [d, setD] = useState({ email: '', phone: '', linkedin: '', github: '', x: '', website: '' })
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
 
-  function beginEdit() {
-    setD({
+  const editor = useSectionEditor(
+    () => setD({
       email: me.email ?? '', phone: me.phone ?? '',
       linkedin: toHandle(me.linkedin ?? '', LINKEDIN_PREFIX),
       github: toHandle(me.github ?? '', GITHUB_PREFIX),
       x: toHandle(me.x ?? '', X_PREFIX),
       website: me.website ?? '',
-    }); setError(''); setEditing(true)
-  }
-
-  async function save() {
-    setSaving(true); setError('')
-    try {
-      await onSave({
-        email: d.email || null, phone: d.phone || null,
-        linkedin: toUrl(d.linkedin, LINKEDIN_PREFIX) || null,
-        github: toUrl(d.github, GITHUB_PREFIX) || null,
-        x: toUrl(d.x, X_PREFIX) || null,
-        website: d.website || null,
-      })
-      setEditing(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
-    finally { setSaving(false) }
-  }
+    }),
+    () => onSave({
+      email: d.email || null, phone: d.phone || null,
+      linkedin: toUrl(d.linkedin, LINKEDIN_PREFIX) || null,
+      github: toUrl(d.github, GITHUB_PREFIX) || null,
+      x: toUrl(d.x, X_PREFIX) || null,
+      website: d.website || null,
+    }),
+  )
 
   const anyContact = !!(me.email || me.phone || me.linkedin || me.github || me.x || me.website)
   const liHandle = toHandle(me.linkedin ?? '', LINKEDIN_PREFIX)
@@ -435,9 +444,8 @@ function ContactsSection({ me, onSave }: { me: MeData; onSave: (patch: MePatchRe
 
   return <SectionShell id="profile-contacts" title="Contacts and links"
     description="Contact details used only when an application form asks. LinkedIn, GitHub and X take a handle; the full URL is stored."
-    editing={editing} saving={saving} error={error}
-    onEdit={beginEdit} onCancel={() => setEditing(false)} onSave={() => void save()}>
-    {editing ? <div className="profile-fields">
+    {...editor}>
+    {editor.editing ? <div className="profile-fields">
       <Field label="Email"><input type="email" value={d.email} onChange={(e) => setD({ ...d, email: e.target.value })}/></Field>
       <Field label="Phone"><input type="tel" value={d.phone} onChange={(e) => setD({ ...d, phone: e.target.value })}/></Field>
       <Field label="LinkedIn" hint={LINKEDIN_PREFIX + 'your-handle'}>
