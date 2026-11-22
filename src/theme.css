@@ -444,7 +444,7 @@ html .profile-conflict strong{color:var(--decide-ink)}
 
 html :is(.detail,.collection-view,.settings-main,.profile-screen) .banner:not(.error),html .msg.info{background:var(--info-bg)!important;color:var(--info-ink)!important}
 html :is(.detail,.collection-view,.settings-main,.profile-screen) .banner:not(.error)::before,html .msg.info::before{-webkit-mask-image:var(--icon-info);mask-image:var(--icon-info);background:var(--info-ink)}
-html :is(.detail,.collection-view,.settings-main,.profile-screen) .banner button,html .profile-document-error button,html .profile-derived.warning button,html .profile-conflict button{background:#fff!important;color:var(--ink)!important}
+html .msg button,html :is(.detail,.collection-view,.settings-main,.profile-screen) .banner button,html .profile-document-error button,html .profile-derived.warning button,html .profile-conflict button{background:#fff!important;color:var(--ink)!important}
 
 html :is(.profile-state.state-error,.profile-state.state-failed,.s-tag.failed){background:var(--retry-pill)!important;color:var(--retry-ink)!important}
 html :is(.profile-state.state-no_text,.profile-state.state-missing,.s-pill.down,.s-pill.warn){background:var(--broken-pill)!important;color:var(--broken-ink)!important}

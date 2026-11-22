@@ -23,6 +23,7 @@ import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { FilterPanel } from './FilterPanel.tsx'
 import { Icon } from './Icon.tsx'
 import { ListResizer, useListWidth } from './ListResizer.tsx'
+import { type Note, report } from './Messages.tsx'
 import { SearchField } from './SearchField.tsx'
 import { VacancyPage } from './VacancyPage.tsx'
 import { VacancyRow } from './VacancyRow.tsx'
@@ -92,7 +93,7 @@ export function InboxList({
   const [listWidth, setListWidth] = useListWidth()
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
   const [actionError, setActionError] = useState<string | null>(null)
-  const [skillNotice, setSkillNotice] = useState<string | null>(null)
+  const [skillNotice, setSkillNotice] = useState<Note | null>(null)
   const [rowFitUpdates, setRowFitUpdates] = useState<Map<number, FitMark>>(new Map())
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>({ kind: 'none' })
   const [applyDialogSaving, setApplyDialogSaving] = useState(false)
@@ -371,7 +372,7 @@ export function InboxList({
         chosenSkill,
       })
       setPageView(vacancyView)
-      setSkillNotice(notice)
+      setSkillNotice(notice ? report(notice) : null)
       setRowFitUpdates((prev) => {
         const next = new Map(prev)
         next.set(vacancyView.id, vacancyView.fit)

@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react'
 import { VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { FitBand } from './FitBand.tsx'
+import { Message, type Note } from './Messages.tsx'
 import { WhatTheyAsk } from './WhatTheyAsk.tsx'
 import { WhatTheyOffer } from './WhatTheyOffer.tsx'
 
@@ -14,9 +15,9 @@ interface Props {
   view: VacancyView
   sessionDecision?: SessionDecision | null
   actionError?: string | null
-  notice?: string | null
+  notice?: Note | null
   onAction: (key: string, url?: string, message?: string) => void
-  onClearNotice?: () => void
+  onClearNotice: () => void
   onSkillDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
 }
 
@@ -151,14 +152,7 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
 
       {activeTab === 'overview' && (
         <>
-          {notice && (
-            <div className="banner" role="status">
-              {notice}
-              {onClearNotice && (
-                <button aria-label="Dismiss" onClick={onClearNotice}>×</button>
-              )}
-            </div>
-          )}
+          <Message note={notice} onDismiss={onClearNotice} />
 
           <FitBand band={view.band} />
 
