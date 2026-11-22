@@ -1304,6 +1304,8 @@ components:
                     type: array
                 location:
                     type: string
+                locationFull:
+                    type: string
                 published:
                     type: string
                 reason:
@@ -1549,6 +1551,8 @@ components:
                 listing:
                     $ref: '#/components/schemas/ListingView'
                 location:
+                    type: string
+                locationFull:
                     type: string
                 offer:
                     $ref: '#/components/schemas/OfferView'

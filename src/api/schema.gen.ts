@@ -971,6 +971,7 @@ export interface components {
             id: number;
             industries: string[];
             location: string;
+            locationFull?: string;
             published: string;
             reason?: string;
             /** @enum {string} */
@@ -1062,6 +1063,7 @@ export interface components {
             industries: string[];
             listing: components["schemas"]["ListingView"];
             location: string;
+            locationFull?: string;
             offer: components["schemas"]["OfferView"];
             original: string;
             published: string;

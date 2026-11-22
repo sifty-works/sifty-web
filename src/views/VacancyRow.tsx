@@ -46,7 +46,7 @@ export function VacancyRow({ row, selected, onSelect, decidedTo }: Props) {
         {decidedTo === 'shortlist' && <span className="yes-check" title="Shortlisted">✓ </span>}
         {row.title}
       </strong>
-      <div className="row-location">
+      <div className="row-location" title={row.locationFull}>
         {row.expired && <span title="Listing expired">◷ </span>}
         {row.location}
         {row.applied && <span> · {row.applied}</span>}

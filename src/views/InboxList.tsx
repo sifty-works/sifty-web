@@ -260,6 +260,7 @@ export function InboxList({
           company: pageView.company,
           title: pageView.title,
           location: pageView.location,
+          locationFull: pageView.locationFull,
           published: pageView.published,
           unread: pageView.unread,
           stage: pageView.stage,
