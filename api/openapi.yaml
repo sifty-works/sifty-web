@@ -1502,6 +1502,8 @@ components:
             properties:
                 converted:
                     type: string
+                full:
+                    type: string
                 line:
                     type: string
                 name:

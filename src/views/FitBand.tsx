@@ -52,7 +52,7 @@ export function FitBand({ band }: Props) {
                   </span>
                 )}
               </div>
-              <span className="band-tile-value">{tile.value || 'Not stated'}</span>
+              <span className="band-tile-value" title={tile.full}>{tile.value || 'Not stated'}</span>
               {tile.converted && <span className="band-tile-approx">{tile.converted}</span>}
               {tile.line && <span className="band-tile-hint">{tile.line}</span>}
             </div>

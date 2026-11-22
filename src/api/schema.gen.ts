@@ -1042,6 +1042,7 @@ export interface components {
         };
         Tile: {
             converted?: string;
+            full?: string;
             line: string;
             name: string;
             value: string;
