@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { previewExclusion, Source, StatusExtra, triggerCollect } from '../api/client.ts'
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
+import type { Note } from '../state/messages.ts'
+import { Message } from './Messages.tsx'
 import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 
@@ -34,7 +36,7 @@ const MODELS_ICON = (
 )
 
 export function SourcesPage({ status, applyStatus, statusText }: Props) {
-  const { state, add, toggle, remove, updateSchedule, addError } = useSources()
+  const { state, add, toggle, remove, updateSchedule, addNote } = useSources()
   const [nameVal, setNameVal] = useState('')
   const [urlVal, setUrlVal] = useState('')
   const [busy, setBusy] = useState(false)
@@ -127,7 +129,7 @@ export function SourcesPage({ status, applyStatus, statusText }: Props) {
               statusText={statusText}
               nameVal={nameVal}
               urlVal={urlVal}
-              addError={addError}
+              addNote={addNote}
               onToggle={(key, enabled) => void toggle(key, enabled)}
               onRemove={(key) => void remove(key)}
               onAdd={(e) => void handleAdd(e)}
@@ -153,7 +155,7 @@ interface SourcesPanelProps {
   statusText: string | null
   nameVal: string
   urlVal: string
-  addError: string | null
+  addNote: Note | null
   onToggle: (key: string, enabled: boolean) => void
   onRemove: (key: string) => void
   onAdd: (e: React.FormEvent) => void
@@ -165,7 +167,7 @@ interface SourcesPanelProps {
 
 function SourcesPanel({
   sources, auto, interval, intervalOpts, busy, isCollecting, statusText,
-  nameVal, urlVal, addError,
+  nameVal, urlVal, addNote,
   onToggle, onRemove, onAdd, onNameChange, onUrlChange, onUpdateSchedule, onCollect,
 }: SourcesPanelProps) {
   return (
@@ -249,7 +251,7 @@ function SourcesPanel({
         <button className="primary" type="submit" disabled={busy || (!nameVal.trim() && !urlVal.trim())}>
           Add site
         </button>
-        {addError && <p className="error">{addError}</p>}
+        <Message note={addNote} />
       </form>
 
       <section className="s-card" style={{ marginTop: 14 }}>
@@ -292,7 +294,7 @@ function SourcesPanel({
 }
 
 function ExclusionsPanel() {
-  const { state, add, remove, addError } = useExclusions()
+  const { state, add, remove, addNote } = useExclusions()
   const [kind, setKind] = useState<'word' | 'company'>('word')
   const [value, setValue] = useState('')
   const [preview, setPreview] = useState('')
@@ -335,7 +337,7 @@ function ExclusionsPanel() {
         />
         <button type="submit">Add</button>
         {preview && <p className="muted">{preview}</p>}
-        {addError && <p className="error">{addError}</p>}
+        <Message note={addNote} />
       </form>
 
       {exclusions.length > 0 && (

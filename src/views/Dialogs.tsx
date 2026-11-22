@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Outcome } from '../api/client.ts'
+import type { Note } from '../state/messages.ts'
+import { Message } from './Messages.tsx'
+
+const UNSAVED =
+  'The outcome could not be saved. The role has not been changed by this action. Try again, or close this dialog to review the error.'
 
 interface ApplyOutcomeDialogProps {
   title: string
@@ -7,11 +12,11 @@ interface ApplyOutcomeDialogProps {
   note: string | null
   outcomes: Outcome[]
   saving: boolean
-  error: string | null
+  message: Note | null
   onDecide: (outcome: Outcome) => void
 }
 
-export function ApplyOutcomeDialog({ title, company, note, outcomes, saving, error, onDecide }: ApplyOutcomeDialogProps) {
+export function ApplyOutcomeDialog({ title, company, note, outcomes, saving, message, onDecide }: ApplyOutcomeDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [pending, setPending] = useState<string | null>(null)
 
@@ -47,12 +52,7 @@ export function ApplyOutcomeDialog({ title, company, note, outcomes, saving, err
         after you have submitted it yourself. You can also confirm later from
         Shortlist. Choose a negative outcome only if you will not apply.
       </p>
-      {error && (
-        <p className="error" role="alert">
-          The outcome could not be saved. The role has not been changed by this
-          action. Try again, or close this dialog to review the error.
-        </p>
-      )}
+      <Message note={message && { ...message, text: UNSAVED }} />
       <div className="confirmation-actions">
         {outcomes.map((outcome) => (
           <button
@@ -74,12 +74,12 @@ interface DeleteConfirmDialogProps {
   title: string
   company: string
   saving: boolean
-  error: string | null
+  message: Note | null
   onKeep: () => void
   onDelete: () => void
 }
 
-export function DeleteConfirmDialog({ title, company, saving, error, onKeep, onDelete }: DeleteConfirmDialogProps) {
+export function DeleteConfirmDialog({ title, company, saving, message, onKeep, onDelete }: DeleteConfirmDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null)
   const pending = useRef(false)
 
@@ -102,7 +102,7 @@ export function DeleteConfirmDialog({ title, company, saving, error, onKeep, onD
       <p>{company}</p>
       <p>This permanently deletes this role, its answers and application history. This cannot be undone. Automatic collection will not restore it.</p>
       <p className="muted">Remembered candidate facts and shared files remain available.</p>
-      {error && <p className="error" role="alert">{error}</p>}
+      <Message note={message} />
       <div className="draft-actions">
         <button autoFocus disabled={saving} onClick={onKeep}>Keep role</button>
         <button className="no-button" disabled={saving} onClick={() => { if (pending.current) return; pending.current = true; onDelete() }}>

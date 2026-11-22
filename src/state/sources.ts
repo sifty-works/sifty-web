@@ -10,6 +10,7 @@ import {
   ServerError,
   OfflineError,
 } from '../api/client.ts'
+import { failure, type Note } from './messages.ts'
 
 export type SourcesState =
   | { status: 'loading' }
@@ -23,7 +24,7 @@ export interface UseSourcesResult {
   toggle: (key: string, enabled: boolean) => Promise<void>
   remove: (key: string) => Promise<void>
   updateSchedule: (auto: boolean, interval: string) => Promise<void>
-  addError: string | null
+  addNote: Note | null
 }
 
 function applyList(
@@ -46,7 +47,7 @@ function offlineOrError(
 
 export function useSources(): UseSourcesResult {
   const [state, setState] = useState<SourcesState>({ status: 'loading' })
-  const [addError, setAddError] = useState<string | null>(null)
+  const [addNote, setAddNote] = useState<Note | null>(null)
   const [version, setVersion] = useState(0)
 
   useEffect(() => {
@@ -59,14 +60,14 @@ export function useSources(): UseSourcesResult {
   }, [version])
 
   const add = useCallback(async (name: string, url: string): Promise<boolean> => {
-    setAddError(null)
+    setAddNote(null)
     try {
       const data = await addSource(name, url)
       applyList(setState, data)
       return true
     } catch (err) {
       if (err instanceof ServerError) {
-        setAddError(err.message)
+        setAddNote(failure(err, 'Could not add site'))
       } else if (err instanceof OfflineError) {
         setState({ status: 'offline' })
       }
@@ -86,5 +87,5 @@ export function useSources(): UseSourcesResult {
   const remove = useMemo(() => change(deleteSource), [change])
   const updateSchedule = useMemo(() => change(setSchedule), [change])
 
-  return { state, add, toggle, remove, updateSchedule, addError }
+  return { state, add, toggle, remove, updateSchedule, addNote }
 }

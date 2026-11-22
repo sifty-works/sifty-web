@@ -5,8 +5,10 @@ import {
   type MeData, type ProfileDetailResp, type ProfileListItem, type ProfilePatchReq, type MePatchReq,
   type QAItem, type ReferenceResp,
 } from '../api/client.ts'
+import { describe, failure, type Note } from '../state/messages.ts'
 import { useReference } from '../state/profile.ts'
 import { Icon } from './Icon.tsx'
+import { Message } from './Messages.tsx'
 
 export function NotSet() { return <span className="profile-not-set">Not set</span> }
 
@@ -28,7 +30,7 @@ export function SectionShell({ id, title, description, editing, saving, error, o
         </> : <button type="button" className="profile-pencil" title="Edit" aria-label={`Edit ${title}`} onClick={onEdit}><Icon name="pencil" size={16}/></button>}
       </div>
     </header>
-    {error ? <div className="banner error" role="alert">{error}</div> : null}
+    <Message note={error ? { kind: 'failure', text: error } : null}/>
     <div className="profile-card-body">{children}</div>
   </section>
 }
@@ -41,7 +43,7 @@ export function useSectionEditor(fill: () => void, commit: () => Promise<unknown
   async function save() {
     setSaving(true); setError('')
     try { await commit(); setEditing(false) }
-    catch (e) { setError(e instanceof Error ? e.message : 'Could not save') }
+    catch (e) { setError(describe(e)) }
     finally { setSaving(false) }
   }
 
@@ -177,7 +179,7 @@ export function useProfilePage(profileId: number): ProfilePageData {
       const p = await getProfile(profileId)
       setProfile(p)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load profile')
+      setError(describe(e, 'Failed to load profile'))
     } finally { setLoading(false) }
   }, [profileId])
 
@@ -210,56 +212,56 @@ function ProfileHeader({ me, profile, onClose, onReload }: {
   const [displayName, setDisplayName] = useState('')
   const [legalName, setLegalName] = useState('')
   const [savingId, setSavingId] = useState(false)
-  const [idError, setIdError] = useState('')
+  const [idNote, setIdNote] = useState<Note | null>(null)
 
   const [headlineEditing, setHeadlineEditing] = useState(false)
   const [headlineDraft, setHeadlineDraft] = useState('')
   const [savingHL, setSavingHL] = useState(false)
-  const [hlError, setHlError] = useState('')
+  const [hlNote, setHlNote] = useState<Note | null>(null)
 
   const [photoExists, setPhotoExists] = useState(false)
   const [photoBusy, setPhotoBusy] = useState(false)
-  const [photoError, setPhotoError] = useState('')
+  const [photoNote, setPhotoNote] = useState<Note | null>(null)
   const photoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { void checkPhoto().then(setPhotoExists) }, [])
 
   function beginEdit() {
     setDisplayName(me.displayName ?? ''); setLegalName(me.legalName ?? '')
-    setIdError(''); setEditing(true)
+    setIdNote(null); setEditing(true)
   }
 
   async function saveIdentity() {
-    setSavingId(true); setIdError('')
+    setSavingId(true); setIdNote(null)
     try {
       await patchMe({ displayName: displayName || null, legalName: legalName || null })
       onReload(); setEditing(false)
-    } catch (e) { setIdError(e instanceof Error ? e.message : 'Could not save') }
+    } catch (e) { setIdNote(failure(e)) }
     finally { setSavingId(false) }
   }
 
   async function saveHeadline() {
-    setSavingHL(true); setHlError('')
+    setSavingHL(true); setHlNote(null)
     try {
       await patchProfile(profile.id, { headline: headlineDraft || null })
       onReload(); setHeadlineEditing(false)
-    } catch (e) { setHlError(e instanceof Error ? e.message : 'Could not save') }
+    } catch (e) { setHlNote(failure(e)) }
     finally { setSavingHL(false) }
   }
 
   async function handlePhoto(file: File) {
     const MAX = 2 * 1024 * 1024
-    if (file.size > MAX) { setPhotoError('Photo must be at most 2 MiB'); return }
-    setPhotoBusy(true); setPhotoError('')
+    if (file.size > MAX) { setPhotoNote(failure('Photo must be at most 2 MiB')); return }
+    setPhotoBusy(true); setPhotoNote(null)
     try { await uploadPhoto(file); setPhotoExists(true) }
-    catch (e) { setPhotoError(e instanceof Error ? e.message : 'Upload failed') }
+    catch (e) { setPhotoNote(failure(e, 'Upload failed')) }
     finally { setPhotoBusy(false) }
   }
 
   async function handleRemovePhoto() {
-    setPhotoBusy(true); setPhotoError('')
+    setPhotoBusy(true); setPhotoNote(null)
     try { await removePhoto(); setPhotoExists(false) }
-    catch (e) { setPhotoError(e instanceof Error ? e.message : 'Remove failed') }
+    catch (e) { setPhotoNote(failure(e, 'Remove failed')) }
     finally { setPhotoBusy(false) }
   }
 
@@ -286,7 +288,7 @@ function ProfileHeader({ me, profile, onClose, onReload }: {
           <Field label="Legal name"><input value={legalName} onChange={(e) => setLegalName(e.target.value)}/></Field>
         </div>
         <p className="profile-hint">Legal name is optional; used only where a form asks for it.</p>
-        {idError ? <p className="error" role="alert">{idError}</p> : null}
+        <Message note={idNote}/>
         <div className="profile-identity-actions">
           <button type="button" onClick={() => setEditing(false)} disabled={savingId}>Cancel</button>
           <button type="button" className="primary" onClick={() => void saveIdentity()} disabled={savingId}>{savingId ? 'Saving…' : 'Save'}</button>
@@ -299,7 +301,7 @@ function ProfileHeader({ me, profile, onClose, onReload }: {
           <input className="profile-headline-input" value={headlineDraft} maxLength={160} aria-label="Headline"
             onChange={(e) => setHeadlineDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveHeadline() } if (e.key === 'Escape') setHeadlineEditing(false) }}/>
-          {hlError ? <p className="error" role="alert">{hlError}</p> : null}
+          <Message note={hlNote}/>
           <div className="profile-headline-actions">
             <button type="button" onClick={() => setHeadlineEditing(false)} disabled={savingHL}>Cancel</button>
             <button type="button" className="primary" onClick={() => void saveHeadline()} disabled={savingHL}>{savingHL ? 'Saving…' : 'Save'}</button>
@@ -315,7 +317,7 @@ function ProfileHeader({ me, profile, onClose, onReload }: {
         </p>
       </>}
     </div>
-    {photoError ? <p className="profile-avatar-error error" role="alert">{photoError}</p> : null}
+    <Message note={photoNote} className="profile-avatar-error"/>
     {!editing ? <div className="profile-identity-actions">
       {photoExists ? <button type="button" onClick={() => void handleRemovePhoto()} disabled={photoBusy}>Remove photo</button> : null}
       <button type="button" className="profile-close" onClick={onClose}>Close</button>
@@ -331,8 +333,8 @@ function QAPanel() {
   const [addQ, setAddQ] = useState(''); const [addA, setAddA] = useState('')
   const [saving, setSaving] = useState<Record<number, boolean>>({})
   const [addSaving, setAddSaving] = useState(false)
-  const [err, setErr] = useState<Record<number, string>>({})
-  const [addErr, setAddErr] = useState('')
+  const [err, setErr] = useState<Record<number, Note | null>>({})
+  const [addNote, setAddNote] = useState<Note | null>(null)
 
   useEffect(() => {
     void getQA().then((r) => { setItems(r.items); setLoading(false) }).catch(() => setLoading(false))
@@ -340,27 +342,27 @@ function QAPanel() {
 
   async function doAdd() {
     if (!addQ.trim()) return
-    setAddSaving(true); setAddErr('')
+    setAddSaving(true); setAddNote(null)
     try {
       const item = await createQA(addQ.trim(), addA.trim())
       setItems((p) => [...p, item]); setAddQ(''); setAddA('')
-    } catch (e) { setAddErr(e instanceof Error ? e.message : 'Could not save') }
+    } catch (e) { setAddNote(failure(e)) }
     finally { setAddSaving(false) }
   }
 
   async function doEdit(id: number) {
-    setSaving((p) => ({ ...p, [id]: true })); setErr((p) => ({ ...p, [id]: '' }))
+    setSaving((p) => ({ ...p, [id]: true })); setErr((p) => ({ ...p, [id]: null }))
     try {
       const item = await updateQA(id, editQ.trim() || null, editA.trim() || null)
       setItems((p) => p.map((x) => x.id === id ? item : x)); setEditId(null)
-    } catch (e) { setErr((p) => ({ ...p, [id]: e instanceof Error ? e.message : 'Could not save' })) }
+    } catch (e) { setErr((p) => ({ ...p, [id]: failure(e) })) }
     finally { setSaving((p) => ({ ...p, [id]: false })) }
   }
 
   async function doDelete(id: number) {
     setSaving((p) => ({ ...p, [id]: true }))
     try { await deleteQA(id); setItems((p) => p.filter((x) => x.id !== id)) }
-    catch (e) { setErr((p) => ({ ...p, [id]: e instanceof Error ? e.message : 'Could not delete' })) }
+    catch (e) { setErr((p) => ({ ...p, [id]: failure(e, 'Could not delete') })) }
     finally { setSaving((p) => ({ ...p, [id]: false })) }
   }
 
@@ -375,7 +377,7 @@ function QAPanel() {
           <Field label="Question"><input value={editQ} onChange={(e) => setEditQ(e.target.value)}/></Field>
           <Field label="Answer"><textarea rows={3} value={editA} onChange={(e) => setEditA(e.target.value)}/></Field>
         </div>
-        {err[item.id] ? <div className="banner error" role="alert">{err[item.id]}</div> : null}
+        <Message note={err[item.id]}/>
         <div className="profile-document-actions">
           <button type="button" disabled={saving[item.id]} onClick={() => void doEdit(item.id)}>{saving[item.id] ? 'Saving…' : 'Save'}</button>
           <button type="button" onClick={() => setEditId(null)}>Cancel</button>
@@ -383,7 +385,7 @@ function QAPanel() {
       </> : <>
         <p className="profile-qa-question">{item.question}</p>
         <p className="profile-qa-answer">{item.answer}</p>
-        {err[item.id] ? <div className="banner error" role="alert">{err[item.id]}</div> : null}
+        <Message note={err[item.id]}/>
         <div className="profile-document-actions">
           <button type="button" disabled={saving[item.id]} onClick={() => { setEditQ(item.question); setEditA(item.answer); setEditId(item.id) }}>Edit</button>
           <button type="button" disabled={saving[item.id]} onClick={() => void doDelete(item.id)}>Delete</button>
@@ -396,7 +398,7 @@ function QAPanel() {
         <Field label="Question"><input value={addQ} onChange={(e) => setAddQ(e.target.value)} placeholder="e.g. What is your notice period?"/></Field>
         <Field label="Answer"><textarea rows={3} value={addA} onChange={(e) => setAddA(e.target.value)} placeholder="e.g. Two weeks"/></Field>
       </div>
-      {addErr ? <div className="banner error" role="alert">{addErr}</div> : null}
+      <Message note={addNote}/>
       <div className="profile-document-actions">
         <button type="button" disabled={addSaving || !addQ.trim()} onClick={() => void doAdd()}>{addSaving ? 'Saving…' : 'Add'}</button>
       </div>
@@ -486,7 +488,7 @@ export function ProfilePage({ profileId, onClose, profileTab: ProfileTab }: Prof
   return <section className="profile-screen" aria-label="Candidate profile">
     <div className="profile-inner">
       {loading ? <p>Loading profile…</p> : null}
-      {error ? <div className="banner error" role="alert">{error}</div> : null}
+      <Message note={error ? { kind: 'failure', text: error } : null}/>
       {!loading && me && profile
         ? <ProfileHeader me={me} profile={profile} onClose={onClose} onReload={data.reload}/>
         : !loading ? <header className="profile-head">

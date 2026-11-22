@@ -18,17 +18,19 @@ import {
 } from '../api/client.ts'
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { SessionDecision } from '../state/decisions.ts'
+import { failure, type Note, report } from '../state/messages.ts'
 import { useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { FilterPanel } from './FilterPanel.tsx'
 import { Icon } from './Icon.tsx'
 import { ListResizer, useListWidth } from './ListResizer.tsx'
-import { type Note, report } from './Messages.tsx'
+import { Message } from './Messages.tsx'
 import { SearchField } from './SearchField.tsx'
 import { VacancyPage } from './VacancyPage.tsx'
 import { VacancyRow } from './VacancyRow.tsx'
 
 const SERVER_DOWN = 'Sifty server is not responding. Retrying…'
+const SERVER_DOWN_NOTE: Note = { kind: 'failure', text: SERVER_DOWN }
 
 type ActiveDialog =
   | { kind: 'none' }
@@ -89,7 +91,7 @@ export function InboxList({
   const heldRowDataRef = useRef<VacancyRowData | null>(null)
   const [heldRowId, setHeldRowId] = useState<number | null>(null)
   const [pageView, setPageView] = useState<VacancyView | null>(null)
-  const [pageError, setPageError] = useState<string | null>(null)
+  const [pageError, setPageError] = useState<Note | null>(null)
   const [listWidth, setListWidth] = useListWidth()
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
   const [actionError, setActionError] = useState<string | null>(null)
@@ -97,10 +99,9 @@ export function InboxList({
   const [rowFitUpdates, setRowFitUpdates] = useState<Map<number, FitMark>>(new Map())
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>({ kind: 'none' })
   const [applyDialogSaving, setApplyDialogSaving] = useState(false)
-  const [applyDialogError, setApplyDialogError] = useState<string | null>(null)
+  const [applyDialogNote, setApplyDialogNote] = useState<Note | null>(null)
   const [deleteDialogSaving, setDeleteDialogSaving] = useState(false)
-  const [deleteDialogError, setDeleteDialogError] = useState<string | null>(null)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
+  const [deleteDialogNote, setDeleteDialogNote] = useState<Note | null>(null)
 
   const dialogOpen = activeDialog.kind !== 'none'
   const profile = state.status === 'ok' ? state.profile : null
@@ -121,10 +122,6 @@ export function InboxList({
     ...filters.sources.map(() => true),
     ...filters.fit.map(() => true),
   ].filter(Boolean).length
-
-  useEffect(() => {
-    if (state.status === 'ok') setBannerDismissed(false)
-  }, [state.status])
 
   useEffect(() => {
     void listSources().then((resp) => {
@@ -192,13 +189,7 @@ export function InboxList({
       void getVacancy(id, profile)
         .then((v) => setPageView(v))
         .catch((err: unknown) => {
-          const msg =
-            err instanceof OfflineError
-              ? 'Server unreachable'
-              : err instanceof Error
-                ? err.message
-                : 'Could not load vacancy'
-          setPageError(msg)
+          setPageError(failure(err instanceof OfflineError ? 'Server unreachable' : err, 'Could not load vacancy'))
         })
     },
     [rows, seenInSession, profile, unread],
@@ -236,21 +227,21 @@ export function InboxList({
         }
       }
       setApplyDialogSaving(false)
-      setApplyDialogError(null)
+      setApplyDialogNote(null)
       setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note, outcomes: action.outcomes ?? [] })
       return
     }
 
     if (action.confirm === 'outcome') {
       setApplyDialogSaving(false)
-      setApplyDialogError(null)
+      setApplyDialogNote(null)
       setActiveDialog({ kind: 'apply', title: pageView.title, company: pageView.company, note: null, outcomes: action.outcomes ?? [] })
       return
     }
 
     if (action.confirm === 'delete') {
       setDeleteDialogSaving(false)
-      setDeleteDialogError(null)
+      setDeleteDialogNote(null)
       setActiveDialog({ kind: 'delete', title: pageView.title, company: pageView.company })
       return
     }
@@ -314,7 +305,7 @@ export function InboxList({
       return
     }
     setApplyDialogSaving(true)
-    setApplyDialogError(null)
+    setApplyDialogNote(null)
     try {
       const { counts: newCounts } = await postDecision(pageView.id, {
         profile,
@@ -330,14 +321,14 @@ export function InboxList({
       setPageView(null)
     } catch (err) {
       setApplyDialogSaving(false)
-      setApplyDialogError(err instanceof ServerError ? err.message : 'Could not save outcome')
+      setApplyDialogNote(failure(err instanceof ServerError ? err : null, 'Could not save outcome'))
     }
   }
 
   async function handleDeleteConfirm() {
     if (!pageView || profile === null) return
     setDeleteDialogSaving(true)
-    setDeleteDialogError(null)
+    setDeleteDialogNote(null)
     try {
       const { counts: newCounts } = await deleteVacancy(pageView.id, profile)
       onCounts?.(newCounts)
@@ -356,7 +347,7 @@ export function InboxList({
       }
     } catch (err) {
       setDeleteDialogSaving(false)
-      setDeleteDialogError(err instanceof ServerError ? err.message : 'Could not delete role')
+      setDeleteDialogNote(failure(err instanceof ServerError ? err : null, 'Could not delete role'))
     }
   }
 
@@ -521,15 +512,10 @@ export function InboxList({
 
       <main className="detail" aria-label="Selected vacancy">
         <div className="detail-inner">
-          {serverDown && !bannerDismissed && (
-            <div className="banner error" data-kind="retry" role="alert">
-              {SERVER_DOWN}
-              <button aria-label="Dismiss" onClick={() => setBannerDismissed(true)}>×</button>
-            </div>
-          )}
+          <Message note={serverDown ? SERVER_DOWN_NOTE : null} />
 
           {pageError ? (
-            <div className="banner error" data-kind="retry" role="alert">{pageError}</div>
+            <Message note={pageError} />
           ) : pageView ? (
             <VacancyPage
               view={pageView}
@@ -560,7 +546,7 @@ export function InboxList({
           note={activeDialog.note}
           outcomes={activeDialog.outcomes}
           saving={applyDialogSaving}
-          error={applyDialogError}
+          message={applyDialogNote}
           onDecide={(outcome) => void handleApplyOutcome(outcome)}
         />
       )}
@@ -569,7 +555,7 @@ export function InboxList({
           title={activeDialog.title}
           company={activeDialog.company}
           saving={deleteDialogSaving}
-          error={deleteDialogError}
+          message={deleteDialogNote}
           onKeep={() => setActiveDialog({ kind: 'none' })}
           onDelete={() => void handleDeleteConfirm()}
         />

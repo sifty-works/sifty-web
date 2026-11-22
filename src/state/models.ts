@@ -7,6 +7,7 @@ import {
   patchModels,
   ServerError,
 } from '../api/client.ts'
+import { failure, type Note } from './messages.ts'
 
 export type ModelsState =
   | { status: 'loading' }
@@ -15,20 +16,20 @@ export type ModelsState =
 
 export interface UseModelsResult {
   state: ModelsState
-  error: string | null
+  note: Note | null
   save: (patch: ModelsPatch) => Promise<void>
   check: (name: string) => Promise<void>
 }
 
 const OFFLINE_MESSAGE = 'Sifty is not running. Start it and refresh the page.'
 
-function failure(err: unknown): string {
-  return err instanceof ServerError ? err.message : OFFLINE_MESSAGE
+function trouble(err: unknown): Note {
+  return failure(err instanceof ServerError ? err : OFFLINE_MESSAGE)
 }
 
 export function useModels(): UseModelsResult {
   const [state, setState] = useState<ModelsState>({ status: 'loading' })
-  const [error, setError] = useState<string | null>(null)
+  const [note, setNote] = useState<Note | null>(null)
   const chain = useRef<Promise<void>>(Promise.resolve())
   const checkSeq = useRef(new Map<string, number>())
 
@@ -50,9 +51,9 @@ export function useModels(): UseModelsResult {
       try {
         const models = await patchModels(patch)
         setState({ status: 'ok', models })
-        setError(null)
+        setNote(null)
       } catch (err) {
-        setError(failure(err))
+        setNote(trouble(err))
         await getModels().then((models) => setState({ status: 'ok', models }), () => {})
       }
     })
@@ -75,11 +76,11 @@ export function useModels(): UseModelsResult {
           ),
         },
       })
-      setError(null)
+      setNote(null)
     } catch (err) {
-      if (seq === checkSeq.current.get(name)) setError(failure(err))
+      if (seq === checkSeq.current.get(name)) setNote(trouble(err))
     }
   }, [])
 
-  return { state, error, save, check }
+  return { state, note, save, check }
 }

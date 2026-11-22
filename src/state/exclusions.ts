@@ -7,6 +7,7 @@ import {
   removeExclusion,
   ServerError,
 } from '../api/client.ts'
+import { failure, type Note } from './messages.ts'
 
 export type ExclusionState =
   | { status: 'loading' }
@@ -19,7 +20,7 @@ function applyResponse(d: ExclusionListResponse): ExclusionState {
 
 export function useExclusions() {
   const [state, setState] = useState<ExclusionState>({ status: 'loading' })
-  const [addError, setAddError] = useState<string | null>(null)
+  const [addNote, setAddNote] = useState<Note | null>(null)
 
   useEffect(() => {
     listExclusions()
@@ -28,13 +29,13 @@ export function useExclusions() {
   }, [])
 
   const add = useCallback(async (kind: string, value: string): Promise<boolean> => {
-    setAddError(null)
+    setAddNote(null)
     try {
       const d = await addExclusion(kind, value)
       setState(applyResponse(d))
       return true
     } catch (err) {
-      setAddError(err instanceof ServerError ? err.message : 'Could not add exclusion.')
+      setAddNote(failure(err instanceof ServerError ? err : null, 'Could not add exclusion.'))
       return false
     }
   }, [])
@@ -47,5 +48,5 @@ export function useExclusions() {
     }
   }, [])
 
-  return { state, add, remove, addError }
+  return { state, add, remove, addNote }
 }

@@ -1,8 +1,9 @@
 import { Fragment, useState } from 'react'
 import { VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
+import type { Note } from '../state/messages.ts'
 import { FitBand } from './FitBand.tsx'
-import { Message, type Note } from './Messages.tsx'
+import { Message } from './Messages.tsx'
 import { WhatTheyAsk } from './WhatTheyAsk.tsx'
 import { WhatTheyOffer } from './WhatTheyOffer.tsx'
 
