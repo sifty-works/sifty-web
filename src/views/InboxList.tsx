@@ -105,7 +105,7 @@ export function InboxList({
 
   const dialogOpen = activeDialog.kind !== 'none'
   const profile = state.status === 'ok' ? state.profile : null
-  const rows = state.status === 'ok' ? state.rows : []
+  const rows = useMemo(() => (state.status === 'ok' ? state.rows : []), [state])
   const counts = state.status === 'ok' ? state.counts : null
   const empty = state.status === 'ok' ? state.empty : ''
   const total = state.status === 'ok' ? state.total : 0
@@ -167,13 +167,24 @@ export function InboxList({
     if (counts !== null) onCounts?.(counts)
   }, [counts, onCounts])
 
-  const selectRow = useCallback(
+  const openRow = useCallback(
     (id: number) => {
       setSelectedId(id)
       setPageView(null)
       setPageError(null)
       setActionError(null)
       setSkillNotice(null)
+      void getVacancy(id, profile)
+        .then((v) => setPageView(v))
+        .catch((err: unknown) => {
+          setPageError(failure(err instanceof OfflineError ? 'Server unreachable' : err, 'Could not load vacancy'))
+        })
+    },
+    [profile],
+  )
+
+  const selectRow = useCallback(
+    (id: number) => {
       const row = rows.find((r) => r.id === id)
       const isUnread = row ? row.unread && !seenInSession.has(id) : false
       if (isUnread) {
@@ -186,19 +197,28 @@ export function InboxList({
         heldRowDataRef.current = rowData
         setHeldRowId(id)
       }
-      void getVacancy(id, profile)
-        .then((v) => setPageView(v))
-        .catch((err: unknown) => {
-          setPageError(failure(err instanceof OfflineError ? 'Server unreachable' : err, 'Could not load vacancy'))
-        })
+      openRow(id)
     },
-    [rows, seenInSession, profile, unread],
+    [rows, seenInSession, unread, openRow],
   )
+
+  const goneRef = useRef<ReadonlySet<number>>(new Set())
+
+  useEffect(() => {
+    goneRef.current = new Set()
+  }, [rows])
+
+  useEffect(() => {
+    if (loading || serverDown || selectedId !== null) return
+    const first = displayRows.find((r) => !goneRef.current.has(r.id))
+    if (first) openRow(first.id)
+  }, [loading, serverDown, selectedId, displayRows, openRow])
 
   const selectAfterRemoval = useCallback(
     (gone: (row: VacancyRowData) => boolean) => {
       const idx = displayRows.findIndex(gone)
-      const stays = (r: VacancyRowData) => !gone(r)
+      goneRef.current = new Set([...goneRef.current, ...displayRows.filter(gone).map((r) => r.id)])
+      const stays = (r: VacancyRowData) => !gone(r) && !goneRef.current.has(r.id)
       const next =
         displayRows.slice(idx + 1).find(stays) ??
         displayRows.slice(0, Math.max(idx, 0)).reverse().find(stays) ??
@@ -523,14 +543,10 @@ export function InboxList({
               onClearNotice={() => setSkillNotice(null)}
               onSkillDecision={(index, have, chosenSkill) => handleSkillDecision(index, have, chosenSkill)}
             />
-          ) : (
+          ) : loading || serverDown ? null : (
             <div className="empty">
-              <h1>{displayRows.length ? 'Select a role' : 'No role selected'}</h1>
-              <p>
-                {displayRows.length
-                  ? 'Choose a role to review its evidence.'
-                  : 'This stage has no visible roles. Change stage or filters, or collect jobs in Sources.'}
-              </p>
+              <h1>No roles</h1>
+              <p>This stage has no visible roles. Change stage or filters, or collect jobs in Sources.</p>
             </div>
           )}
         </div>
