@@ -68,6 +68,38 @@ export interface paths {
         patch: operations["patchApiDocumentsId"];
         trace?: never;
     };
+    "/api/documents/{id}/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiDocumentsIdAnalyze"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiDocumentsIdCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/documents/{id}/original": {
         parameters: {
             query?: never;
@@ -78,6 +110,22 @@ export interface paths {
         get: operations["getApiDocumentsIdOriginal"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiDocumentsIdRefresh"];
         delete?: never;
         options?: never;
         head?: never;
@@ -242,6 +290,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["patchApiProfilesId"];
+        trace?: never;
+    };
+    "/api/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiProposals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/providers/{name}/check": {
@@ -761,6 +825,20 @@ export interface components {
             timeZones?: string[] | null;
             workModes?: string[] | null;
         };
+        ProposalItem: {
+            createdAt: string;
+            /** Format: int64 */
+            documentId: number;
+            documentName: string;
+            field: string;
+            /** Format: int64 */
+            id: number;
+            quote: string;
+            value: string;
+        };
+        ProposalListResp: {
+            proposals: components["schemas"]["ProposalItem"][];
+        };
         ProviderState: {
             loading?: components["schemas"]["LoadingInfo"] | null;
             state: string;
@@ -1175,6 +1253,48 @@ export interface operations {
             "4XX": components["responses"]["Error"];
         };
     };
+    postApiDocumentsIdAnalyze: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentItem"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiDocumentsIdCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentItem"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
     getApiDocumentsIdOriginal: {
         parameters: {
             query?: never;
@@ -1190,6 +1310,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiDocumentsIdRefresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentItem"];
+                };
             };
             "4XX": components["responses"]["Error"];
         };
@@ -1613,6 +1754,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileDetailResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiProposals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalListResp"];
                 };
             };
             "4XX": components["responses"]["Error"];

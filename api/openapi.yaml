@@ -965,6 +965,42 @@ components:
                           type: array
                         - type: "null"
             type: object
+        ProposalItem:
+            properties:
+                createdAt:
+                    type: string
+                documentId:
+                    format: int64
+                    type: integer
+                documentName:
+                    type: string
+                field:
+                    type: string
+                id:
+                    format: int64
+                    type: integer
+                quote:
+                    type: string
+                value:
+                    type: string
+            required:
+                - id
+                - documentId
+                - documentName
+                - field
+                - value
+                - quote
+                - createdAt
+            type: object
+        ProposalListResp:
+            properties:
+                proposals:
+                    items:
+                        $ref: '#/components/schemas/ProposalItem'
+                    type: array
+            required:
+                - proposals
+            type: object
         ProviderState:
             properties:
                 loading:
@@ -1789,6 +1825,30 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/DocumentItem'
                     description: OK
+    /api/documents/{id}/analyze:
+        post:
+            operationId: postApiDocumentsIdAnalyze
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DocumentItem'
+                    description: OK
+    /api/documents/{id}/cancel:
+        post:
+            operationId: postApiDocumentsIdCancel
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DocumentItem'
+                    description: OK
     /api/documents/{id}/original:
         get:
             operationId: getApiDocumentsIdOriginal
@@ -1797,6 +1857,18 @@ paths:
                     $ref: '#/components/responses/Error'
                 "204":
                     description: No Content
+    /api/documents/{id}/refresh:
+        post:
+            operationId: postApiDocumentsIdRefresh
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DocumentItem'
+                    description: OK
     /api/documents/{id}/text:
         get:
             operationId: getApiDocumentsIdText
@@ -2061,6 +2133,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ProfileDetailResp'
+                    description: OK
+    /api/proposals:
+        get:
+            operationId: getApiProposals
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProposalListResp'
                     description: OK
     /api/providers/{name}/check:
         post:
