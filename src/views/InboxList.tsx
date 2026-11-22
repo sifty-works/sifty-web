@@ -195,6 +195,24 @@ export function InboxList({
     [rows, seenInSession, profile, unread],
   )
 
+  const selectAfterRemoval = useCallback(
+    (gone: (row: VacancyRowData) => boolean) => {
+      const idx = displayRows.findIndex(gone)
+      const stays = (r: VacancyRowData) => !gone(r)
+      const next =
+        displayRows.slice(idx + 1).find(stays) ??
+        displayRows.slice(0, Math.max(idx, 0)).reverse().find(stays) ??
+        null
+      if (next) {
+        selectRow(next.id)
+      } else {
+        setSelectedId(null)
+        setPageView(null)
+      }
+    },
+    [displayRows, selectRow],
+  )
+
   const handleActionRef = useRef<(key: string) => void>(() => {})
 
   async function handleAction(key: string) {
@@ -205,8 +223,7 @@ export function InboxList({
       try {
         await addExclusion('company', pageView.company)
         setBlockCount((n) => n + 1)
-        setSelectedId(null)
-        setPageView(null)
+        selectAfterRemoval((r) => r.company === pageView.company)
       } catch (err) {
         setActionError(failure(err instanceof ServerError ? err : null, 'Could not block company'))
       }
@@ -291,8 +308,7 @@ export function InboxList({
           return next
         })
         setBlockCount((n) => n + 1)
-        setSelectedId(null)
-        setPageView(null)
+        selectAfterRemoval((r) => r.id === pageView.id)
       }
     } catch (err) {
       setActionError(failure(err instanceof ServerError ? err : null, 'Could not save decision'))
@@ -318,8 +334,7 @@ export function InboxList({
       onCounts?.(newCounts)
       setActiveDialog({ kind: 'none' })
       setBlockCount((n) => n + 1)
-      setSelectedId(null)
-      setPageView(null)
+      selectAfterRemoval((r) => r.id === pageView.id)
     } catch (err) {
       setApplyDialogSaving(false)
       setApplyDialogNote(failure(err instanceof ServerError ? err : null, 'Could not save outcome'))
@@ -334,18 +349,8 @@ export function InboxList({
       const { counts: newCounts } = await deleteVacancy(pageView.id, profile)
       onCounts?.(newCounts)
       setActiveDialog({ kind: 'none' })
-      const idx = displayRows.findIndex((r) => r.id === pageView.id)
-      const nextRow =
-        displayRows.find((_, i) => i > idx) ??
-        displayRows.find((_, i) => i < idx) ??
-        null
       setBlockCount((n) => n + 1)
-      if (nextRow) {
-        selectRow(nextRow.id)
-      } else {
-        setSelectedId(null)
-        setPageView(null)
-      }
+      selectAfterRemoval((r) => r.id === pageView.id)
     } catch (err) {
       setDeleteDialogSaving(false)
       setDeleteDialogNote(failure(err instanceof ServerError ? err : null, 'Could not delete role'))
