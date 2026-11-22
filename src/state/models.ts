@@ -7,7 +7,7 @@ import {
   patchModels,
   ServerError,
 } from '../api/client.ts'
-import { failure, type Note } from './messages.ts'
+import { failure, type Note, silent } from './messages.ts'
 
 export type ModelsState =
   | { status: 'loading' }
@@ -54,7 +54,7 @@ export function useModels(): UseModelsResult {
         setNote(null)
       } catch (err) {
         setNote(trouble(err))
-        await getModels().then((models) => setState({ status: 'ok', models }), () => {})
+        await getModels().then((models) => setState({ status: 'ok', models }), silent('the re-read after a failed save has nothing of its own to say: the save failure already spoke'))
       }
     })
     chain.current = run
