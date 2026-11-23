@@ -331,6 +331,16 @@ html .profile-screen,html .settings-page>.settings-main,html .workspace>.detail{
 .ask-row.no .ask-mark{background:var(--warn-ink);color:#fff}
 .ask-text{font-size:15px;line-height:20px;font-weight:500;color:var(--ink);flex:1 1 auto;min-width:0;word-wrap:break-word}
 .ask-evidence{margin-left:auto;font-size:12px;line-height:16px;color:var(--ink-4);white-space:nowrap;flex-shrink:0;max-width:35%;overflow:hidden;text-overflow:ellipsis}
+.ask-row.checked{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;row-gap:8px}
+.ask-check{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-left:34px;font-size:13px;line-height:18px;color:var(--ink-2)}
+.check-mark{flex-shrink:0;min-width:16px;padding:0 5px;border-radius:999px;font-size:10px;font-weight:700;line-height:16px;text-align:center;color:#fff}
+.check-reason{flex:1 1 0;min-width:120px}
+.check-mark.match{background:var(--ok-ink)}
+.check-mark.no{background:var(--warn-ink)}
+.check-line{display:flex;align-items:center;gap:10px;margin:0;font-size:13px;line-height:20px;color:var(--ink-3)}
+.check-line button{padding:2px 10px;border:0;border-radius:8px;background:var(--vc-ns-bg);color:var(--ink);font-size:12px;font-weight:600;cursor:pointer}
+.check-line button:disabled{opacity:.6;cursor:default}
+.check-excerpt{flex-basis:100%;color:var(--ink-4);font-style:italic}
 .ask-row.pending{opacity:0.6}
 .ask-row.pending .ask-mark{opacity:0.5}
 .ask-actions{display:flex;gap:6px;margin-left:auto;flex-shrink:0;flex-wrap:wrap}

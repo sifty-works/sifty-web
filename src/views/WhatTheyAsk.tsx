@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { Band, RequirementLine } from '../api/client.ts'
+import { Band, CheckAnswer, CheckView, RequirementLine } from '../api/client.ts'
 
 interface Props {
   band: Band
+  check?: CheckView | null
   onDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
+  onRetry: () => Promise<void>
 }
 
-export function WhatTheyAsk({ band, onDecision }: Props) {
+export function WhatTheyAsk({ band, check, onDecision, onRetry }: Props) {
+  const answers = new Map((check?.answers ?? []).map((a) => [a.index, a]))
   const totalItems = band.groups.reduce((sum, g) => sum + g.items.length, 0)
   const hasItems = totalItems > 0
 
@@ -46,6 +49,8 @@ export function WhatTheyAsk({ band, onDecision }: Props) {
         )}
       </div>
 
+      {check && <CheckLine check={check} onRetry={onRetry} />}
+
       {!hasItems ? (
         <p className="ask-not-found">{band.requirementsText}</p>
       ) : (
@@ -54,7 +59,7 @@ export function WhatTheyAsk({ band, onDecision }: Props) {
             <div className="ask-section-label">{group.label.toUpperCase()}</div>
             <ul className="ask-list" style={{ marginTop: 8 }}>
               {group.items.map((item) => (
-                <AskRow key={item.index} item={item} onDecision={onDecision} />
+                <AskRow key={item.index} item={item} checked={answers.get(item.index)} onDecision={onDecision} />
               ))}
             </ul>
           </div>
@@ -64,8 +69,28 @@ export function WhatTheyAsk({ band, onDecision }: Props) {
   )
 }
 
+function CheckLine({ check, onRetry }: { check: CheckView; onRetry: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false)
+  if (!check.state && !check.note && !check.retry) return null
+
+  async function retry() {
+    setBusy(true)
+    try { await onRetry() }
+    finally { setBusy(false) }
+  }
+
+  return (
+    <p className="check-line">
+      {check.state && <span>{check.state}</span>}
+      {check.note && <span>{check.note}</span>}
+      {check.retry && <button disabled={busy} onClick={() => void retry()}>Retry</button>}
+    </p>
+  )
+}
+
 interface AskRowProps {
   item: RequirementLine
+  checked?: CheckAnswer
   onDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
 }
 
@@ -159,7 +184,7 @@ function AnswerControl({ kind, skills, busy, open, onOpenChange, onChoose }: Ans
   )
 }
 
-function AskRow({ item, onDecision }: AskRowProps) {
+function AskRow({ item, checked, onDecision }: AskRowProps) {
   const [busy, setBusy] = useState<Answer | null>(null)
   const [openList, setOpenList] = useState<Answer | null>(null)
 
@@ -178,9 +203,10 @@ function AskRow({ item, onDecision }: AskRowProps) {
 
   const mark = item.verdict === '✓' ? '✓' : item.verdict === '✕' ? '✕' : '?'
   const rowCls = item.verdict === '✓' ? 'match' : item.verdict === '✕' ? 'no' : 'unknown'
+  const shown = isUnknown ? checked : undefined
 
   return (
-    <li className={`ask-row ${rowCls}${busy ? ' pending' : ''}`}>
+    <li className={`ask-row ${rowCls}${shown ? ' checked' : ''}${busy ? ' pending' : ''}`}>
       <span className="ask-mark" aria-hidden="true">{busy ? '…' : mark}</span>
       <span className="ask-text">
         {item.text}
@@ -206,6 +232,13 @@ function AskRow({ item, onDecision }: AskRowProps) {
               onChoose={(chosenSkill) => void answer(kind, chosenSkill)}
             />
           ))}
+        </div>
+      )}
+      {shown && (
+        <div className="ask-check">
+          <span className={`check-mark ${shown.verdict === '✓' ? 'match' : 'no'}`} title="The model's verdict">{shown.verdict}</span>
+          <span className="check-reason">{shown.reason}</span>
+          {shown.excerpt && <q className="check-excerpt">{shown.excerpt}</q>}
         </div>
       )}
     </li>

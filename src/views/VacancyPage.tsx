@@ -30,9 +30,10 @@ interface Props {
   onAction: (key: string) => void
   onClearNotice: () => void
   onSkillDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
+  onCheckRetry: () => Promise<void>
 }
 
-export function VacancyPage({ view, sessionDecision, actionError, notice, onAction, onClearNotice, onSkillDecision }: Props) {
+export function VacancyPage({ view, sessionDecision, actionError, notice, onAction, onClearNotice, onSkillDecision, onCheckRetry }: Props) {
   const placed = (place: Place) =>
     (view.actions ?? []).filter((a) => (ACTIONS[a.key]?.place ?? 'main') === place)
   const buttons = (list: VacancyAction[]) =>
@@ -138,7 +139,7 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
           <FitBand band={view.band} />
 
           <div className="what-cards" style={{ marginTop: 14 }}>
-            <WhatTheyAsk band={view.band} onDecision={onSkillDecision} />
+            <WhatTheyAsk band={view.band} check={view.check} onDecision={onSkillDecision} onRetry={onCheckRetry} />
             <WhatTheyOffer offer={view.offer} />
           </div>
 

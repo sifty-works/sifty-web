@@ -500,6 +500,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vacancies/{id}/shortlist-check/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiVacanciesIdShortlist-checkRetry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/version": {
         parameters: {
             query?: never;
@@ -560,6 +576,27 @@ export interface components {
             score: number | null;
             text: string;
             tiles: components["schemas"]["Tile"][];
+        };
+        CheckAnswer: {
+            excerpt: string;
+            /** Format: int64 */
+            index: number;
+            reason: string;
+            requirement: string;
+            verdict: string;
+        };
+        CheckRetryReq: {
+            /** Format: int64 */
+            profile: number;
+        };
+        CheckView: {
+            active: boolean;
+            answers: components["schemas"]["CheckAnswer"][];
+            made?: string;
+            note?: string;
+            outdated: boolean;
+            retry: boolean;
+            state?: string;
         };
         CollectProgress: {
             /** Format: int64 */
@@ -1056,6 +1093,7 @@ export interface components {
             actions: components["schemas"]["Action"][];
             applied?: string;
             band: components["schemas"]["Band"];
+            check: components["schemas"]["CheckView"] | null;
             company: string;
             expired?: boolean;
             fit: components["schemas"]["FitMark"];
@@ -2254,6 +2292,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    "postApiVacanciesIdShortlist-checkRetry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckRetryReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VacancyView"];
+                };
             };
             "4XX": components["responses"]["Error"];
         };

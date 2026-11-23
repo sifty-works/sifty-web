@@ -9,6 +9,7 @@ import {
   VacancyCounts,
   VacancyFilters,
   VacancyRow,
+  VacancyView,
 } from '../api/client.ts'
 import { silent } from './messages.ts'
 
@@ -108,6 +109,21 @@ function saveSort(v: 'fit' | 'newest'): void {
   } catch {
     silent('the saved sort order is a convenience: the page works without it')()
   }
+}
+
+const CHECK_POLL_MS = 2000
+
+export function useCheckRefresh(view: VacancyView | null, reload: (id: number) => Promise<void>): void {
+  const active = view?.check?.active === true
+  const id = view?.id
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    if (!active || id === undefined) return
+    const timer = setTimeout(() => {
+      void reload(id).finally(() => setTick((n) => n + 1))
+    }, CHECK_POLL_MS)
+    return () => clearTimeout(timer)
+  }, [active, id, tick, reload])
 }
 
 export type VacancyListState =

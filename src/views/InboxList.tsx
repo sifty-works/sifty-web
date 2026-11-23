@@ -10,6 +10,7 @@ import {
   OfflineError,
   Outcome,
   postDecision,
+  postShortlistCheckRetry,
   postSkillsDecision,
   ServerError,
   VacancyCounts,
@@ -19,7 +20,7 @@ import {
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import { failure, type Note, report, silent } from '../state/messages.ts'
-import { useVacancies } from '../state/vacancies.ts'
+import { useCheckRefresh, useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { FilterPanel } from './FilterPanel.tsx'
 import { Icon } from './Icon.tsx'
@@ -182,6 +183,19 @@ export function InboxList({
     },
     [profile],
   )
+
+  const reloadOpen = useCallback(
+    async (id: number) => {
+      try {
+        const v = await getVacancy(id, profile)
+        setPageView((cur) => (cur?.id === id ? v : cur))
+      } catch {
+        silent('the refresh retries on the next visit: the open page keeps what it shows')()
+      }
+    },
+    [profile],
+  )
+  useCheckRefresh(pageView, reloadOpen)
 
   const selectRow = useCallback(
     (id: number) => {
@@ -400,6 +414,15 @@ export function InboxList({
     }
   }
 
+  async function handleCheckRetry(): Promise<void> {
+    if (!pageView || profile === null) return
+    try {
+      setPageView(await postShortlistCheckRetry(pageView.id, profile))
+    } catch (err) {
+      setActionError(failure(err instanceof ServerError ? err : null, 'Could not retry the check'))
+    }
+  }
+
   useEffect(() => {
     const selectNext = () => {
       if (dialogOpen || displayRows.length === 0) return
@@ -542,6 +565,7 @@ export function InboxList({
               onAction={(key) => void handleAction(key)}
               onClearNotice={() => setSkillNotice(null)}
               onSkillDecision={(index, have, chosenSkill) => handleSkillDecision(index, have, chosenSkill)}
+              onCheckRetry={handleCheckRetry}
             />
           ) : loading || serverDown ? null : (
             <div className="empty">

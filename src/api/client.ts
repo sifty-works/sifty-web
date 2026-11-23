@@ -34,6 +34,8 @@ export type Outcome = components['schemas']['Outcome']
 export type VacancyListing = components['schemas']['ListingView']
 export type VacancySource = components['schemas']['VacancySource']
 export type VacancyView = components['schemas']['VacancyView']
+export type CheckView = components['schemas']['CheckView']
+export type CheckAnswer = components['schemas']['CheckAnswer']
 export type SourceStatus = components['schemas']['SourceStatus']
 export type Source = components['schemas']['Source']
 export type SourceListResponse = components['schemas']['SourcesResp']
@@ -213,6 +215,10 @@ export function previewExclusion(kind: string, value: string): Promise<{ text: s
 
 export function postDecision(id: number, req: DecisionRequest): Promise<DecisionResponse> {
   return request<DecisionResponse>('POST', `/api/vacancies/${id}/decision`, req)
+}
+
+export function postShortlistCheckRetry(id: number, profile: number): Promise<VacancyView> {
+  return request<VacancyView>('POST', `/api/vacancies/${id}/shortlist-check/retry`, { profile })
 }
 
 export function deleteVacancy(id: number, profile: number): Promise<{ counts: VacancyCounts }> {
