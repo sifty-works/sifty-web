@@ -3,6 +3,7 @@ import { triggerCollect, VacancyCounts } from '../api/client.ts'
 import { silent } from '../state/messages.ts'
 import { useStatus } from '../state/status.ts'
 import { Brand } from './Brand.tsx'
+import { FilesTab } from './FilesPanel.tsx'
 import { Icon } from './Icon.tsx'
 import { InboxList } from './InboxList.tsx'
 import { ProfilePage } from './ProfilePage.tsx'
@@ -22,6 +23,12 @@ export function Shell() {
   const [mainTab, setMainTab] = useState<MainTab>('inbox')
   const [archiveTab, setArchiveTab] = useState<ArchiveTab>('applied')
   const [counts, setCounts] = useState<VacancyCounts | null>(null)
+  const [settingsPanel, setSettingsPanel] = useState<string | undefined>(undefined)
+
+  function openSettings(panel?: string) {
+    setSettingsPanel(panel)
+    setPage('settings')
+  }
 
   const stage = mainTab === 'archive' ? archiveTab : mainTab
 
@@ -86,7 +93,7 @@ export function Shell() {
             <button
               className="settings-button"
               style={{ color: '#e0b45a', fontSize: 13 }}
-              onClick={() => setPage('settings')}
+              onClick={() => openSettings()}
             >
               {attentionText}
             </button>
@@ -98,7 +105,7 @@ export function Shell() {
           />
           <button
             className={page === 'settings' ? 'settings-button active' : 'settings-button'}
-            onClick={() => setPage(page === 'settings' ? 'inbox' : 'settings')}
+            onClick={() => (page === 'settings' ? setPage('inbox') : openSettings())}
           >
             <Icon name="settings" size={16} /> Settings
           </button>
@@ -117,7 +124,9 @@ export function Shell() {
         <ProfilePage
           profileId={profileId}
           onClose={() => setPage('inbox')}
+          onOpenSettings={() => openSettings('models')}
           profileTab={ProfileTab}
+          filesTab={FilesTab}
         />
       ) : page === 'inbox' ? (
         <InboxList
@@ -132,7 +141,7 @@ export function Shell() {
           profile={activeProfileId}
         />
       ) : (
-        <SourcesPage status={status} applyStatus={applyStatus} statusText={headerText} />
+        <SourcesPage startPanel={settingsPanel} status={status} applyStatus={applyStatus} statusText={headerText} />
       )}
     </div>
   )

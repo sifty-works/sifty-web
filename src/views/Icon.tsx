@@ -2,7 +2,7 @@ export function Icon({
   name,
   size = 16,
 }: {
-  name: 'search' | 'filters' | 'settings' | 'clock' | 'target' | 'pencil' | 'user'
+  name: 'search' | 'filters' | 'settings' | 'clock' | 'target' | 'pencil' | 'user' | 'trash'
   size?: number
 }) {
   return (
@@ -42,6 +42,8 @@ export function Icon({
         </>
       ) : name === 'pencil' ? (
         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+      ) : name === 'trash' ? (
+        <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
       ) : (
         <>
           <circle cx="12" cy="8" r="3.5" />

@@ -16,18 +16,20 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
   return <label className="profile-field-block"><span>{label}</span>{children}{hint ? <small>{hint}</small> : null}</label>
 }
 
-export function SectionShell({ id, title, description, editing, saving, error, onEdit, onCancel, onSave, children }: {
-  id?: string; title: string; description?: string; editing: boolean; saving: boolean; error: string
+export function SectionShell({ id, title, description, editLabel, actions, editing, saving, error, onEdit, onCancel, onSave, children }: {
+  id?: string; title: string; description?: string; editLabel?: string; actions?: React.ReactNode; editing: boolean; saving: boolean; error: string
   onEdit: () => void; onCancel: () => void; onSave: () => void; children: React.ReactNode
 }) {
   return <section className={`profile-card${editing ? ' editing' : ''}`} id={id}>
     <header className="profile-card-head">
       <div><h2>{title}</h2>{editing && description ? <p className="muted">{description}</p> : null}</div>
       <div className="profile-card-actions">
+        {actions}
         {editing ? <>
           <button type="button" onClick={onCancel} disabled={saving}>Cancel</button>
           <button type="button" className="primary" onClick={onSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
-        </> : <button type="button" className="profile-pencil" title="Edit" aria-label={`Edit ${title}`} onClick={onEdit}><Icon name="pencil" size={16}/></button>}
+        </> : editLabel ? <button type="button" onClick={onEdit}>{editLabel}</button>
+          : <button type="button" className="profile-pencil" title="Edit" aria-label={`Edit ${title}`} onClick={onEdit}><Icon name="pencil" size={16}/></button>}
       </div>
     </header>
     <Message note={error ? { kind: 'failure', text: error } : null}/>
@@ -419,7 +421,7 @@ function toUrl(handle: string, prefix: string): string {
   return handle.startsWith('https://') || handle.startsWith('http://') ? handle : prefix + handle.replace(/\/$/, '')
 }
 
-function ContactsSection({ me, onSave }: { me: MeData; onSave: (patch: MePatchReq) => Promise<void> }) {
+export function ContactsSection({ me, onSave, extra }: { me: MeData; onSave: (patch: MePatchReq) => Promise<void>; extra?: React.ReactNode }) {
   const [d, setD] = useState({ email: '', phone: '', linkedin: '', github: '', x: '', website: '' })
 
   const editor = useSectionEditor(
@@ -469,18 +471,27 @@ function ContactsSection({ me, onSave }: { me: MeData; onSave: (patch: MePatchRe
       {me.website ? <div className="profile-read-line"><strong>Website</strong> <a href={me.website} target="_blank" rel="noreferrer">{me.website.replace(/^https?:\/\/(www\.)?/, '')}</a></div> : null}
       {!anyContact ? <NotSet/> : null}
     </div>}
+    {extra}
   </SectionShell>
 }
 
 type Tab = 'files' | 'profile' | 'qa'
 
+export type FilesTabProps = {
+  me: MeData
+  saveMe: (patch: MePatchReq) => Promise<void>
+  onOpenSettings: () => void
+}
+
 type ProfilePageProps = {
   profileId: number
   onClose: () => void
+  onOpenSettings: () => void
   profileTab?: React.ComponentType<ProfilePageData>
+  filesTab?: React.ComponentType<FilesTabProps>
 }
 
-export function ProfilePage({ profileId, onClose, profileTab: ProfileTab }: ProfilePageProps) {
+export function ProfilePage({ profileId, onClose, onOpenSettings, profileTab: ProfileTab, filesTab: FilesTab }: ProfilePageProps) {
   const data = useProfilePage(profileId)
   const [tab, setTab] = useState<Tab>('profile')
   const { me, profile, loading, error } = data
@@ -505,11 +516,7 @@ export function ProfilePage({ profileId, onClose, profileTab: ProfileTab }: Prof
           </div>
         </div>
 
-        {tab === 'files' ? <div className="profile-cols-profile" style={{ maxWidth: 760 }}>
-          <div className="profile-col-left">
-            <ContactsSection me={me} onSave={data.saveMe}/>
-          </div>
-        </div> : null}
+        {tab === 'files' && FilesTab ? <FilesTab me={me} saveMe={data.saveMe} onOpenSettings={onOpenSettings}/> : null}
 
         {tab === 'profile' && ProfileTab ? <ProfileTab {...data}/> : null}
         {tab === 'profile' && !ProfileTab ? <p className="profile-hint">Profile sections loading…</p> : null}

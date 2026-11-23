@@ -8,6 +8,7 @@ import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 
 interface Props {
+  startPanel?: string
   status: StatusExtra | null
   applyStatus: (data: StatusExtra) => void
   statusText: string | null
@@ -33,12 +34,12 @@ const MODELS_ICON = (
   </>
 )
 
-export function SourcesPage({ status, applyStatus, statusText }: Props) {
+export function SourcesPage({ startPanel, status, applyStatus, statusText }: Props) {
   const { state, add, toggle, remove, updateSchedule, addNote } = useSources()
   const [nameVal, setNameVal] = useState('')
   const [urlVal, setUrlVal] = useState('')
   const [busy, setBusy] = useState(false)
-  const [nav, setNav] = useState('sources')
+  const [nav, setNav] = useState(startPanel ?? 'sources')
   const [collectNote, setCollectNote] = useState<Note | null>(null)
 
   const isCollecting = status?.collecting != null

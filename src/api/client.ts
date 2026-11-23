@@ -62,6 +62,8 @@ export type ProviderView = components['schemas']['providerView']
 export type WorkView = components['schemas']['workView']
 export type CheckResponse = components['schemas']['checkResp']
 export type RecoveredFile = components['schemas']['RecoveredFile']
+export type DocumentItem = components['schemas']['DocumentItem']
+export type DocumentListResp = components['schemas']['DocumentListResp']
 
 export interface VacancyFilters {
   collected: '' | '7' | '30'
@@ -257,6 +259,55 @@ export async function uploadPhoto(file: File): Promise<void> {
 }
 export function removePhoto(): Promise<void> {
   return request<void>('DELETE', PHOTO_URL)
+}
+
+async function rawRequest(method: string, url: string, init: RequestInit = {}): Promise<Response> {
+  let res: Response
+  try {
+    res = await fetch(url, { method, ...init })
+  } catch {
+    throw new OfflineError()
+  }
+  if (!res.ok) {
+    const message = await parseErrorBody(res)
+    if (message !== null) throw new ServerError(message)
+    throw new OfflineError()
+  }
+  return res
+}
+
+export function listDocuments(): Promise<DocumentListResp> {
+  return request<DocumentListResp>('GET', '/api/documents')
+}
+export async function uploadDocument(file: File): Promise<void> {
+  await rawRequest('POST', `/api/documents?name=${encodeURIComponent(file.name)}`, { body: file })
+}
+export async function addDocument(source: { name: string; text: string } | { url: string }): Promise<void> {
+  await rawRequest('POST', '/api/documents', {
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(source),
+  })
+}
+export async function getDocumentText(id: number): Promise<string> {
+  return (await rawRequest('GET', `/api/documents/${id}/text`)).text()
+}
+export async function getDocumentOriginal(id: number): Promise<Blob> {
+  return (await rawRequest('GET', `/api/documents/${id}/original`)).blob()
+}
+export function analyzeDocument(id: number): Promise<DocumentItem> {
+  return request<DocumentItem>('POST', `/api/documents/${id}/analyze`)
+}
+export function cancelDocument(id: number): Promise<DocumentItem> {
+  return request<DocumentItem>('POST', `/api/documents/${id}/cancel`)
+}
+export function refreshDocument(id: number): Promise<DocumentItem> {
+  return request<DocumentItem>('POST', `/api/documents/${id}/refresh`)
+}
+export function setDocumentEvidence(id: number, evidence: boolean): Promise<DocumentItem> {
+  return request<DocumentItem>('PATCH', `/api/documents/${id}`, { evidence })
+}
+export function deleteDocument(id: number): Promise<void> {
+  return request<void>('DELETE', `/api/documents/${id}`)
 }
 
 let _ref: ReferenceResp | null = null
