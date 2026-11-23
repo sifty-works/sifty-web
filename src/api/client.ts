@@ -64,6 +64,8 @@ export type CheckResponse = components['schemas']['checkResp']
 export type RecoveredFile = components['schemas']['RecoveredFile']
 export type DocumentItem = components['schemas']['DocumentItem']
 export type DocumentListResp = components['schemas']['DocumentListResp']
+export type ProposalItem = components['schemas']['ProposalItem']
+export type ProposalListResp = components['schemas']['ProposalListResp']
 
 export interface VacancyFilters {
   collected: '' | '7' | '30'
@@ -353,4 +355,14 @@ export function patchModels(patch: ModelsPatch): Promise<ModelsResponse> {
 
 export function checkProvider(name: string): Promise<CheckResponse> {
   return request<CheckResponse>('POST', `/api/providers/${encodeURIComponent(name)}/check`)
+}
+
+export function listProposals(): Promise<ProposalListResp> {
+  return request<ProposalListResp>('GET', '/api/proposals')
+}
+export function acceptProposal(id: number): Promise<ProposalListResp> {
+  return request<ProposalListResp>('POST', `/api/proposals/${id}/accept`)
+}
+export function rejectProposal(id: number): Promise<ProposalListResp> {
+  return request<ProposalListResp>('POST', `/api/proposals/${id}/reject`)
 }

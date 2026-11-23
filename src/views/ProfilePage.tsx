@@ -6,6 +6,7 @@ import {
   type QAItem, type ReferenceResp,
 } from '../api/client.ts'
 import { describe, failure, type Note } from '../state/messages.ts'
+import { useProposals, type UseProposalsResult } from '../state/proposals.ts'
 import { useReference } from '../state/profile.ts'
 import { Icon } from './Icon.tsx'
 import { Message } from './Messages.tsx'
@@ -159,6 +160,7 @@ export type ProfilePageData = {
   loading: boolean
   error: string
   reload: () => void
+  refresh: () => Promise<void>
   saveMe: (patch: MePatchReq) => Promise<void>
   saveProfile: (patch: ProfilePatchReq) => Promise<void>
   firstProfileName: () => string
@@ -187,6 +189,15 @@ export function useProfilePage(profileId: number): ProfilePageData {
 
   useEffect(() => { void reload() }, [reload])
 
+  const refresh = useCallback(async () => {
+    try {
+      const [meData, p] = await Promise.all([getMe(), getProfile(profileId)])
+      setMe(meData); setProfile(p)
+    } catch (e) {
+      setError(describe(e, 'Failed to refresh profile'))
+    }
+  }, [profileId])
+
   const saveMe = useCallback(async (patch: MePatchReq) => {
     const updated = await patchMe(patch)
     setMe(updated)
@@ -200,7 +211,7 @@ export function useProfilePage(profileId: number): ProfilePageData {
   const inherited = new Set(Object.keys(profile?.inherited ?? {}))
   const firstProfileName = useCallback(() => profiles[0]?.name ?? '', [profiles])
 
-  return { me, profile, profiles, ref: refData, loading, error, reload, saveMe, saveProfile, firstProfileName, inherited }
+  return { me, profile, profiles, ref: refData, loading, error, reload, refresh, saveMe, saveProfile, firstProfileName, inherited }
 }
 
 function initials(name: string): string {
@@ -421,7 +432,7 @@ function toUrl(handle: string, prefix: string): string {
   return handle.startsWith('https://') || handle.startsWith('http://') ? handle : prefix + handle.replace(/\/$/, '')
 }
 
-export function ContactsSection({ me, onSave, extra }: { me: MeData; onSave: (patch: MePatchReq) => Promise<void>; extra?: React.ReactNode }) {
+export function ContactsSection({ me, onSave, extra }: { me: MeData; onSave: (patch: MePatchReq) => Promise<void>; extra?: (editing: boolean) => React.ReactNode }) {
   const [d, setD] = useState({ email: '', phone: '', linkedin: '', github: '', x: '', website: '' })
 
   const editor = useSectionEditor(
@@ -471,7 +482,7 @@ export function ContactsSection({ me, onSave, extra }: { me: MeData; onSave: (pa
       {me.website ? <div className="profile-read-line"><strong>Website</strong> <a href={me.website} target="_blank" rel="noreferrer">{me.website.replace(/^https?:\/\/(www\.)?/, '')}</a></div> : null}
       {!anyContact ? <NotSet/> : null}
     </div>}
-    {extra}
+    {extra?.(editor.editing)}
   </SectionShell>
 }
 
@@ -480,6 +491,7 @@ type Tab = 'files' | 'profile' | 'qa'
 export type FilesTabProps = {
   me: MeData
   saveMe: (patch: MePatchReq) => Promise<void>
+  proposals: UseProposalsResult
   onOpenSettings: () => void
 }
 
@@ -493,6 +505,7 @@ type ProfilePageProps = {
 
 export function ProfilePage({ profileId, onClose, onOpenSettings, profileTab: ProfileTab, filesTab: FilesTab }: ProfilePageProps) {
   const data = useProfilePage(profileId)
+  const proposals = useProposals(data.refresh)
   const [tab, setTab] = useState<Tab>('profile')
   const { me, profile, loading, error } = data
 
@@ -510,13 +523,13 @@ export function ProfilePage({ profileId, onClose, onOpenSettings, profileTab: Pr
       {!loading && me && profile ? <>
         <div className="profile-tabs">
           <div className="profile-tabs-seg">
-            <button type="button" aria-pressed={tab === 'files'} onClick={() => setTab('files')}>Files</button>
+            <button type="button" aria-pressed={tab === 'files'} onClick={() => setTab('files')}>Files{proposals.count ? <span className="profile-tab-badge">{proposals.count}</span> : null}</button>
             <button type="button" aria-pressed={tab === 'profile'} onClick={() => setTab('profile')}>Profile</button>
             <button type="button" aria-pressed={tab === 'qa'} onClick={() => setTab('qa')}>Questions &amp; Answers</button>
           </div>
         </div>
 
-        {tab === 'files' && FilesTab ? <FilesTab me={me} saveMe={data.saveMe} onOpenSettings={onOpenSettings}/> : null}
+        {tab === 'files' && FilesTab ? <FilesTab me={me} saveMe={data.saveMe} proposals={proposals} onOpenSettings={onOpenSettings}/> : null}
 
         {tab === 'profile' && ProfileTab ? <ProfileTab {...data}/> : null}
         {tab === 'profile' && !ProfileTab ? <p className="profile-hint">Profile sections loading…</p> : null}

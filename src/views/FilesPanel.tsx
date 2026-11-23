@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   addDocument, analyzeDocument, cancelDocument, deleteDocument, getDocumentOriginal, getDocumentText,
   OfflineError, refreshDocument, setDocumentEvidence, uploadDocument, type DocumentItem,
@@ -7,6 +7,7 @@ import { OFFLINE_MESSAGE, trouble, useDocuments, type UseDocumentsResult } from 
 import { describe, failure, type Note } from '../state/messages.ts'
 import { Icon } from './Icon.tsx'
 import { Message } from './Messages.tsx'
+import { SuggestionsPanel } from './SuggestionsPanel.tsx'
 import { ContactsSection, Field, SectionShell, useSectionEditor, type FilesTabProps } from './ProfilePage.tsx'
 
 const OPEN_SETTINGS = 'Open Settings.'
@@ -45,10 +46,6 @@ function ErrorReason({ reason, onOpenSettings }: { reason: string; onOpenSetting
       {lead}
       {toSettings ? <> <button type="button" className="document-link" onClick={onOpenSettings}>{OPEN_SETTINGS}</button></> : null}
     </p>
-    <details className="document-details">
-      <summary>Technical details</summary>
-      <code>{reason}</code>
-    </details>
   </div>
 }
 
@@ -243,9 +240,10 @@ function FilesSection({ documents, items, onOpenSettings }: {
   </SectionShell>
 }
 
-function FetchedPages({ documents, items, onOpenSettings }: {
+function FetchedPages({ documents, items, editing, onOpenSettings }: {
   documents: UseDocumentsResult
   items: DocumentItem[]
+  editing: boolean
   onOpenSettings: () => void
 }) {
   const [address, setAddress] = useState('')
@@ -259,32 +257,46 @@ function FetchedPages({ documents, items, onOpenSettings }: {
     finally { setAdding(false) }
   }
 
+  if (!editing && items.length === 0) return null
+
   return <div className="profile-links-docs">
     <p className="profile-links-docs-heading muted">Fetched pages</p>
     <Listing documents={documents} items={items} onOpenSettings={onOpenSettings}/>
-    <div className="profile-link-add">
+    {editing ? <div className="profile-link-add">
       <div className="profile-link-add-row">
         <input type="url" placeholder="https://example.com/about" value={address} disabled={adding} aria-label="URL to add"
           onChange={(e) => { setAddress(e.target.value); setError('') }}
           onKeyDown={(e) => { if (e.key === 'Enter') void add() }}/>
-        <button type="button" disabled={adding} onClick={() => void add()}>{adding ? 'Adding…' : '+ Add link'}</button>
+        <button type="button" disabled={adding || !address.trim()} onClick={() => void add()}>{adding ? 'Adding…' : '+ Add link'}</button>
       </div>
       {error ? <p className="profile-link-add-error" role="alert">{error}</p> : null}
-    </div>
+    </div> : null}
   </div>
 }
 
-export function FilesTab({ me, saveMe, onOpenSettings }: FilesTabProps) {
+export function FilesTab({ me, saveMe, proposals, onOpenSettings }: FilesTabProps) {
   const documents = useDocuments()
   const { state } = documents
   const all = state.status === 'ok' ? state.documents : []
+  const analysing = all.some((d) => d.state === 'analysing')
+  const wasAnalysing = useRef(false)
+  const { reload } = proposals
+
+  useEffect(() => { void reload() }, [reload])
+  useEffect(() => {
+    if (wasAnalysing.current && !analysing) void reload()
+    wasAnalysing.current = analysing
+  }, [analysing, reload])
 
   return <div className="profile-cols-files">
     <div className="profile-col-files-docs">
       <Message note={documents.note}/>
       <FilesSection documents={documents} items={all.filter((d) => !d.address)} onOpenSettings={onOpenSettings}/>
       <ContactsSection me={me} onSave={saveMe}
-        extra={<FetchedPages documents={documents} items={all.filter((d) => d.address)} onOpenSettings={onOpenSettings}/>}/>
+        extra={(editing) => <FetchedPages documents={documents} items={all.filter((d) => d.address)} editing={editing} onOpenSettings={onOpenSettings}/>}/>
+    </div>
+    <div className="profile-col-files-facts">
+      <SuggestionsPanel proposals={proposals}/>
     </div>
   </div>
 }
