@@ -115,7 +115,7 @@ export function Shell() {
       {recovered.length > 0 && (
         <div className="app-recovered">
           {recovered.map((f) => (
-            <p key={f.file}>A file could not be read and was restored from a backup: {f.file}.</p>
+            <p key={f.file}>{f.text}</p>
           ))}
         </div>
       )}

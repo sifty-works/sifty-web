@@ -1094,16 +1094,13 @@ components:
             type: object
         RecoveredFile:
             properties:
-                broken:
-                    type: string
-                err:
-                    type: string
                 file:
+                    type: string
+                text:
                     type: string
             required:
                 - file
-                - err
-                - broken
+                - text
             type: object
         ReferenceCountry:
             properties:

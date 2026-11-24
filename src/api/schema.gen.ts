@@ -944,9 +944,8 @@ export interface components {
             question?: string | null;
         };
         RecoveredFile: {
-            broken: string;
-            err: string;
             file: string;
+            text: string;
         };
         ReferenceCountry: {
             code: string;
