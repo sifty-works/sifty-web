@@ -70,7 +70,7 @@ export type ProposalItem = components['schemas']['ProposalItem']
 export type ProposalListResp = components['schemas']['ProposalListResp']
 
 export interface VacancyFilters {
-  collected: '' | '7' | '30'
+  published: '' | '7' | '30'
   remote: boolean
   leadership: boolean
   industries: string[]
@@ -79,7 +79,7 @@ export interface VacancyFilters {
 }
 
 export const DEFAULT_FILTERS: VacancyFilters = {
-  collected: '',
+  published: '',
   remote: false,
   leadership: false,
   industries: [],
@@ -144,7 +144,7 @@ export function listVacancies(
   const params = new URLSearchParams({ stage })
   if (profile !== null) params.set('profile', String(profile))
   if (q) params.set('q', q)
-  if (filters.collected) params.set('collected', filters.collected)
+  if (filters.published) params.set('published', filters.published)
   if (filters.remote) params.set('remote', 'true')
   if (filters.leadership) params.set('leadership', 'true')
   if (filters.industries.length > 0) params.set('industries', filters.industries.join(','))
@@ -190,8 +190,8 @@ export function deleteSource(key: string): Promise<SourceListResponse> {
   return request<SourceListResponse>('DELETE', '/api/sources', { key })
 }
 
-export function setSchedule(auto: boolean, interval: string): Promise<SourceListResponse> {
-  return request<SourceListResponse>('PUT', '/api/sources/schedule', { auto, interval })
+export function setSchedule(auto: boolean, interval: string, maxAgeMonths: number | null): Promise<SourceListResponse> {
+  return request<SourceListResponse>('PUT', '/api/sources/schedule', { auto, interval, max_age_months: maxAgeMonths })
 }
 
 export function listExclusions(): Promise<ExclusionListResponse> {

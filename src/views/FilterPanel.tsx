@@ -123,24 +123,24 @@ export function FilterPanel({
         </div>
 
         <div className="fp-group">
-          <h4>Collected</h4>
+          <h4>Published</h4>
           <div className="fp-chips">
             <div className="fp-seg">
               <button
-                aria-pressed={filters.collected === ''}
-                onClick={() => onChange({ ...filters, collected: '' })}
+                aria-pressed={filters.published === ''}
+                onClick={() => onChange({ ...filters, published: '' })}
               >
-                Any time
+                All
               </button>
               <button
-                aria-pressed={filters.collected === '7'}
-                onClick={() => onChange({ ...filters, collected: '7' })}
+                aria-pressed={filters.published === '7'}
+                onClick={() => onChange({ ...filters, published: '7' })}
               >
                 7 days
               </button>
               <button
-                aria-pressed={filters.collected === '30'}
-                onClick={() => onChange({ ...filters, collected: '30' })}
+                aria-pressed={filters.published === '30'}
+                onClick={() => onChange({ ...filters, published: '30' })}
               >
                 30 days
               </button>

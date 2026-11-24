@@ -1056,6 +1056,7 @@ export interface components {
         SourcesResp: {
             auto: boolean;
             interval: string;
+            max_age_months: number | null;
             sources: components["schemas"]["Source"][];
         };
         StatusExtra: {
@@ -1163,6 +1164,7 @@ export interface components {
         scheduleReq: {
             auto: boolean;
             interval: string;
+            max_age_months: number | null;
         };
         toggleSourceReq: {
             enabled: boolean;
@@ -2182,7 +2184,7 @@ export interface operations {
                 profile: number;
                 q: string;
                 industries?: string;
-                collected?: string;
+                published?: string;
                 remote?: boolean;
                 leadership?: boolean;
                 sources?: string;

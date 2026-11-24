@@ -35,12 +35,14 @@ const MODELS_ICON = (
 )
 
 export function SourcesPage({ startPanel, status, applyStatus, statusText }: Props) {
-  const { state, add, toggle, remove, updateSchedule, addNote } = useSources()
+  const { state, add, toggle, remove, updateSchedule, setAgeLimit, addNote } = useSources()
   const [nameVal, setNameVal] = useState('')
   const [urlVal, setUrlVal] = useState('')
   const [busy, setBusy] = useState(false)
   const [nav, setNav] = useState(startPanel ?? 'sources')
   const [collectNote, setCollectNote] = useState<Note | null>(null)
+  const [ageDraft, setAgeDraft] = useState<string | null>(null)
+  const [ageNote, setAgeNote] = useState<Note | null>(null)
 
   const isCollecting = status?.collecting != null
 
@@ -55,6 +57,15 @@ export function SourcesPage({ startPanel, status, applyStatus, statusText }: Pro
     }
   }
 
+  async function saveAge(e: React.FormEvent) {
+    e.preventDefault()
+    setAgeNote(null)
+    const text = (ageDraft ?? '').trim()
+    const note = await setAgeLimit(text === '' ? null : Number(text))
+    setAgeNote(note)
+    if (!note) setAgeDraft(null)
+  }
+
   function collect() {
     setCollectNote(null)
     triggerCollect(true).then(applyStatus).catch((e: unknown) => setCollectNote(failure(e, 'Could not start collection')))
@@ -63,6 +74,7 @@ export function SourcesPage({ startPanel, status, applyStatus, statusText }: Pro
   const sources = state.status === 'ok' ? state.sources : []
   const auto = state.status === 'ok' ? state.auto : false
   const interval = state.status === 'ok' ? state.interval : '3h'
+  const storedAge = state.status === 'ok' && state.maxAgeMonths !== null ? String(state.maxAgeMonths) : ''
 
   const intervalOpts = INTERVAL_OPTIONS.some((o) => o.value === interval)
     ? INTERVAL_OPTIONS
@@ -92,6 +104,11 @@ export function SourcesPage({ startPanel, status, applyStatus, statusText }: Pro
                 urlVal={urlVal}
                 addNote={addNote}
                 collectNote={collectNote}
+                ageVal={ageDraft ?? storedAge}
+                ageSaved={ageDraft === null}
+                ageNote={ageNote}
+                onAgeChange={setAgeDraft}
+                onAgeSave={(e) => void saveAge(e)}
                 onToggle={(key, enabled) => void toggle(key, enabled)}
                 onRemove={(key) => void remove(key)}
                 onAdd={(e) => void handleAdd(e)}
@@ -162,6 +179,11 @@ interface SourcesPanelProps {
   urlVal: string
   addNote: Note | null
   collectNote: Note | null
+  ageVal: string
+  ageSaved: boolean
+  ageNote: Note | null
+  onAgeChange: (v: string) => void
+  onAgeSave: (e: React.FormEvent) => void
   onToggle: (key: string, enabled: boolean) => void
   onRemove: (key: string) => void
   onAdd: (e: React.FormEvent) => void
@@ -173,7 +195,7 @@ interface SourcesPanelProps {
 
 function SourcesPanel({
   sources, auto, interval, intervalOpts, busy, isCollecting, statusText,
-  nameVal, urlVal, addNote, collectNote,
+  nameVal, urlVal, addNote, collectNote, ageVal, ageSaved, ageNote, onAgeChange, onAgeSave,
   onToggle, onRemove, onAdd, onNameChange, onUrlChange, onUpdateSchedule, onCollect,
 }: SourcesPanelProps) {
   return (
@@ -288,6 +310,20 @@ function SourcesPanel({
             </select>
           </div>
         )}
+        <form onSubmit={onAgeSave} style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <label htmlFor="max-age-months">Do not collect roles published more than</label>
+          <input
+            id="max-age-months"
+            type="number"
+            style={{ width: 80 }}
+            value={ageVal}
+            placeholder="no limit"
+            onChange={(e) => onAgeChange(e.target.value)}
+          />
+          <span>months ago</span>
+          <button type="submit" disabled={busy || ageSaved}>Save</button>
+        </form>
+        <Message note={ageNote} />
         <div style={{ marginTop: 14 }}>
           <button className="primary" disabled={isCollecting} onClick={onCollect}>
             Collect jobs

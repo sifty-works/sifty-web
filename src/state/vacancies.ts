@@ -46,7 +46,7 @@ function loadSavedFilters(): VacancyFilters {
     if (!raw) return DEFAULT_FILTERS
     const parsed = JSON.parse(raw) as Partial<VacancyFilters>
     return {
-      collected: (parsed.collected === '7' || parsed.collected === '30') ? parsed.collected : '',
+      published: (parsed.published === '7' || parsed.published === '30') ? parsed.published : '',
       remote: parsed.remote === true,
       leadership: parsed.leadership === true,
       industries: Array.isArray(parsed.industries) ? parsed.industries.filter((v): v is string => typeof v === 'string') : [],
@@ -60,7 +60,7 @@ function loadSavedFilters(): VacancyFilters {
 
 function saveFilters(f: VacancyFilters): void {
   try {
-    const isDefault = !f.collected && !f.remote && !f.leadership && f.industries.length === 0 && f.sources.length === 0 && f.fit.length === 0
+    const isDefault = !f.published && !f.remote && !f.leadership && f.industries.length === 0 && f.sources.length === 0 && f.fit.length === 0
     if (isDefault) {
       localStorage.removeItem(FILTERS_KEY)
     } else {

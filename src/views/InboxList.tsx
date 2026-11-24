@@ -116,7 +116,7 @@ export function InboxList({
   const serverDown = state.status === 'offline'
 
   const activeFilterCount = [
-    filters.collected !== '',
+    filters.published !== '',
     filters.remote,
     filters.leadership,
     ...filters.industries.map(() => true),

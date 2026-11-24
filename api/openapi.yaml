@@ -1477,6 +1477,11 @@ components:
                     type: boolean
                 interval:
                     type: string
+                max_age_months:
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
                 sources:
                     items:
                         $ref: '#/components/schemas/Source'
@@ -1485,6 +1490,7 @@ components:
                 - sources
                 - auto
                 - interval
+                - max_age_months
             type: object
         StatusExtra:
             properties:
@@ -1778,9 +1784,15 @@ components:
                     type: boolean
                 interval:
                     type: string
+                max_age_months:
+                    oneOf:
+                        - format: double
+                          type: number
+                        - type: "null"
             required:
                 - auto
                 - interval
+                - max_age_months
             type: object
         toggleSourceReq:
             properties:
@@ -2443,7 +2455,7 @@ paths:
                   schema:
                     type: string
                 - in: query
-                  name: collected
+                  name: published
                   schema:
                     type: string
                 - in: query

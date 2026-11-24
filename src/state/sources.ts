@@ -15,7 +15,7 @@ import { failure, type Note } from './messages.ts'
 export type SourcesState =
   | { status: 'loading' }
   | { status: 'offline' }
-  | { status: 'ok'; sources: Source[]; auto: boolean; interval: string }
+  | { status: 'ok'; sources: Source[]; auto: boolean; interval: string; maxAgeMonths: number | null }
   | { status: 'error'; message: string }
 
 export interface UseSourcesResult {
@@ -24,6 +24,7 @@ export interface UseSourcesResult {
   toggle: (key: string, enabled: boolean) => Promise<void>
   remove: (key: string) => Promise<void>
   updateSchedule: (auto: boolean, interval: string) => Promise<void>
+  setAgeLimit: (maxAgeMonths: number | null) => Promise<Note | null>
   addNote: Note | null
 }
 
@@ -31,7 +32,7 @@ function applyList(
   setState: Dispatch<SetStateAction<SourcesState>>,
   data: SourceListResponse,
 ) {
-  setState({ status: 'ok', sources: data.sources, auto: data.auto, interval: data.interval })
+  setState({ status: 'ok', sources: data.sources, auto: data.auto, interval: data.interval, maxAgeMonths: data.max_age_months })
 }
 
 function offlineOrError(
@@ -85,7 +86,28 @@ export function useSources(): UseSourcesResult {
     }, [])
   const toggle = useMemo(() => change(patchSource), [change])
   const remove = useMemo(() => change(deleteSource), [change])
-  const updateSchedule = useMemo(() => change(setSchedule), [change])
+  const schedule = state.status === 'ok' ? state : null
+  const updateSchedule = useCallback(
+    async (auto: boolean, interval: string): Promise<void> => {
+      if (schedule) await change(setSchedule)(auto, interval, schedule.maxAgeMonths)
+    },
+    [change, schedule],
+  )
 
-  return { state, add, toggle, remove, updateSchedule, addNote }
+  const setAgeLimit = useCallback(
+    async (maxAgeMonths: number | null): Promise<Note | null> => {
+      if (!schedule) return null
+      try {
+        applyList(setState, await setSchedule(schedule.auto, schedule.interval, maxAgeMonths))
+        return null
+      } catch (err) {
+        if (err instanceof ServerError) return failure(err)
+        setVersion((v) => v + 1)
+        return null
+      }
+    },
+    [schedule],
+  )
+
+  return { state, add, toggle, remove, updateSchedule, setAgeLimit, addNote }
 }
