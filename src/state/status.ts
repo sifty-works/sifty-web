@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getStatus, RecoveredFile, StatusExtra } from '../api/client.ts'
+import { usePoll } from './poll.ts'
 
 export type StatusState =
   | { status: 'unknown' }
@@ -31,32 +32,15 @@ export function useStatus(onCatalogueChange: () => void): UseStatusResult {
     setState({ status: 'ok', data })
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
-    let timerId: ReturnType<typeof setTimeout> | null = null
-
-    async function poll() {
-      try {
-        const data = await getStatus()
-        if (!cancelled) {
-          setRecovered(data.recovered)
-          applyStatus(data)
-        }
-      } catch {
-        if (!cancelled) setState({ status: 'offline' })
-      }
-      if (!cancelled) {
-        timerId = setTimeout(() => { void poll() }, 5000)
-      }
+  usePoll(async () => {
+    try {
+      const data = await getStatus()
+      setRecovered(data.recovered)
+      applyStatus(data)
+    } catch {
+      setState({ status: 'offline' })
     }
-
-    void poll()
-
-    return () => {
-      cancelled = true
-      if (timerId !== null) clearTimeout(timerId)
-    }
-  }, [applyStatus]) 
+  }, 5000)
 
   return { state, recovered, applyStatus }
 }

@@ -180,6 +180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -1119,6 +1135,20 @@ export interface components {
         collectReq: {
             force: boolean;
         };
+        logAttr: {
+            key: string;
+            value: string;
+        };
+        logEntry: {
+            attrs: components["schemas"]["logAttr"][];
+            level: string;
+            message: string;
+            time: string;
+        };
+        logsResp: {
+            entries: components["schemas"]["logEntry"][];
+            failed: components["schemas"]["workFailed"][];
+        };
         modelsPatch: {
             allowPaidBulk?: boolean | null;
             dailyLimit?: number | null;
@@ -1178,7 +1208,6 @@ export interface components {
             until?: string;
         };
         workResp: {
-            failed: components["schemas"]["workFailed"][];
             running: components["schemas"]["workRunning"][];
             waiting: components["schemas"]["workWaiting"][];
         };
@@ -1551,6 +1580,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreviewResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiLogs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["logsResp"];
                 };
             };
             "4XX": components["responses"]["Error"];

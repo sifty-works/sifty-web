@@ -4,6 +4,7 @@ import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
 import { failure, type Note } from '../state/messages.ts'
 import { Message } from './Messages.tsx'
+import { LogsPanel } from './LogsPanel.tsx'
 import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 import { WorkPanel } from './WorkPanel.tsx'
@@ -135,7 +136,10 @@ export function SourcesPage({ startPanel, status, applyStatus, statusText }: Pro
     {
       title: 'Monitor',
       icon: MONITOR_ICON,
-      panels: [{ id: 'monitor', label: 'Background work', body: <WorkPanel /> }],
+      panels: [
+        { id: 'monitor', label: 'Background work', body: <WorkPanel /> },
+        { id: 'logs', label: 'Logs', body: <LogsPanel /> },
+      ],
     },
   ]
   const panels = groups.flatMap((g) => g.panels)

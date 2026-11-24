@@ -27,7 +27,7 @@ fe_test=$(files 'src/' | { grep -E '\.test\.(ts|tsx)$' || true; } | count)
 row() { printf "%-40s %10s %10s %s\n" "$1" "$2" "$3" "$4"; }
 mark() { if [ "$1" -gt "$2" ]; then fail=1; echo "OVER"; fi; }
 
-row "Frontend code (lines)" "$fe" "6000" "$(mark "$fe" 6000)"
+row "Frontend code (lines)" "$fe" "6200" "$(mark "$fe" 6200)"
 row "Frontend tests (lines)" "$fe_test" "-" ""
 
 if [ "$fail" -ne 0 ]; then

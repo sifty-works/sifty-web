@@ -1,56 +1,50 @@
-import { useEffect, useState } from 'react'
-import { getWork, ServerError, WorkResponse } from '../api/client.ts'
+import { useCallback, useState } from 'react'
+import { getLogs, getWork, LogsResponse, ServerError, WorkResponse } from '../api/client.ts'
 import { failure, type Note } from './messages.ts'
+import { usePoll } from './poll.ts'
 
-export type WorkState =
+export type RemoteState<T> =
   | { status: 'loading' }
   | { status: 'offline' }
   | { status: 'error' }
-  | { status: 'ok'; work: WorkResponse }
+  | { status: 'ok'; data: T }
 
-export interface UseWorkResult {
-  state: WorkState
+export interface UseRemoteResult<T> {
+  state: RemoteState<T>
   note: Note | null
+  reload: () => Promise<void>
 }
 
 const REFRESH_MS = 5000
 
-export function useWork(): UseWorkResult {
-  const [state, setState] = useState<WorkState>({ status: 'loading' })
+function useRemote<T>(fetcher: () => Promise<T>, ms: number | null): UseRemoteResult<T> {
+  const [state, setState] = useState<RemoteState<T>>({ status: 'loading' })
   const [note, setNote] = useState<Note | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    let timerId: ReturnType<typeof setTimeout> | null = null
-
-    async function poll() {
-      try {
-        const work = await getWork()
-        if (!cancelled) {
-          setState({ status: 'ok', work })
-          setNote(null)
-        }
-      } catch (err) {
-        if (!cancelled) {
-          if (err instanceof ServerError) {
-            setNote((prev) => prev?.text === err.message ? prev : failure(err))
-            setState({ status: 'error' })
-          } else {
-            setNote(null)
-            setState({ status: 'offline' })
-          }
-        }
+  const reload = useCallback(async () => {
+    try {
+      setState({ status: 'ok', data: await fetcher() })
+      setNote(null)
+    } catch (err) {
+      if (err instanceof ServerError) {
+        setNote((prev) => prev?.text === err.message ? prev : failure(err))
+        setState({ status: 'error' })
+      } else {
+        setNote(null)
+        setState({ status: 'offline' })
       }
-      if (!cancelled) timerId = setTimeout(() => { void poll() }, REFRESH_MS)
     }
+  }, [fetcher])
 
-    void poll()
+  usePoll(reload, ms)
 
-    return () => {
-      cancelled = true
-      if (timerId !== null) clearTimeout(timerId)
-    }
-  }, [])
+  return { state, note, reload }
+}
 
-  return { state, note }
+export function useWork(): UseRemoteResult<WorkResponse> {
+  return useRemote(getWork, REFRESH_MS)
+}
+
+export function useLogs(): UseRemoteResult<LogsResponse> {
+  return useRemote(getLogs, null)
 }

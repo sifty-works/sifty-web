@@ -63,6 +63,8 @@ export type WorkView = components['schemas']['workView']
 export type CheckResponse = components['schemas']['checkResp']
 export type WorkResponse = components['schemas']['workResp']
 export type WorkRunning = components['schemas']['workRunning']
+export type LogsResponse = components['schemas']['logsResp']
+export type LogEntry = components['schemas']['logEntry']
 export type RecoveredFile = components['schemas']['RecoveredFile']
 export type DocumentItem = components['schemas']['DocumentItem']
 export type DocumentListResp = components['schemas']['DocumentListResp']
@@ -375,4 +377,8 @@ export function rejectProposal(id: number): Promise<ProposalListResp> {
 
 export function getWork(): Promise<WorkResponse> {
   return request<WorkResponse>('GET', '/api/work')
+}
+
+export function getLogs(): Promise<LogsResponse> {
+  return request<LogsResponse>('GET', '/api/logs')
 }
