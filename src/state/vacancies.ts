@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   DEFAULT_FILTERS,
-  IndustryCount,
   LIST_WINDOW,
   LIST_WINDOW_MAX,
   listVacancies,
@@ -52,7 +51,6 @@ function loadSavedFilters(): VacancyFilters {
       published: (parsed.published === '7' || parsed.published === '30') ? parsed.published : '',
       remote: parsed.remote === true,
       leadership: parsed.leadership === true,
-      industries: Array.isArray(parsed.industries) ? parsed.industries.filter((v): v is string => typeof v === 'string') : [],
       sources: Array.isArray(parsed.sources) ? parsed.sources.filter((v): v is string => typeof v === 'string') : [],
       fit: Array.isArray(parsed.fit) ? parsed.fit.filter((v): v is string => typeof v === 'string') : [],
     }
@@ -63,7 +61,7 @@ function loadSavedFilters(): VacancyFilters {
 
 function saveFilters(f: VacancyFilters): void {
   try {
-    const isDefault = !f.published && !f.remote && !f.leadership && f.industries.length === 0 && f.sources.length === 0 && f.fit.length === 0
+    const isDefault = !f.published && !f.remote && !f.leadership && f.sources.length === 0 && f.fit.length === 0
     if (isDefault) {
       localStorage.removeItem(FILTERS_KEY)
     } else {
@@ -141,7 +139,6 @@ export type VacancyListState =
       empty: string
       total: number
       matching: number
-      industryCounts: IndustryCount[]
       sourceCounts: SourceCount[]
     }
 
@@ -265,7 +262,6 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
             empty: data.empty,
             total: data.total,
             matching: data.matching,
-            industryCounts: data.industryCounts,
             sourceCounts: data.sourceCounts,
           })
         }
@@ -312,7 +308,6 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
               empty: data.empty,
               total: data.total,
               matching: data.matching,
-              industryCounts: data.industryCounts,
               sourceCounts: data.sourceCounts,
             }
           })

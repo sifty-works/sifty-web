@@ -180,22 +180,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/industries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiIndustries"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -724,17 +708,6 @@ export interface components {
             weeklyMax?: number | null;
             weeklyMin?: number | null;
         };
-        IndustriesResp: {
-            industries: components["schemas"]["IndustryItem"][];
-        };
-        IndustryCount: {
-            /** Format: int64 */
-            count: number;
-            name: string;
-        };
-        IndustryItem: {
-            name: string;
-        };
         InheritedSource: {
             /** Format: int64 */
             profileId: number;
@@ -752,7 +725,6 @@ export interface components {
         ListResp: {
             counts: components["schemas"]["Counts"];
             empty: string;
-            industryCounts: components["schemas"]["IndustryCount"][];
             /** Format: int64 */
             matching: number;
             /** Format: int64 */
@@ -855,7 +827,6 @@ export interface components {
             otherRequirements?: string;
             preferredLocations?: components["schemas"]["Location"][];
             relocation?: string;
-            targetIndustries?: string[];
             targetRoles?: string[];
             timeZones?: string[];
             workModes?: string[];
@@ -892,7 +863,6 @@ export interface components {
             otherRequirements?: string | null;
             preferredLocations?: components["schemas"]["Location"][] | null;
             relocation?: string | null;
-            targetIndustries?: string[] | null;
             targetRoles?: string[] | null;
             timeZones?: string[] | null;
             workModes?: string[] | null;
@@ -1008,7 +978,6 @@ export interface components {
             fit: components["schemas"]["FitMark"];
             /** Format: int64 */
             id: number;
-            industries: string[];
             location: string;
             locationFull?: string;
             published: string;
@@ -1102,7 +1071,6 @@ export interface components {
             fit: components["schemas"]["FitMark"];
             /** Format: int64 */
             id: number;
-            industries: string[];
             listing: components["schemas"]["ListingView"];
             location: string;
             locationFull?: string;
@@ -1525,27 +1493,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreviewResp"];
-                };
-            };
-            "4XX": components["responses"]["Error"];
-        };
-    };
-    getApiIndustries: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IndustriesResp"];
                 };
             };
             "4XX": components["responses"]["Error"];
@@ -2185,7 +2132,6 @@ export interface operations {
                 stage: "inbox" | "shortlist" | "applied" | "dismissed";
                 profile: number;
                 q: string;
-                industries?: string;
                 published?: string;
                 remote?: boolean;
                 leadership?: boolean;

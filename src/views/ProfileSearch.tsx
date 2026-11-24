@@ -159,13 +159,12 @@ function inheritedClass(fieldName: string, inherited: Set<string>) {
 }
 
 function WhatSection({ data }: { data: ProfilePageData }) {
-  const { profile, inherited, firstProfileName } = data
+  const { profile, inherited } = data
   const eff = profile?.effective
 
   const [roles, setRoles] = useState<string[]>([])
   const [keywords, setKeywords] = useState<string[]>([])
   const [allOf, setAllOf] = useState<string[]>([])
-  const [industries, setIndustries] = useState<string[]>([])
 
   const [exclusions, setExclusions] = useState<Exclusion[]>([])
   const [exclLoading, setExclLoading] = useState(false)
@@ -181,7 +180,6 @@ function WhatSection({ data }: { data: ProfilePageData }) {
     setRoles(eff?.targetRoles ?? [])
     setKeywords(eff?.keywords ?? [])
     setAllOf(eff?.allOf ?? [])
-    setIndustries(eff?.targetIndustries ?? [])
   }
 
   async function save() {
@@ -189,7 +187,6 @@ function WhatSection({ data }: { data: ProfilePageData }) {
       targetRoles: roles.length ? roles : null,
       keywords: keywords.length ? keywords : null,
       allOf: allOf.length ? allOf : null,
-      targetIndustries: industries.length ? industries : null,
     }
     await data.saveProfile(patch)
   }
@@ -212,9 +209,6 @@ function WhatSection({ data }: { data: ProfilePageData }) {
     } catch (e) { setExclNote(failure(e, 'Could not remove the word')) }
   }
 
-  const inds = eff?.targetIndustries ?? []
-  const inh = inherited.has('targetIndustries')
-
   return <SectionShell title="What you're looking for"
     {...editor}>
     {editor.editing ? <div className="profile-fields">
@@ -236,7 +230,6 @@ function WhatSection({ data }: { data: ProfilePageData }) {
           <Message note={exclNote}/>
         </div>
       </div>
-      <TagInput label="Industries" title="Industries" variant="any" values={industries} placeholder="Add an industry…" onChange={setIndustries}/>
     </div> : <div className="profile-read">
       {(eff?.targetRoles ?? []).length ? <div className={`profile-read-line${inheritedClass('targetRoles', inherited)}`}>
         <strong>Roles</strong><ReadTags values={eff!.targetRoles!}/>
@@ -246,12 +239,7 @@ function WhatSection({ data }: { data: ProfilePageData }) {
       {exclusions.length ? <div className="profile-read-line"><strong>Except</strong>
         <div className="profile-tags">{exclusions.map((e) => <span key={e.id}>{e.value}</span>)}</div>
       </div> : null}
-      {inds.length ? <div className={`profile-read-line${inh ? ' profile-inherited-value' : ''}`}>
-        <strong>Industries</strong>
-        <div className="profile-tags">{inds.map((v, i) => <span key={i}>{v}</span>)}</div>
-      </div> : null}
-      {inh ? <InheritedNote fieldName="targetIndustries" inherited={inherited} firstProfileName={firstProfileName}/> : null}
-      {!(eff?.targetRoles ?? []).length && !(eff?.keywords ?? []).length && !(eff?.allOf ?? []).length && !exclusions.length && !inds.length ? <NotSet/> : null}
+      {!(eff?.targetRoles ?? []).length && !(eff?.keywords ?? []).length && !(eff?.allOf ?? []).length && !exclusions.length ? <NotSet/> : null}
     </div>}
   </SectionShell>
 }

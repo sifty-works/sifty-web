@@ -3,7 +3,6 @@ import {
   addExclusion,
   deleteVacancy,
   FitMark,
-  getIndustries,
   getVacancy,
   listSources,
   markSeen,
@@ -89,7 +88,6 @@ export function InboxList({
   const [seenInSession, setSeenInSession] = useState<ReadonlySet<number>>(new Set())
   const [panelOpen, setPanelOpen] = useState(false)
   const [allSources, setAllSources] = useState<{ key: string; name: string }[]>([])
-  const [allIndustries, setAllIndustries] = useState<string[]>([])
 
   const heldRowDataRef = useRef<VacancyRowData | null>(null)
   const [heldRowId, setHeldRowId] = useState<number | null>(null)
@@ -114,7 +112,6 @@ export function InboxList({
   const total = state.status === 'ok' ? state.total : 0
   const matching = state.status === 'ok' ? state.matching : 0
   const hasMore = rows.length < matching
-  const industryCounts = state.status === 'ok' ? state.industryCounts : []
   const sourceCounts = state.status === 'ok' ? state.sourceCounts : []
   const loading = state.status === 'loading'
   const serverDown = state.status === 'offline'
@@ -123,7 +120,6 @@ export function InboxList({
     filters.published !== '',
     filters.remote,
     filters.leadership,
-    ...filters.industries.map(() => true),
     ...filters.sources.map(() => true),
     ...filters.fit.map(() => true),
   ].filter(Boolean).length
@@ -132,9 +128,6 @@ export function InboxList({
     void listSources().then((resp) => {
       setAllSources(resp.sources.map((s) => ({ key: s.key, name: s.name })))
     }).catch(silent('the source filter list is optional: the filter stays empty'))
-    void getIndustries().then((resp) => {
-      setAllIndustries(resp.industries.map((i) => i.name))
-    }).catch(silent('the industry filter list is optional: the filter stays empty'))
   }, [])
 
   useEffect(() => {
@@ -326,7 +319,6 @@ export function InboxList({
           published: pageView.published,
           unread: pageView.unread,
           stage: pageView.stage,
-          industries: pageView.industries,
           fit: pageView.fit,
         }
         const idx = displayRows.findIndex((r) => r.id === pageView.id)
@@ -488,9 +480,7 @@ export function InboxList({
             {panelOpen && (
               <FilterPanel
                 filters={filters}
-                allIndustries={allIndustries}
                 allSources={allSources}
-                industryCounts={industryCounts}
                 sourceCounts={sourceCounts}
                 rowCount={matching}
                 total={total}

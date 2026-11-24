@@ -31,7 +31,6 @@ export function VacancyRow({ row, selected, onSelect, decidedTo }: Props) {
   return (
     <button className={classes} onClick={onSelect} aria-pressed={selected}>
       <div className="row-company">
-        {row.industries.map((ind) => <span key={ind} className="ind-badge">{ind}</span>)}
         <span className="row-co-name">{row.company}</span>
       </div>
       <div className="row-icons">

@@ -501,33 +501,6 @@ components:
                           type: number
                         - type: "null"
             type: object
-        IndustriesResp:
-            properties:
-                industries:
-                    items:
-                        $ref: '#/components/schemas/IndustryItem'
-                    type: array
-            required:
-                - industries
-            type: object
-        IndustryCount:
-            properties:
-                count:
-                    format: int64
-                    type: integer
-                name:
-                    type: string
-            required:
-                - name
-                - count
-            type: object
-        IndustryItem:
-            properties:
-                name:
-                    type: string
-            required:
-                - name
-            type: object
         InheritedSource:
             properties:
                 profileId:
@@ -567,10 +540,6 @@ components:
                     $ref: '#/components/schemas/Counts'
                 empty:
                     type: string
-                industryCounts:
-                    items:
-                        $ref: '#/components/schemas/IndustryCount'
-                    type: array
                 matching:
                     format: int64
                     type: integer
@@ -591,7 +560,6 @@ components:
             required:
                 - rows
                 - counts
-                - industryCounts
                 - sourceCounts
                 - total
                 - matching
@@ -879,10 +847,6 @@ components:
                     type: array
                 relocation:
                     type: string
-                targetIndustries:
-                    items:
-                        type: string
-                    type: array
                 targetRoles:
                     items:
                         type: string
@@ -997,12 +961,6 @@ components:
                 relocation:
                     oneOf:
                         - type: string
-                        - type: "null"
-                targetIndustries:
-                    oneOf:
-                        - items:
-                            type: string
-                          type: array
                         - type: "null"
                 targetRoles:
                     oneOf:
@@ -1354,10 +1312,6 @@ components:
                 id:
                     format: int64
                     type: integer
-                industries:
-                    items:
-                        type: string
-                    type: array
                 location:
                     type: string
                 locationFull:
@@ -1383,7 +1337,6 @@ components:
                 - title
                 - location
                 - published
-                - industries
                 - unread
                 - stage
                 - fit
@@ -1612,10 +1565,6 @@ components:
                 id:
                     format: int64
                     type: integer
-                industries:
-                    items:
-                        type: string
-                    type: array
                 listing:
                     $ref: '#/components/schemas/ListingView'
                 location:
@@ -1653,7 +1602,6 @@ components:
                 - title
                 - location
                 - published
-                - industries
                 - unread
                 - stage
                 - fit
@@ -2037,18 +1985,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PreviewResp'
-                    description: OK
-    /api/industries:
-        get:
-            operationId: getApiIndustries
-            responses:
-                4XX:
-                    $ref: '#/components/responses/Error'
-                "200":
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/IndustriesResp'
                     description: OK
     /api/me:
         get:
@@ -2452,10 +2388,6 @@ paths:
                 - in: query
                   name: q
                   required: true
-                  schema:
-                    type: string
-                - in: query
-                  name: industries
                   schema:
                     type: string
                 - in: query

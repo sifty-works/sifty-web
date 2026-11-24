@@ -48,8 +48,6 @@ export type DecisionRequest = components['schemas']['DecisionReq']
 export type DecisionResponse = components['schemas']['DecisionResp']
 export type Exclusion = components['schemas']['Exclusion']
 export type ExclusionListResponse = components['schemas']['ExclusionsResp']
-export type IndustriesResp = components['schemas']['IndustriesResp']
-export type IndustryCount = components['schemas']['IndustryCount']
 export type SourceCount = components['schemas']['SourceCount']
 export type FitMark = components['schemas']['FitMark']
 export type Band = components['schemas']['Band']
@@ -73,7 +71,6 @@ export interface VacancyFilters {
   published: '' | '7' | '30'
   remote: boolean
   leadership: boolean
-  industries: string[]
   sources: string[]
   fit: string[]
 }
@@ -82,7 +79,6 @@ export const DEFAULT_FILTERS: VacancyFilters = {
   published: '',
   remote: false,
   leadership: false,
-  industries: [],
   sources: [],
   fit: [],
 }
@@ -152,7 +148,6 @@ export function listVacancies(
   if (filters.published) params.set('published', filters.published)
   if (filters.remote) params.set('remote', 'true')
   if (filters.leadership) params.set('leadership', 'true')
-  if (filters.industries.length > 0) params.set('industries', filters.industries.join(','))
   if (filters.sources.length > 0) params.set('sources', filters.sources.join(','))
   if (unread) params.set('unread', 'true')
   if (filters.fit.length > 0) params.set('fit', filters.fit.join(','))
@@ -348,10 +343,6 @@ export function deleteQA(id: number): Promise<void> {
 
 export function getExclusions(profileId: number): Promise<ExclusionListResponse> {
   return request<ExclusionListResponse>('GET', `/api/exclusions?profile=${profileId}`)
-}
-
-export function getIndustries(): Promise<IndustriesResp> {
-  return request<IndustriesResp>('GET', '/api/industries')
 }
 
 export function postSkillsDecision(req: SkillsDecisionReq): Promise<SkillsDecisionResp> {

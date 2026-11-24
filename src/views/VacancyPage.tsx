@@ -53,7 +53,6 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
       <div className="detail-top">
         <div className="role-heading">
           <p className="company">
-            {view.industries.map((ind) => <span key={ind} className="ind-chip">{ind}</span>)}
             {view.company}
           </p>
           <h1>{view.title}</h1>

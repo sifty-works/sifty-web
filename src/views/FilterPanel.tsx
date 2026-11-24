@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { IndustryCount, SourceCount, VacancyFilters } from '../api/client.ts'
+import { SourceCount, VacancyFilters } from '../api/client.ts'
 
 interface SourceEntry {
   key: string
@@ -8,9 +8,7 @@ interface SourceEntry {
 
 interface Props {
   filters: VacancyFilters
-  allIndustries: string[]
   allSources: SourceEntry[]
-  industryCounts: IndustryCount[]
   sourceCounts: SourceCount[]
   rowCount: number
   total: number
@@ -28,9 +26,7 @@ const FIT_OPTIONS = [
 
 export function FilterPanel({
   filters,
-  allIndustries,
   allSources,
-  industryCounts,
   sourceCounts,
   rowCount,
   total,
@@ -57,19 +53,10 @@ export function FilterPanel({
     }
   }, [onClose])
 
-  const industryCountMap = useMemo(
-    () => new Map(industryCounts.map((ic) => [ic.name, ic.count])),
-    [industryCounts],
-  )
   const sourceCountMap = useMemo(
     () => new Map(sourceCounts.map((sc) => [sc.name, sc.count])),
     [sourceCounts],
   )
-
-  const industryList = useMemo(() => {
-    const extra = filters.industries.filter((n) => !allIndustries.includes(n))
-    return [...allIndustries, ...extra]
-  }, [allIndustries, filters.industries])
 
   const sourceList = useMemo(() => {
     const allKeys = new Set(allSources.map((s) => s.key))
@@ -86,13 +73,6 @@ export function FilterPanel({
     onChange({ ...filters, fit })
   }
 
-  function toggleIndustry(name: string) {
-    const industries = filters.industries.includes(name)
-      ? filters.industries.filter((i) => i !== name)
-      : [...filters.industries, name]
-    onChange({ ...filters, industries })
-  }
-
   function toggleSource(key: string) {
     const sources = filters.sources.includes(key)
       ? filters.sources.filter((s) => s !== key)
@@ -100,7 +80,6 @@ export function FilterPanel({
     onChange({ ...filters, sources })
   }
 
-  const showIndustries = industryList.length > 0
   const showSources = sourceList.length > 0
 
   return (
@@ -167,24 +146,6 @@ export function FilterPanel({
             </button>
           </div>
         </div>
-
-        {showIndustries && (
-          <div className="fp-group">
-            <h4>Industries</h4>
-            <div className="fp-chips">
-              {industryList.map((name) => (
-                <button
-                  key={name}
-                  className="fp-chip"
-                  aria-pressed={filters.industries.includes(name)}
-                  onClick={() => toggleIndustry(name)}
-                >
-                  {name} <small>({industryCountMap.get(name) ?? 0})</small>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {showSources && (
           <div className="fp-group">
