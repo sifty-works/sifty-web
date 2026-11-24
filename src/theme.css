@@ -179,6 +179,7 @@
 .settings-main .sites-table th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#a1a1aa;padding:0 12px 4px;border:0}
 .settings-main .sites-table td{background:#fff;padding:10px 12px;border:0;vertical-align:middle}
 .settings-main .sites-table td:first-child{border-radius:9px 0 0 9px;font-weight:600}.settings-main .sites-table td:last-child{border-radius:0 9px 9px 0;text-align:right}
+.settings-main .sites-table.work-table td:last-child{text-align:left}
 
 @font-face{font-family:'Tiny5';src:url('/fonts/tiny5.woff2') format('woff2');font-display:block}
 .app-header .brand{padding:6px 4px;display:flex;align-items:center}

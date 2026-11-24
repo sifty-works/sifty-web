@@ -61,6 +61,8 @@ export type ModelsPatch = components['schemas']['modelsPatch']
 export type ProviderView = components['schemas']['providerView']
 export type WorkView = components['schemas']['workView']
 export type CheckResponse = components['schemas']['checkResp']
+export type WorkResponse = components['schemas']['workResp']
+export type WorkRunning = components['schemas']['workRunning']
 export type RecoveredFile = components['schemas']['RecoveredFile']
 export type DocumentItem = components['schemas']['DocumentItem']
 export type DocumentListResp = components['schemas']['DocumentListResp']
@@ -369,4 +371,8 @@ export function acceptProposal(id: number): Promise<ProposalListResp> {
 }
 export function rejectProposal(id: number): Promise<ProposalListResp> {
   return request<ProposalListResp>('POST', `/api/proposals/${id}/reject`)
+}
+
+export function getWork(): Promise<WorkResponse> {
+  return request<WorkResponse>('GET', '/api/work')
 }

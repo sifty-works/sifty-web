@@ -6,6 +6,7 @@ import { failure, type Note } from '../state/messages.ts'
 import { Message } from './Messages.tsx'
 import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
+import { WorkPanel } from './WorkPanel.tsx'
 
 interface Props {
   startPanel?: string
@@ -33,6 +34,8 @@ const MODELS_ICON = (
     <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
   </>
 )
+
+const MONITOR_ICON = <path d="M3 12h4l3-7 4 14 3-7h4" />
 
 export function SourcesPage({ startPanel, status, applyStatus, statusText }: Props) {
   const { state, add, toggle, remove, updateSchedule, setAgeLimit, addNote } = useSources()
@@ -125,7 +128,14 @@ export function SourcesPage({ startPanel, status, applyStatus, statusText }: Pro
     {
       title: 'Models',
       icon: MODELS_ICON,
-      panels: [{ id: 'models', label: 'Models', body: <ModelsPanel /> }],
+      panels: [
+        { id: 'models', label: 'Models', body: <ModelsPanel /> },
+      ],
+    },
+    {
+      title: 'Monitor',
+      icon: MONITOR_ICON,
+      panels: [{ id: 'monitor', label: 'Background work', body: <WorkPanel /> }],
     },
   ]
   const panels = groups.flatMap((g) => g.panels)
