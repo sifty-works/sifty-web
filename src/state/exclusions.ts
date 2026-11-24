@@ -12,6 +12,7 @@ import { failure, type Note } from './messages.ts'
 export type ExclusionState =
   | { status: 'loading' }
   | { status: 'offline' }
+  | { status: 'error'; message: string }
   | { status: 'ok'; exclusions: Exclusion[] }
 
 function applyResponse(d: ExclusionListResponse): ExclusionState {
@@ -25,7 +26,14 @@ export function useExclusions() {
   useEffect(() => {
     listExclusions()
       .then((d) => setState(applyResponse(d)))
-      .catch(() => setState({ status: 'offline' }))
+      .catch((err: unknown) => {
+        if (err instanceof ServerError) {
+          setState({ status: 'error', message: err.message })
+          setNote(failure(err))
+        } else {
+          setState({ status: 'offline' })
+        }
+      })
   }, [])
 
   const add = useCallback(async (kind: string, value: string): Promise<boolean> => {

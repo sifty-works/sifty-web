@@ -341,6 +341,7 @@ function ProfileHeader({ me, profile, onClose, onReload }: {
 function QAPanel() {
   const [items, setItems] = useState<QAItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadNote, setLoadNote] = useState<Note | null>(null)
   const [editId, setEditId] = useState<number | null>(null)
   const [editQ, setEditQ] = useState(''); const [editA, setEditA] = useState('')
   const [addQ, setAddQ] = useState(''); const [addA, setAddA] = useState('')
@@ -350,7 +351,10 @@ function QAPanel() {
   const [addNote, setAddNote] = useState<Note | null>(null)
 
   useEffect(() => {
-    void getQA().then((r) => { setItems(r.items); setLoading(false) }).catch(() => setLoading(false))
+    void getQA().then((r) => { setItems(r.items); setLoading(false) }).catch((e) => {
+      setLoadNote(failure(`Saved answers could not be loaded. ${describe(e, '')}`.trim()))
+      setLoading(false)
+    })
   }, [])
 
   async function doAdd() {
@@ -383,7 +387,8 @@ function QAPanel() {
     <p className="profile-col-heading">Questions &amp; Answers</p>
     <p className="profile-hint">Answers you approve or edit from the Application tab are saved here and offered again on future applications. They are shared across all your profiles.</p>
     {loading ? <p>Loading…</p> : null}
-    {!loading && !items.length ? <p className="profile-hint">No saved answers yet.</p> : null}
+    <Message note={loadNote}/>
+    {!loading && !loadNote && !items.length ? <p className="profile-hint">No saved answers yet.</p> : null}
     {items.map((item) => <article key={item.id} className="profile-qa-entry">
       {editId === item.id ? <>
         <div className="profile-fields">
@@ -405,7 +410,7 @@ function QAPanel() {
         </div>
       </>}
     </article>)}
-    <details className="profile-qa-add">
+    {!loading && !loadNote ? <details className="profile-qa-add">
       <summary>Add an answer</summary>
       <div className="profile-fields">
         <Field label="Question"><input value={addQ} onChange={(e) => setAddQ(e.target.value)} placeholder="e.g. What is your notice period?"/></Field>
@@ -415,7 +420,7 @@ function QAPanel() {
       <div className="profile-document-actions">
         <button type="button" disabled={addSaving || !addQ.trim()} onClick={() => void doAdd()}>{addSaving ? 'Saving…' : 'Add'}</button>
       </div>
-    </details>
+    </details> : null}
   </div>
 }
 

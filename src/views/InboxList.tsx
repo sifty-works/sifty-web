@@ -115,7 +115,10 @@ export function InboxList({
   const hasMore = rows.length < matching
   const sourceCounts = state.status === 'ok' ? state.sourceCounts : []
   const loading = state.status === 'loading'
-  const serverDown = state.status === 'offline'
+  const listNote = useMemo<Note | null>(
+    () => (state.status === 'offline' ? SERVER_DOWN_NOTE : state.status === 'error' ? failure(state.message) : null),
+    [state],
+  )
 
   const activeFilterCount = [
     filters.published !== '',
@@ -234,10 +237,10 @@ export function InboxList({
   }, [rows])
 
   useEffect(() => {
-    if (loading || serverDown || selectedId !== null) return
+    if (loading || listNote || selectedId !== null) return
     const first = displayRows.find((r) => !goneRef.current.has(r.id))
     if (first) openRow(first.id)
-  }, [loading, serverDown, selectedId, displayRows, openRow])
+  }, [loading, listNote, selectedId, displayRows, openRow])
 
   const selectAfterRemoval = useCallback(
     (gone: (row: VacancyRowData) => boolean) => {
@@ -561,8 +564,8 @@ export function InboxList({
         <div className="job-list">
           {loading ? null : displayRows.length === 0 ? (
             <div className="empty">
-              <p>{serverDown ? SERVER_DOWN : empty}</p>
-              {!serverDown && (query.trim() !== '' || activeFilterCount > 0 || unread) && (
+              <p>{listNote ? listNote.text : empty}</p>
+              {!listNote && (query.trim() !== '' || activeFilterCount > 0 || unread) && (
                 <button onClick={resetAll}>Reset filters</button>
               )}
             </div>
@@ -581,7 +584,7 @@ export function InboxList({
               )
             })
           )}
-          {!loading && !serverDown && hasMore && (
+          {!loading && !listNote && hasMore && (
             <div className="list-more">
               <Message note={moreError} inline />
               <button type="button" disabled={loadingMore} onClick={() => loadMore(gone)}>
@@ -600,7 +603,7 @@ export function InboxList({
 
       <main className="detail" aria-label="Selected vacancy">
         <div className="detail-inner">
-          <Message note={serverDown ? SERVER_DOWN_NOTE : null} />
+          <Message note={listNote} />
 
           {pageError ? (
             <Message note={pageError} />
@@ -616,7 +619,7 @@ export function InboxList({
               onSkillDecision={(index, have, chosenSkill) => handleSkillDecision(index, have, chosenSkill)}
               onCheckRetry={handleCheckRetry}
             />
-          ) : loading || serverDown ? null : (
+          ) : loading || listNote ? null : (
             <div className="empty">
               <h1>No roles</h1>
               <p>This stage has no visible roles. Change stage or filters, or collect jobs in Sources.</p>

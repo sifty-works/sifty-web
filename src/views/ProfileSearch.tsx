@@ -5,7 +5,7 @@ import {
   type Compensation, type Exclusion, type Location, type MePatchReq,
   type ProfilePatchReq, type WorkAuthorization,
 } from '../api/client.ts'
-import { failure, type Note } from '../state/messages.ts'
+import { describe, failure, type Note } from '../state/messages.ts'
 import { geoLabel, labelOf, regionLabel } from '../state/profile.ts'
 import { DateInput } from './DateInputs.tsx'
 import { Message } from './Messages.tsx'
@@ -173,7 +173,10 @@ function WhatSection({ data }: { data: ProfilePageData }) {
   useEffect(() => {
     if (!profile) return
     setExclLoading(true)
-    void getExclusions(profile.id).then((r) => { setExclusions(r.exclusions.filter((e) => e.kind === 'word')); setExclLoading(false) }).catch(() => setExclLoading(false))
+    void getExclusions(profile.id).then((r) => { setExclusions(r.exclusions.filter((e) => e.kind === 'word')); setExclLoading(false) }).catch((e) => {
+      setExclNote(failure(`The excluded words could not be loaded. ${describe(e, '')}`.trim()))
+      setExclLoading(false)
+    })
   }, [profile])
 
   function beginEdit() {
