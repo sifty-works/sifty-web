@@ -15,3 +15,8 @@ After changing a stylesheet or adding a class that is built at run time rather
 than written out, run `node scripts/dead-styles.mjs`. It reports every class
 rule no element can match, and stops with an error when a site that builds a
 class name has moved. It is not part of `npm run check`.
+
+A working copy made with `git worktree add` starts without `node_modules`, and
+`npm run check` cannot run there. Link the main checkout's instead of
+installing a second copy: `ln -s ../../node_modules node_modules` from the
+root of the working copy.
