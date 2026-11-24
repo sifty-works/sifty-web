@@ -28,12 +28,13 @@ interface Props {
   actionError?: Note | null
   notice?: Note | null
   onAction: (key: string) => void
+  onUndoDecision: () => void
   onClearNotice: () => void
   onSkillDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
   onCheckRetry: () => Promise<void>
 }
 
-export function VacancyPage({ view, sessionDecision, actionError, notice, onAction, onClearNotice, onSkillDecision, onCheckRetry }: Props) {
+export function VacancyPage({ view, sessionDecision, actionError, notice, onAction, onUndoDecision, onClearNotice, onSkillDecision, onCheckRetry }: Props) {
   const placed = (place: Place) =>
     (view.actions ?? []).filter((a) => (ACTIONS[a.key]?.place ?? 'main') === place)
   const buttons = (list: VacancyAction[]) =>
@@ -82,7 +83,7 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
           {sessionDecision ? (
             <SessionDecisionActions
               decision={sessionDecision}
-              onUndo={() => onAction('undo')}
+              onUndo={onUndoDecision}
             />
           ) : (
             <>

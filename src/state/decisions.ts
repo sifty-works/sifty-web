@@ -1,8 +1,13 @@
-import { VacancyRow } from '../api/client.ts'
+import { DecisionRequest, VacancyRow } from '../api/client.ts'
 
 export interface SessionDecision {
   row: VacancyRow   
-  from: string      
-  to: string        
+  from: DecisionRequest['from']
+  to: DecisionRequest['to']
   idx: number       
+}
+
+export interface ReturnedRow {
+  row: VacancyRow
+  idx: number
 }

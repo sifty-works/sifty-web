@@ -17,7 +17,7 @@ import {
   VacancyView,
 } from '../api/client.ts'
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
-import { SessionDecision } from '../state/decisions.ts'
+import { ReturnedRow, SessionDecision } from '../state/decisions.ts'
 import { failure, type Note, report, silent } from '../state/messages.ts'
 import { useCheckRefresh, useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
@@ -95,6 +95,7 @@ export function InboxList({
   const [pageError, setPageError] = useState<Note | null>(null)
   const [listWidth, setListWidth] = useListWidth()
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
+  const [returnedRows, setReturnedRows] = useState<Map<number, ReturnedRow>>(new Map())
   const [actionError, setActionError] = useState<Note | null>(null)
   const [skillNotice, setSkillNotice] = useState<Note | null>(null)
   const [rowFitUpdates, setRowFitUpdates] = useState<Map<number, FitMark>>(new Map())
@@ -131,6 +132,10 @@ export function InboxList({
   }, [])
 
   useEffect(() => {
+    setReturnedRows(new Map())
+  }, [stage, query, filters, unread, sort, profileProp, reloadTrigger, blockCount])
+
+  useEffect(() => {
     if (!unread) {
       heldRowDataRef.current = null
       setHeldRowId(null)
@@ -141,11 +146,13 @@ export function InboxList({
     const serverIds = new Set(rows.map((r) => r.id))
     const result: VacancyRowData[] = [...rows]
     if (stage === 'inbox') {
-      const decided = Array.from(sessionDecisions.values()).sort((a, b) => a.idx - b.idx)
-      for (const dec of decided) {
-        if (!serverIds.has(dec.row.id)) {
-          const pos = Math.min(dec.idx, result.length)
-          result.splice(pos, 0, dec.row)
+      const placed = new Map<number, ReturnedRow>(returnedRows)
+      for (const [id, dec] of sessionDecisions) placed.set(id, dec)
+      const ordered = Array.from(placed.values()).sort((a, b) => a.idx - b.idx)
+      for (const item of ordered) {
+        if (!serverIds.has(item.row.id)) {
+          const pos = Math.min(item.idx, result.length)
+          result.splice(pos, 0, item.row)
         }
       }
     }
@@ -154,7 +161,7 @@ export function InboxList({
       result.push(heldRowDataRef.current)
     }
     return result
-  }, [rows, sessionDecisions, stage, unread, heldRowId])
+  }, [rows, sessionDecisions, returnedRows, stage, unread, heldRowId])
 
   const gone = useMemo<ReadonlySet<number>>(() => {
     const ids = new Set<number>()
@@ -251,7 +258,39 @@ export function InboxList({
     [displayRows, selectRow],
   )
 
+  const selectedIdRef = useRef<number | null>(null)
+  selectedIdRef.current = selectedId
+
   const handleActionRef = useRef<(key: string) => void>(() => {})
+
+  async function handleUndoDecision() {
+    if (!pageView || profile === null) return
+    const decision = sessionDecisions.get(pageView.id)
+    if (!decision) return
+    const id = decision.row.id
+    setActionError(null)
+    try {
+      const { counts: newCounts } = await postDecision(id, {
+        profile,
+        from: decision.to,
+        to: decision.from,
+        reason: '',
+        confirmed: false,
+      })
+      onCounts?.(newCounts)
+      if (!rows.some((r) => r.id === id)) {
+        setReturnedRows((prev) => new Map(prev).set(id, { row: decision.row, idx: decision.idx }))
+      }
+      setSessionDecisions((prev) => {
+        const next = new Map(prev)
+        next.delete(id)
+        return next
+      })
+      if (selectedIdRef.current === id) openRow(id)
+    } catch (err) {
+      setActionError(failure(err instanceof ServerError ? err : null, 'Could not undo decision'))
+    }
+  }
 
   async function handleAction(key: string) {
     if (!pageView || profile === null) return
@@ -572,6 +611,7 @@ export function InboxList({
               actionError={actionError}
               notice={skillNotice}
               onAction={(key) => void handleAction(key)}
+              onUndoDecision={() => void handleUndoDecision()}
               onClearNotice={() => setSkillNotice(null)}
               onSkillDecision={(index, have, chosenSkill) => handleSkillDecision(index, have, chosenSkill)}
               onCheckRetry={handleCheckRetry}
