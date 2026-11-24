@@ -754,6 +754,8 @@ export interface components {
             empty: string;
             industryCounts: components["schemas"]["IndustryCount"][];
             /** Format: int64 */
+            matching: number;
+            /** Format: int64 */
             profile: number;
             rows: components["schemas"]["Row"][];
             sourceCounts: components["schemas"]["SourceCount"][];
@@ -2191,6 +2193,8 @@ export interface operations {
                 unread?: boolean;
                 fit?: string;
                 sort?: string;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;

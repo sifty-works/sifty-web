@@ -38,3 +38,4 @@ html .msg.inline button{float:none;height:auto;margin-left:8px;padding:0 6px;fon
 .app-recovered p{margin:0}
 .sift-app:has(>.app-recovered){grid-template-rows:56px auto minmax(0,1fr)}
 @media(min-width:768px){.sift-app:has(>.app-recovered){grid-template-rows:64px auto minmax(0,1fr)}}
+.list-more{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 0 4px}.list-more .msg.inline{margin:0}.list-more button{min-height:34px;font-size:12px}

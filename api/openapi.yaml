@@ -571,6 +571,9 @@ components:
                     items:
                         $ref: '#/components/schemas/IndustryCount'
                     type: array
+                matching:
+                    format: int64
+                    type: integer
                 profile:
                     format: int64
                     type: integer
@@ -591,6 +594,7 @@ components:
                 - industryCounts
                 - sourceCounts
                 - total
+                - matching
                 - empty
                 - profile
             type: object
@@ -2482,6 +2486,16 @@ paths:
                   name: sort
                   schema:
                     type: string
+                - in: query
+                  name: limit
+                  schema:
+                    format: int64
+                    type: integer
+                - in: query
+                  name: offset
+                  schema:
+                    format: int64
+                    type: integer
             responses:
                 4XX:
                     $ref: '#/components/responses/Error'

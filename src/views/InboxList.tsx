@@ -77,7 +77,9 @@ export function InboxList({
   profile: profileProp,
 }: Props) {
   const [blockCount, setBlockCount] = useState(0)
-  const { state, query, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll } = useVacancies(
+  const {
+    state, query, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll, loadMore, loadingMore, moreError,
+  } = useVacancies(
     stage,
     (reloadTrigger ?? 0) + blockCount,
     profileProp ?? null,
@@ -110,6 +112,8 @@ export function InboxList({
   const counts = state.status === 'ok' ? state.counts : null
   const empty = state.status === 'ok' ? state.empty : ''
   const total = state.status === 'ok' ? state.total : 0
+  const matching = state.status === 'ok' ? state.matching : 0
+  const hasMore = rows.length < matching
   const industryCounts = state.status === 'ok' ? state.industryCounts : []
   const sourceCounts = state.status === 'ok' ? state.sourceCounts : []
   const loading = state.status === 'loading'
@@ -158,6 +162,13 @@ export function InboxList({
     }
     return result
   }, [rows, sessionDecisions, stage, unread, heldRowId])
+
+  const gone = useMemo<ReadonlySet<number>>(() => {
+    const ids = new Set<number>()
+    if (stage === 'inbox') for (const id of sessionDecisions.keys()) ids.add(id)
+    if (unread) for (const id of seenInSession) ids.add(id)
+    return ids
+  }, [sessionDecisions, seenInSession, stage, unread])
 
   const dismissedThisSession = useMemo(
     () => Array.from(sessionDecisions.values()).filter((d) => d.to === 'dismissed').length,
@@ -481,7 +492,7 @@ export function InboxList({
                 allSources={allSources}
                 industryCounts={industryCounts}
                 sourceCounts={sourceCounts}
-                rowCount={displayRows.length}
+                rowCount={matching}
                 total={total}
                 onChange={setFilters}
                 onReset={() => { resetAll(); setPanelOpen(false) }}
@@ -540,6 +551,14 @@ export function InboxList({
                 />
               )
             })
+          )}
+          {!loading && !serverDown && hasMore && (
+            <div className="list-more">
+              <Message note={moreError} inline />
+              <button type="button" disabled={loadingMore} onClick={() => loadMore(gone)}>
+                Show more roles
+              </button>
+            </div>
           )}
         </div>
 

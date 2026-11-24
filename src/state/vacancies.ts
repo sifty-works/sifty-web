@@ -2,16 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   DEFAULT_FILTERS,
   IndustryCount,
+  LIST_WINDOW,
+  LIST_WINDOW_MAX,
   listVacancies,
   OfflineError,
   ServerError,
   SourceCount,
   VacancyCounts,
   VacancyFilters,
+  VacancyListResponse,
   VacancyRow,
   VacancyView,
 } from '../api/client.ts'
-import { silent } from './messages.ts'
+import { failure, type Note, silent } from './messages.ts'
 
 const NEVER_LOADED = Symbol()
 
@@ -137,6 +140,7 @@ export type VacancyListState =
       profile: number
       empty: string
       total: number
+      matching: number
       industryCounts: IndustryCount[]
       sourceCounts: SourceCount[]
     }
@@ -152,6 +156,29 @@ export interface UseVacanciesResult {
   sort: 'fit' | 'newest'
   setSort: (v: 'fit' | 'newest') => void
   resetAll: () => void
+  loadMore: (gone: ReadonlySet<number>) => void
+  loadingMore: boolean
+  moreError: Note | null
+}
+
+function mergeRows(held: VacancyRow[], more: VacancyRow[]): VacancyRow[] {
+  const ids = new Set(held.map((r) => r.id))
+  return [...held, ...more.filter((r) => !ids.has(r.id))]
+}
+
+async function fetchSpan(
+  span: number,
+  fetchWindow: (limit: number, offset: number) => Promise<VacancyListResponse>,
+): Promise<VacancyListResponse> {
+  let data = await fetchWindow(Math.min(span, LIST_WINDOW_MAX), 0)
+  let rows = data.rows
+  while (rows.length < span && rows.length < data.matching) {
+    const next = await fetchWindow(Math.min(span - rows.length, LIST_WINDOW_MAX), rows.length)
+    if (next.rows.length === 0) break
+    rows = mergeRows(rows, next.rows)
+    data = next
+  }
+  return { ...data, rows }
 }
 
 export function useVacancies(stage: string, reloadTrigger = 0, profile: number | null = null): UseVacanciesResult {
@@ -163,6 +190,12 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
   const [state, setState] = useState<VacancyListState>({ status: 'loading' })
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevQueryRef = useRef<string | typeof NEVER_LOADED>(NEVER_LOADED)
+  const prevSelectionRef = useRef('')
+  const heldRef = useRef<VacancyRow[]>([])
+  const generationRef = useRef(0)
+  const loadingMoreRef = useRef(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [moreError, setMoreError] = useState<Note | null>(null)
 
   const setQuery = useCallback((q: string) => {
     setPending(q)
@@ -207,14 +240,23 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
 
   useEffect(() => {
     let cancelled = false
+    generationRef.current += 1
+    loadingMoreRef.current = false
+    setLoadingMore(false)
+    setMoreError(null)
     if (prevQueryRef.current === NEVER_LOADED || prevQueryRef.current !== query) {
       setState({ status: 'loading' })
     }
     prevQueryRef.current = query
 
-    listVacancies(profile, stage, query, filters, unread, sort)
+    const selection = JSON.stringify([stage, query, filters, unread, profile, sort])
+    const span = prevSelectionRef.current === selection ? Math.max(LIST_WINDOW, heldRef.current.length) : LIST_WINDOW
+    prevSelectionRef.current = selection
+
+    fetchSpan(span, (limit, offset) => listVacancies(profile, stage, query, filters, unread, sort, limit, offset))
       .then((data) => {
         if (!cancelled) {
+          heldRef.current = data.rows
           setState({
             status: 'ok',
             rows: data.rows,
@@ -222,6 +264,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
             profile: data.profile,
             empty: data.empty,
             total: data.total,
+            matching: data.matching,
             industryCounts: data.industryCounts,
             sourceCounts: data.sourceCounts,
           })
@@ -229,6 +272,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
       })
       .catch((err: unknown) => {
         if (!cancelled) {
+          heldRef.current = []
           if (err instanceof OfflineError) {
             setState({ status: 'offline' })
           } else if (err instanceof ServerError) {
@@ -244,5 +288,50 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
     }
   }, [stage, query, filters, unread, reloadTrigger, profile, sort])
 
-  return { state, query: pending, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll }
+  const loadMore = useCallback(
+    (gone: ReadonlySet<number>) => {
+      if (loadingMoreRef.current) return
+      const held = heldRef.current
+      const offset = held.filter((r) => !gone.has(r.id)).length
+      const generation = generationRef.current
+      loadingMoreRef.current = true
+      setLoadingMore(true)
+      setMoreError(null)
+      listVacancies(profile, stage, query, filters, unread, sort, LIST_WINDOW, offset)
+        .then((data) => {
+          if (generation !== generationRef.current) return
+          setState((prev) => {
+            if (prev.status !== 'ok') return prev
+            const rows = mergeRows(prev.rows.filter((r) => !gone.has(r.id)), data.rows)
+            heldRef.current = rows
+            return {
+              status: 'ok',
+              rows,
+              counts: data.counts,
+              profile: data.profile,
+              empty: data.empty,
+              total: data.total,
+              matching: data.matching,
+              industryCounts: data.industryCounts,
+              sourceCounts: data.sourceCounts,
+            }
+          })
+        })
+        .catch((err: unknown) => {
+          if (generation !== generationRef.current) return
+          setMoreError(failure(err instanceof OfflineError ? 'Server unreachable' : err, 'Could not load more roles'))
+        })
+        .finally(() => {
+          if (generation !== generationRef.current) return
+          loadingMoreRef.current = false
+          setLoadingMore(false)
+        })
+    },
+    [stage, query, filters, unread, sort, profile],
+  )
+
+  return {
+    state, query: pending, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll,
+    loadMore, loadingMore, moreError,
+  }
 }

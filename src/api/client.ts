@@ -133,6 +133,9 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
   return res.json() as Promise<T>
 }
 
+export const LIST_WINDOW = 100
+export const LIST_WINDOW_MAX = 200
+
 export function listVacancies(
   profile: number | null,
   stage: string,
@@ -140,6 +143,8 @@ export function listVacancies(
   filters: VacancyFilters = DEFAULT_FILTERS,
   unread = false,
   sort = 'fit',
+  limit = LIST_WINDOW,
+  offset = 0,
 ): Promise<VacancyListResponse> {
   const params = new URLSearchParams({ stage })
   if (profile !== null) params.set('profile', String(profile))
@@ -152,6 +157,8 @@ export function listVacancies(
   if (unread) params.set('unread', 'true')
   if (filters.fit.length > 0) params.set('fit', filters.fit.join(','))
   if (sort) params.set('sort', sort)
+  params.set('limit', String(limit))
+  if (offset > 0) params.set('offset', String(offset))
   return request<VacancyListResponse>('GET', `/api/vacancies?${params.toString()}`)
 }
 
