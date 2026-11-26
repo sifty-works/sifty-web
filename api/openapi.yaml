@@ -1818,6 +1818,16 @@ components:
                 - at
                 - reason
             type: object
+        workModel:
+            properties:
+                model:
+                    type: string
+                provider:
+                    type: string
+            required:
+                - provider
+                - model
+            type: object
         workProgress:
             properties:
                 done:
@@ -1867,6 +1877,10 @@ components:
                     type: string
                 label:
                     type: string
+                model:
+                    oneOf:
+                        - $ref: '#/components/schemas/workModel'
+                        - type: "null"
                 progress:
                     oneOf:
                         - $ref: '#/components/schemas/workProgress'

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { previewExclusion, Source, StatusExtra, triggerCollect } from '../api/client.ts'
+import { previewExclusion, Source, StatusExtra, triggerCollect, WorkResponse } from '../api/client.ts'
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
+import { type UseRemoteResult } from '../state/work.ts'
 import { failure, type Note } from '../state/messages.ts'
 import { Message } from './Messages.tsx'
 import { LogsPanel } from './LogsPanel.tsx'
@@ -11,9 +12,11 @@ import { WorkPanel } from './WorkPanel.tsx'
 
 interface Props {
   startPanel?: string
+  opened: number
   status: StatusExtra | null
   applyStatus: (data: StatusExtra) => void
   statusText: string | null
+  work: UseRemoteResult<WorkResponse>
 }
 
 const INTERVAL_OPTIONS = [
@@ -38,7 +41,7 @@ const MODELS_ICON = (
 
 const MONITOR_ICON = <path d="M3 12h4l3-7 4 14 3-7h4" />
 
-export function SourcesPage({ startPanel, status, applyStatus, statusText }: Props) {
+export function SourcesPage({ startPanel, opened, status, applyStatus, statusText, work }: Props) {
   const { state, add, toggle, remove, updateSchedule, setAgeLimit, addNote } = useSources()
   const [nameVal, setNameVal] = useState('')
   const [urlVal, setUrlVal] = useState('')
@@ -49,6 +52,10 @@ export function SourcesPage({ startPanel, status, applyStatus, statusText }: Pro
   const [ageNote, setAgeNote] = useState<Note | null>(null)
 
   const isCollecting = status?.collecting != null
+
+  useEffect(() => {
+    if (startPanel) setNav(startPanel)
+  }, [startPanel, opened])
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -137,7 +144,7 @@ export function SourcesPage({ startPanel, status, applyStatus, statusText }: Pro
       title: 'Monitor',
       icon: MONITOR_ICON,
       panels: [
-        { id: 'monitor', label: 'Background work', body: <WorkPanel /> },
+        { id: 'monitor', label: 'Background work', body: <WorkPanel work={work} /> },
         { id: 'logs', label: 'Logs', body: <LogsPanel /> },
       ],
     },

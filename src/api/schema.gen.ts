@@ -1194,6 +1194,10 @@ export interface components {
             reason: string;
             subject: string;
         };
+        workModel: {
+            model: string;
+            provider: string;
+        };
         workProgress: {
             /** Format: int64 */
             done: number;
@@ -1215,6 +1219,7 @@ export interface components {
             id: number;
             kind: string;
             label: string;
+            model?: components["schemas"]["workModel"] | null;
             progress: components["schemas"]["workProgress"] | null;
             since: string;
             subject: string;

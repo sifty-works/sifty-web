@@ -1,5 +1,5 @@
-import { WorkRunning } from '../api/client.ts'
-import { useWork } from '../state/work.ts'
+import { WorkResponse, WorkRunning } from '../api/client.ts'
+import { type UseRemoteResult } from '../state/work.ts'
 import { Message } from './Messages.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 import { localTime, WorkSection } from './WorkTable.tsx'
@@ -8,8 +8,7 @@ function progressText(job: WorkRunning): string {
   return job.progress ? `${job.progress.done} of ${job.progress.total}` : ''
 }
 
-export function WorkPanel() {
-  const { state, note } = useWork()
+export function WorkPanel({ work: { state, note } }: { work: UseRemoteResult<WorkResponse> }) {
 
   if (state.status === 'loading') return <p className="muted">Loading…</p>
   if (state.status === 'offline') return <OfflineNotice />

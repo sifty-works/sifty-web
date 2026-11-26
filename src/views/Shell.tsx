@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { triggerCollect, VacancyCounts } from '../api/client.ts'
 import { silent } from '../state/messages.ts'
 import { useStatus } from '../state/status.ts'
+import { useWork } from '../state/work.ts'
 import { Brand } from './Brand.tsx'
 import { FilesTab } from './FilesPanel.tsx'
 import { Icon } from './Icon.tsx'
@@ -10,6 +11,7 @@ import { ProfilePage } from './ProfilePage.tsx'
 import { ProfileTab } from './ProfileSearch.tsx'
 import { ProfileSwitcher } from './ProfileSwitcher.tsx'
 import { SourcesPage } from './SourcesPage.tsx'
+import { StatusBar } from './StatusBar.tsx'
 
 type Page = 'inbox' | 'settings' | 'profile'
 type MainTab = 'inbox' | 'shortlist' | 'archive'
@@ -23,10 +25,10 @@ export function Shell() {
   const [mainTab, setMainTab] = useState<MainTab>('inbox')
   const [archiveTab, setArchiveTab] = useState<ArchiveTab>('applied')
   const [counts, setCounts] = useState<VacancyCounts | null>(null)
-  const [settingsPanel, setSettingsPanel] = useState<string | undefined>(undefined)
+  const [settingsPanel, setSettingsPanel] = useState<{ id?: string; opened: number }>({ opened: 0 })
 
   function openSettings(panel?: string) {
-    setSettingsPanel(panel)
+    setSettingsPanel((prev) => ({ id: panel, opened: prev.opened + 1 }))
     setPage('settings')
   }
 
@@ -35,6 +37,7 @@ export function Shell() {
   const handleCatalogueChange = useCallback(() => setReloadCount((n) => n + 1), [])
   const { state: statusState, recovered, applyStatus } = useStatus(handleCatalogueChange)
   const status = statusState.status === 'ok' ? statusState.data : null
+  const work = useWork()
 
   const prevStatusRef = useRef<string>('unknown')
   useEffect(() => {
@@ -54,7 +57,7 @@ export function Shell() {
   }, [applyStatus])
 
   const collecting = status?.collecting != null
-  const headerText =
+  const collectText =
     status?.collecting?.text ??
     (status?.lastRun?.state === 'failed' ? status.lastRun.message : null)
   const attentionText = status?.attention?.text ?? null
@@ -86,9 +89,6 @@ export function Shell() {
         <Brand collecting={collecting} />
 
         <div className="header-actions">
-          {headerText && (
-            <span className="muted" style={{ fontSize: 12 }}>{headerText}</span>
-          )}
           {attentionText && (
             <button
               className="settings-button"
@@ -141,8 +141,17 @@ export function Shell() {
           profile={activeProfileId}
         />
       ) : (
-        <SourcesPage startPanel={settingsPanel} status={status} applyStatus={applyStatus} statusText={headerText} />
+        <SourcesPage
+          startPanel={settingsPanel.id}
+          opened={settingsPanel.opened}
+          status={status}
+          applyStatus={applyStatus}
+          statusText={collectText}
+          work={work}
+        />
       )}
+
+      <StatusBar status={statusState} work={work.state} onOpen={() => openSettings('monitor')} />
     </div>
   )
 }
