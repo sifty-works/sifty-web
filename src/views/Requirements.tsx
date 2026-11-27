@@ -44,7 +44,6 @@ export function Skills({ band, check, onDecision }: SkillsProps) {
 
   return (
     <div className="skills">
-      <h4>Skills</h4>
       <div className="skill-cols">
         {columns.map((group) => (
           <SkillColumn
@@ -80,8 +79,8 @@ function SkillColumn({ label, skills, check, open, onOpen, onPick }: SkillColumn
   return (
     <div className="skill-col">
       <div className="skill-head">
-        <span>{label}</span>
-        <small>{have} of {skills.length}</small>
+        <h4>Skills {label}</h4>
+        <small>({have} of {skills.length})</small>
       </div>
       <ul className="skill-list">
         {sortedByVerdict(skills).map((entry) => {
