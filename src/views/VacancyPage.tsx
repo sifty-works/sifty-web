@@ -25,15 +25,13 @@ interface Props {
   view: VacancyView
   sessionDecision?: SessionDecision | null
   actionError?: Note | null
-  notice?: Note | null
   onAction: (key: string) => void
   onUndoDecision: () => void
-  onClearNotice: () => void
   onSkillDecision: (answer: SkillAnswer) => Promise<void>
   onCheckRetry: () => Promise<void>
 }
 
-export function VacancyPage({ view, sessionDecision, actionError, notice, onAction, onUndoDecision, onClearNotice, onSkillDecision, onCheckRetry }: Props) {
+export function VacancyPage({ view, sessionDecision, actionError, onAction, onUndoDecision, onSkillDecision, onCheckRetry }: Props) {
   const placed = (place: Place) =>
     (view.actions ?? []).filter((a) => (ACTIONS[a.key]?.place ?? 'main') === place)
   const buttons = (list: VacancyAction[]) =>
@@ -43,9 +41,7 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
   const links = placed('links')
 
   const appAvailable = false
-  const appDisabledHint = view.stage === 'inbox'
-    ? 'Shortlist this role to open Application'
-    : 'Application is not available yet'
+  const showTabs = view.stage === 'shortlist'
   const [activeTab, setActiveTab] = useState<'overview' | 'application'>('overview')
 
   return (
@@ -108,7 +104,7 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
         </div>
       </div>
 
-      <div className="detail-tabs-row">
+      {showTabs && <div className="detail-tabs-row">
         <div className="detail-tabs" role="tablist">
           <button
             role="tab"
@@ -123,18 +119,16 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
             className={activeTab === 'application' ? 'active' : undefined}
             aria-selected={activeTab === 'application'}
             disabled={!appAvailable}
-            title={appDisabledHint}
+            title="Application is not available yet"
             onClick={() => { if (appAvailable) setActiveTab('application') }}
           >
             Application
           </button>
         </div>
-      </div>
+      </div>}
 
       {activeTab === 'overview' && (
         <>
-          <Message note={notice} onDismiss={onClearNotice} />
-
           <FitBand band={view.band} check={view.check} onDecision={onSkillDecision} />
 
           {view.check && <CheckLine check={view.check} onRetry={onCheckRetry} />}

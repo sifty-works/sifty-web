@@ -19,7 +19,7 @@ import {
 } from '../api/client.ts'
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { ReturnedRow, SessionDecision } from '../state/decisions.ts'
-import { failure, type Note, report, silent } from '../state/messages.ts'
+import { failure, type Note, silent } from '../state/messages.ts'
 import { useCheckRefresh, useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { FilterPanel } from './FilterPanel.tsx'
@@ -98,7 +98,6 @@ export function InboxList({
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
   const [returnedRows, setReturnedRows] = useState<Map<number, ReturnedRow>>(new Map())
   const [actionError, setActionError] = useState<Note | null>(null)
-  const [skillNotice, setSkillNotice] = useState<Note | null>(null)
   const [rowFitUpdates, setRowFitUpdates] = useState<Map<number, FitMark>>(new Map())
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>({ kind: 'none' })
   const [applyDialogSaving, setApplyDialogSaving] = useState(false)
@@ -183,16 +182,22 @@ export function InboxList({
     if (counts !== null) onCounts?.(counts)
   }, [counts, onCounts])
 
+  const selectedIdRef = useRef<number | null>(null)
+  selectedIdRef.current = selectedId
+
   const openRow = useCallback(
     (id: number) => {
+      selectedIdRef.current = id
       setSelectedId(id)
       setPageView(null)
       setPageError(null)
       setActionError(null)
-      setSkillNotice(null)
       void getVacancy(id, profile)
-        .then((v) => setPageView(v))
+        .then((v) => {
+          if (selectedIdRef.current === id) setPageView(v)
+        })
         .catch((err: unknown) => {
+          if (selectedIdRef.current !== id) return
           setPageError(failure(err instanceof OfflineError ? 'Server unreachable' : err, 'Could not load vacancy'))
         })
     },
@@ -238,9 +243,15 @@ export function InboxList({
   }, [rows])
 
   useEffect(() => {
-    if (loading || listNote || selectedId !== null) return
+    if (loading || listNote) return
+    if (selectedId !== null && displayRows.some((r) => r.id === selectedId)) return
     const first = displayRows.find((r) => !goneRef.current.has(r.id))
-    if (first) openRow(first.id)
+    if (first) {
+      openRow(first.id)
+    } else if (selectedId !== null && displayRows.length === 0) {
+      setSelectedId(null)
+      setPageView(null)
+    }
   }, [loading, listNote, selectedId, displayRows, openRow])
 
   const selectAfterRemoval = useCallback(
@@ -262,9 +273,6 @@ export function InboxList({
     [displayRows, selectRow],
   )
 
-  const selectedIdRef = useRef<number | null>(null)
-  selectedIdRef.current = selectedId
-
   const handleActionRef = useRef<(key: string) => void>(() => {})
 
   async function handleUndoDecision() {
@@ -272,12 +280,13 @@ export function InboxList({
     const decision = sessionDecisions.get(pageView.id)
     if (!decision) return
     const id = decision.row.id
+    const back = pageView.actions?.find((a) => a.key === 'inbox' || a.key === 'restore')
     setActionError(null)
     try {
       const { counts: newCounts } = await postDecision(id, {
         profile,
         from: decision.to,
-        to: decision.from,
+        to: back?.to ?? decision.from,
         reason: '',
         confirmed: false,
       })
@@ -442,12 +451,11 @@ export function InboxList({
   async function handleSkillDecision(answer: SkillAnswer): Promise<void> {
     if (!pageView) return
     try {
-      const { notice, vacancyView } = await postSkillsDecision({
+      const { vacancyView } = await postSkillsDecision({
         ...answer,
         vacancyId: pageView.id,
       })
       setPageView(vacancyView)
-      setSkillNotice(notice ? report(notice) : null)
       setRowFitUpdates((prev) => {
         const next = new Map(prev)
         next.set(vacancyView.id, vacancyView.fit)
@@ -611,10 +619,8 @@ export function InboxList({
               view={pageView}
               sessionDecision={sessionDecisions.get(pageView.id) ?? null}
               actionError={actionError}
-              notice={skillNotice}
               onAction={(key) => void handleAction(key)}
               onUndoDecision={() => void handleUndoDecision()}
-              onClearNotice={() => setSkillNotice(null)}
               onSkillDecision={handleSkillDecision}
               onCheckRetry={handleCheckRetry}
             />
