@@ -72,7 +72,7 @@ export function FilterPanel({
     <div className="filter-popover" ref={ref}>
       <div className="fp-groups">
         <div className="fp-group">
-          <h4>Fits you</h4>
+          <h4>Fit</h4>
           <div className="fp-chips">
             {FIT_OPTIONS.map(({ value, label }) => (
               <button

@@ -231,7 +231,7 @@ function CompensationSection({ data }: { data: ProfilePageData }) {
   const inh = inherited.has('compensation')
 
   return <SectionShell title="Compensation"
-    description="Amounts are compared by Fits you. Currency is EUR or USD; an unset currency or period is not assumed."
+    description="Amounts are compared by Fit. Currency is EUR or USD; an unset currency or period is not assumed."
     {...editor}>
     {editor.editing ? <div className={`profile-fields${inh ? ' profile-inherited-value' : ''}`}>
       <div className="profile-fields-grid">
@@ -557,7 +557,7 @@ function OtherRequirementsSection({ data }: { data: ProfilePageData }) {
   const editor = useSectionEditor(beginEdit, save)
 
   return <SectionShell title="Other requirements"
-    description="Plain text with Markdown. Used by the Shortlist check and preparation; Fits you does not interpret this text."
+    description="Plain text with Markdown. Used by the Shortlist check and preparation; Fit does not interpret this text."
     {...editor}>
     {editor.editing
       ? <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder="Enter any other requirements…"/>

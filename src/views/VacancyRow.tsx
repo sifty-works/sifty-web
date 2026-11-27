@@ -23,7 +23,6 @@ export function VacancyRow({ row, selected, onSelect, decidedTo }: Props) {
     fit.dimmed ? 'previous' : '',
   ].filter(Boolean).join(' ')
 
-  const isCounts = fit.requirementsText.startsWith('✓')
   const scoreTitle = fit.requirementsText
     ? `${fit.text} · ${fit.requirementsText}`
     : fit.text
@@ -36,9 +35,6 @@ export function VacancyRow({ row, selected, onSelect, decidedTo }: Props) {
       <div className="row-icons">
         {fit.score !== null && (
           <span className={scoreClasses} title={scoreTitle}>{fit.score}</span>
-        )}
-        {isCounts && (
-          <span className="score" title={scoreTitle}>{fit.requirementsText}</span>
         )}
       </div>
       <strong>

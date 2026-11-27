@@ -104,9 +104,6 @@ components:
                     items:
                         type: string
                     type: array
-                requirementCount:
-                    format: int64
-                    type: integer
                 requirementsText:
                     type: string
                 score:
@@ -132,7 +129,6 @@ components:
                 - text
                 - tiles
                 - requirementsText
-                - requirementCount
                 - groups
                 - scoredOn
                 - scoredOf
@@ -785,35 +781,6 @@ components:
                     type: object
             required:
                 - paused
-            type: object
-        OfferTile:
-            properties:
-                key:
-                    type: string
-                label:
-                    type: string
-                value:
-                    type: string
-            required:
-                - key
-                - label
-                - value
-            type: object
-        OfferView:
-            properties:
-                empty:
-                    type: string
-                items:
-                    items:
-                        type: string
-                    type: array
-                tiles:
-                    items:
-                        $ref: '#/components/schemas/OfferTile'
-                    type: array
-            required:
-                - tiles
-                - items
             type: object
         OptionItem:
             properties:
@@ -1607,8 +1574,6 @@ components:
                     type: string
                 full:
                     type: string
-                goal:
-                    type: boolean
                 line:
                     type: string
                 name:
@@ -1622,7 +1587,6 @@ components:
                 - value
                 - line
                 - verdict
-                - goal
             type: object
         VacancySource:
             properties:
@@ -1662,8 +1626,6 @@ components:
                     type: string
                 locationFull:
                     type: string
-                offer:
-                    $ref: '#/components/schemas/OfferView'
                 original:
                     type: string
                 published:
@@ -1701,7 +1663,6 @@ components:
                 - actions
                 - listing
                 - band
-                - offer
                 - check
             type: object
         VersionResp:

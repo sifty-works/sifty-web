@@ -4,8 +4,7 @@ import { SessionDecision } from '../state/decisions.ts'
 import type { Note } from '../state/messages.ts'
 import { FitBand } from './FitBand.tsx'
 import { Message } from './Messages.tsx'
-import { WhatTheyAsk } from './WhatTheyAsk.tsx'
-import { WhatTheyOffer } from './WhatTheyOffer.tsx'
+import { CheckLine, OtherRequirements } from './Requirements.tsx'
 
 type Place = 'main' | 'links' | 'segment'
 interface ActionStyle { lead?: string; trail?: string; code?: string; cls?: string; place?: Place }
@@ -136,12 +135,11 @@ export function VacancyPage({ view, sessionDecision, actionError, notice, onActi
         <>
           <Message note={notice} onDismiss={onClearNotice} />
 
-          <FitBand band={view.band} />
+          <FitBand band={view.band} check={view.check} onDecision={onSkillDecision} />
 
-          <div className="what-cards" style={{ marginTop: 14 }}>
-            <WhatTheyAsk band={view.band} check={view.check} onDecision={onSkillDecision} onRetry={onCheckRetry} />
-            <WhatTheyOffer offer={view.offer} />
-          </div>
+          {view.check && <CheckLine check={view.check} onRetry={onCheckRetry} />}
+
+          <OtherRequirements band={view.band} check={view.check} onDecision={onSkillDecision} />
 
           <div className="overview-stack">
             <section className="listing-panel">

@@ -56,7 +56,7 @@ function Card({ tile }: { tile: Tile }) {
 function Others({ tiles }: { tiles: Tile[] }) {
   const rows = [
     ...tiles
-      .filter((tile) => !FACTS.includes(tile.name) && (isStated(tile) || tile.goal))
+      .filter((tile) => !FACTS.includes(tile.name))
       .sort((a, b) => ORDER.indexOf(verdictMod(a.verdict)) - ORDER.indexOf(verdictMod(b.verdict))),
     ...tiles.filter((tile) => FACTS.includes(tile.name)),
   ]
@@ -85,7 +85,7 @@ function Others({ tiles }: { tiles: Tile[] }) {
   )
 }
 
-export function BandTiles({ tiles }: { tiles: Tile[] }) {
+export function BandTiles({ tiles, children }: { tiles: Tile[]; children?: ReactNode }) {
   return (
     <div className="band-body">
       <div className="band-grid">
@@ -96,6 +96,7 @@ export function BandTiles({ tiles }: { tiles: Tile[] }) {
           ))}
       </div>
       <Others tiles={tiles.filter((tile) => !KEY.includes(tile.name))} />
+      {children}
     </div>
   )
 }

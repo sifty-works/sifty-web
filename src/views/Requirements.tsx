@@ -3,14 +3,7 @@ import { Band, CheckAnswer, CheckView, RequirementLine, SkillAnswer, SkillEntry 
 import { useDismiss } from '../dismiss.ts'
 import { useReference } from '../state/profile.ts'
 
-interface Props {
-  band: Band
-  check?: CheckView | null
-  onDecision: (answer: SkillAnswer) => Promise<void>
-  onRetry: () => Promise<void>
-}
-
-const VERDICT_RANK: Record<string, number> = { '✕': 0, '≈': 1, '?': 2, '✓': 3 }
+const VERDICT_RANK: Record<string, number> = { '✕': 0, '?': 1, '≈': 2, '✓': 3 }
 const VERDICT_CLASS: Record<string, string> = { '✕': 'no', '≈': 'near', '?': 'unknown', '✓': 'ok' }
 
 function demanded(entry: SkillEntry): string {
@@ -18,7 +11,7 @@ function demanded(entry: SkillEntry): string {
 }
 
 function sortedByVerdict(skills: SkillEntry[]): SkillEntry[] {
-  return [...skills].sort((a, b) => (VERDICT_RANK[a.verdict] ?? 2) - (VERDICT_RANK[b.verdict] ?? 2))
+  return [...skills].sort((a, b) => (VERDICT_RANK[a.verdict] ?? 1) - (VERDICT_RANK[b.verdict] ?? 1))
 }
 
 function joinNames(names: string[]): string {
@@ -26,94 +19,77 @@ function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`
 }
 
-export function WhatTheyAsk({ band, check, onDecision, onRetry }: Props) {
-  const answers = new Map((check?.answers ?? []).map((a) => [a.index, a]))
+function entryKey(entry: SkillEntry): string {
+  return entry.line + '|' + entry.skills.map((s) => s.name).join()
+}
+
+export function skillsToAnswer(band: Band): number | null {
+  const entries = band.groups.flatMap((g) => g.skills)
+  if (entries.length === 0) return null
+  return entries.filter((e) => e.verdict === '?').length
+}
+
+interface SkillsProps {
+  band: Band
+  check?: CheckView | null
+  onDecision: (answer: SkillAnswer) => Promise<void>
+}
+
+export function Skills({ band, check, onDecision }: SkillsProps) {
   const columns = band.groups.filter((g) => g.skills.length > 0)
-  const rows = band.groups.flatMap((g) => g.items)
-  const hasItems = columns.length > 0 || rows.length > 0
   const [open, setOpen] = useState<{ label: string; key: string } | null>(null)
   const close = () => setOpen(null)
-  useDismiss(open !== null, close, '.ask-picker, .ask-skill-chip')
-  const current = columns.flatMap((g) => g.skills.map((entry) => ({ label: g.label, entry }))).find((c) => open?.label === c.label && open.key === entryKey(c.entry))
+  useDismiss(open !== null, close, '.skill-picker, .skill-chip')
+  if (columns.length === 0) return null
 
   return (
-    <section className="what-ask">
-      <div className="card-icon-head">
-        <span className="card-icon-box" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f4f4f5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="8.5" />
-            <circle cx="12" cy="12" r="4.5" />
-            <circle cx="12" cy="12" r="0.8" fill="#f4f4f5" stroke="none" />
-          </svg>
-        </span>
-        <div className="card-title-block">
-          <span className="card-title">What they ask</span>
-          <span className="card-subtitle">{band.requirementsText}</span>
-        </div>
+    <div className="skills">
+      <h4>Skills</h4>
+      <div className="skill-cols">
+        {columns.map((group) => (
+          <SkillColumn
+            key={group.label}
+            label={group.label}
+            skills={group.skills}
+            check={check}
+            open={open?.label === group.label ? open.key : null}
+            onOpen={(key) => setOpen(key === null ? null : { label: group.label, key })}
+            onPick={async (skill, level) => {
+              close()
+              await onDecision({ skill, level })
+            }}
+          />
+        ))}
       </div>
-
-      {check && <CheckLine check={check} onRetry={onRetry} />}
-
-      {!hasItems ? (
-        <p className="ask-not-found">{band.requirementsText}</p>
-      ) : (
-        <>
-          {columns.length > 0 && (
-            <div className="ask-skill-cols">
-              {columns.map((group) => (
-                <SkillColumn key={group.label} label={group.label} skills={group.skills} open={open?.label === group.label ? open.key : null} onOpen={(key) => setOpen(key === null ? null : { label: group.label, key })} />
-              ))}
-              {current && (
-                <LevelPicker
-                  key={open?.label + '|' + open?.key}
-                  entry={current.entry}
-                  checked={check?.answers.find((a) => a.requirement === current.entry.line && (a.skills?.length ?? 0) > 0)}
-                  onPick={async (skill, level) => {
-                    close()
-                    await onDecision({ skill, level })
-                  }}
-                />
-              )}
-            </div>
-          )}
-          {rows.length > 0 && (
-            <div>
-              <div className="ask-section-label">OTHER REQUIREMENTS</div>
-              <ul className="ask-list" style={{ marginTop: 8 }}>
-                {rows.map((item) => (
-                  <AskRow key={item.index} item={item} checked={answers.get(item.index)} onDecision={onDecision} />
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
-      )}
-    </section>
+    </div>
   )
 }
 
 interface SkillColumnProps {
   label: string
   skills: SkillEntry[]
+  check?: CheckView | null
   open: string | null
   onOpen: (key: string | null) => void
+  onPick: (skill: string, level: string) => Promise<void>
 }
 
-function SkillColumn({ label, skills, open, onOpen }: SkillColumnProps) {
+function SkillColumn({ label, skills, check, open, onOpen, onPick }: SkillColumnProps) {
   const have = skills.filter((e) => e.verdict === '✓').length
+  const current = skills.find((e) => entryKey(e) === open)
   return (
-    <div className="ask-skill-col">
-      <div className="ask-skill-head">
+    <div className="skill-col">
+      <div className="skill-head">
         <span>{label}</span>
         <small>{have} of {skills.length}</small>
       </div>
-      <ul className="ask-skill-list">
+      <ul className="skill-list">
         {sortedByVerdict(skills).map((entry) => {
           const key = entryKey(entry)
           return (
-            <li key={key} className={`ask-skill ${VERDICT_CLASS[entry.verdict] ?? 'unknown'}${open === key ? ' open' : ''}`}>
-              <button type="button" className="ask-skill-chip" aria-expanded={open === key} title={entry.line} onClick={() => onOpen(open === key ? null : key)}>
-                <span className="ask-skill-mark" aria-hidden="true">{entry.verdict}</span>
+            <li key={key} className={`skill ${VERDICT_CLASS[entry.verdict] ?? 'unknown'}${open === key ? ' open' : ''}`}>
+              <button type="button" className="skill-chip" aria-expanded={open === key} title={entry.line} onClick={() => onOpen(open === key ? null : key)}>
+                {entry.verdict === '✕' && <span className="skill-x" aria-hidden="true">✕</span>}
                 {joinNames(entry.skills.map((s) => s.name))}
                 {demanded(entry) && <small>{demanded(entry)}</small>}
               </button>
@@ -121,12 +97,16 @@ function SkillColumn({ label, skills, open, onOpen }: SkillColumnProps) {
           )
         })}
       </ul>
+      {current && (
+        <LevelPicker
+          key={open}
+          entry={current}
+          checked={check?.answers.find((a) => a.requirement === current.line && (a.skills?.length ?? 0) > 0)}
+          onPick={onPick}
+        />
+      )}
     </div>
   )
-}
-
-function entryKey(entry: SkillEntry): string {
-  return entry.line + '|' + entry.skills.map((s) => s.name).join()
 }
 
 interface LevelPickerProps {
@@ -138,12 +118,13 @@ interface LevelPickerProps {
 function LevelPicker({ entry, checked, onPick }: LevelPickerProps) {
   const [name, setName] = useState(entry.skills[0]?.name ?? '')
   const have = entry.skills.find((s) => s.name === name)?.have ?? ''
+  const matched = entry.skills.filter((s) => s.have)
   const levels = [...(useReference()?.options.skillLevels ?? []), { value: 'No', label: 'No' }]
 
   return (
-    <div className="ask-picker">
+    <div className="skill-picker">
       {entry.skills.length > 1 ? (
-        <span className="ask-picker-alts" role="radiogroup" aria-label="Skill">
+        <span className="skill-picker-alts" role="radiogroup" aria-label="Skill">
           {entry.skills.map((s) => (
             <button key={s.name} type="button" role="radio" aria-checked={s.name === name} className={s.name === name ? 'on' : ''} onClick={() => setName(s.name)}>
               {s.name}
@@ -154,12 +135,13 @@ function LevelPicker({ entry, checked, onPick }: LevelPickerProps) {
         <strong>{name}</strong>
       )}
       <q>{entry.line}</q>
-      <span className="ask-picker-facts">
+      <span className="skill-picker-facts">
         {demanded(entry) && <span>They ask: {demanded(entry)}</span>}
         <span>You: {have || 'not set'}</span>
+        {entry.skills.length > 1 && matched.length > 0 && <span>{matched.map((s) => s.name).join(' and ')} in your profile</span>}
       </span>
-      {checked && <span className="ask-picker-check">{checked.reason}</span>}
-      <span className="ask-picker-levels" role="radiogroup" aria-label={`Your level in ${name}`}>
+      {checked && <span className="skill-picker-check">{checked.reason}</span>}
+      <span className="skill-picker-levels" role="radiogroup" aria-label={`Your level in ${name}`}>
         {levels.map(({ value, label }) => (
           <button key={value} type="button" role="radio" aria-checked={have === value} autoFocus={have === value} className={have === value ? 'on' : ''} onClick={() => void onPick(name, value)}>
             {label}
@@ -170,7 +152,7 @@ function LevelPicker({ entry, checked, onPick }: LevelPickerProps) {
   )
 }
 
-function CheckLine({ check, onRetry }: { check: CheckView; onRetry: () => Promise<void> }) {
+export function CheckLine({ check, onRetry }: { check: CheckView; onRetry: () => Promise<void> }) {
   const [busy, setBusy] = useState(false)
   if (!check.state && !check.note && !check.retry) return null
 
@@ -189,18 +171,45 @@ function CheckLine({ check, onRetry }: { check: CheckView; onRetry: () => Promis
   )
 }
 
+interface OtherProps {
+  band: Band
+  check?: CheckView | null
+  onDecision: (answer: SkillAnswer) => Promise<void>
+}
+
+export function OtherRequirements({ band, check, onDecision }: OtherProps) {
+  const rows = band.groups.flatMap((g) => g.items)
+  const [open, setOpen] = useState(false)
+  if (rows.length === 0) return null
+  const answers = new Map((check?.answers ?? []).map((a) => [a.index, a]))
+
+  return (
+    <section className="other-requirements">
+      <button type="button" className="other-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <strong>Other requirements</strong>
+        <span>{rows.length} other requirement{rows.length === 1 ? '' : 's'}</span>
+        <span aria-hidden="true">{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <ul className="ask-list">
+          {rows.map((item) => (
+            <AskRow key={item.index} item={item} checked={answers.get(item.index)} onDecision={onDecision} />
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 interface AskRowProps {
   item: RequirementLine
   checked?: CheckAnswer
   onDecision: (answer: SkillAnswer) => Promise<void>
 }
 
-type Answer = 'add' | 'dismiss'
+type Answer = 'have' | 'not'
 
-const ANSWERS: Record<Answer, { glyph: string; label: string }> = {
-  add: { glyph: '+', label: 'I have this' },
-  dismiss: { glyph: '−', label: 'I do not have this' },
-}
+const ANSWERS: Record<Answer, string> = { have: 'I have it', not: 'I don’t' }
 
 function AskRow({ item, checked, onDecision }: AskRowProps) {
   const [busy, setBusy] = useState<Answer | null>(null)
@@ -210,7 +219,7 @@ function AskRow({ item, checked, onDecision }: AskRowProps) {
   async function answer(kind: Answer) {
     if (busy) return
     setBusy(kind)
-    try { await onDecision({ requirementIndex: item.index, have: kind === 'add' }) }
+    try { await onDecision({ requirementIndex: item.index, have: kind === 'have' }) }
     finally { setBusy(null) }
   }
 
@@ -229,14 +238,12 @@ function AskRow({ item, checked, onDecision }: AskRowProps) {
           </span>
         )}
       </span>
-      {item.evidence && !isUnknown && (
-        <span className="ask-evidence">{item.evidence}</span>
-      )}
+      {item.evidence && <span className="ask-evidence">{item.evidence}</span>}
       {isUnknown && (
         <div className="ask-actions">
-          {(['add', 'dismiss'] as const).map((kind) => (
-            <button key={kind} className={kind} disabled={!!busy} onClick={() => void answer(kind)} aria-label={ANSWERS[kind].label}>
-              {busy === kind ? '…' : ANSWERS[kind].glyph}
+          {(['have', 'not'] as const).map((kind) => (
+            <button key={kind} className={kind} disabled={!!busy} onClick={() => void answer(kind)}>
+              {busy === kind ? '…' : ANSWERS[kind]}
             </button>
           ))}
         </div>

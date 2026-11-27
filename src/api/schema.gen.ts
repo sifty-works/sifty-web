@@ -588,8 +588,6 @@ export interface components {
             bucket: string;
             groups: components["schemas"]["RequirementGroup"][];
             reasons: string[];
-            /** Format: int64 */
-            requirementCount: number;
             requirementsText: string;
             score: number | null;
             /** Format: int64 */
@@ -835,16 +833,6 @@ export interface components {
             providers?: {
                 [key: string]: components["schemas"]["ProviderState"];
             };
-        };
-        OfferTile: {
-            key: string;
-            label: string;
-            value: string;
-        };
-        OfferView: {
-            empty?: string;
-            items: string[];
-            tiles: components["schemas"]["OfferTile"][];
         };
         OptionItem: {
             label: string;
@@ -1115,7 +1103,6 @@ export interface components {
             bucket?: string;
             converted?: string;
             full?: string;
-            goal: boolean;
             line: string;
             name: string;
             value: string;
@@ -1138,7 +1125,6 @@ export interface components {
             listing: components["schemas"]["ListingView"];
             location: string;
             locationFull?: string;
-            offer: components["schemas"]["OfferView"];
             original: string;
             published: string;
             reason?: string;
