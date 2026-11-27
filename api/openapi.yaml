@@ -92,11 +92,17 @@ components:
             type: object
         Band:
             properties:
+                brokenMust:
+                    type: boolean
                 bucket:
                     type: string
                 groups:
                     items:
                         $ref: '#/components/schemas/RequirementGroup'
+                    type: array
+                reasons:
+                    items:
+                        type: string
                     type: array
                 requirementCount:
                     format: int64
@@ -108,6 +114,12 @@ components:
                         - format: int64
                           type: integer
                         - type: "null"
+                scoredOf:
+                    format: int64
+                    type: integer
+                scoredOn:
+                    format: int64
+                    type: integer
                 text:
                     type: string
                 tiles:
@@ -122,6 +134,10 @@ components:
                 - requirementsText
                 - requirementCount
                 - groups
+                - scoredOn
+                - scoredOf
+                - reasons
+                - brokenMust
             type: object
         CheckAnswer:
             properties:
@@ -461,6 +477,8 @@ components:
             type: object
         FitMark:
             properties:
+                brokenMust:
+                    type: boolean
                 bucket:
                     type: string
                 dimmed:
@@ -480,6 +498,7 @@ components:
                 - text
                 - dimmed
                 - requirementsText
+                - brokenMust
             type: object
         Hours:
             properties:

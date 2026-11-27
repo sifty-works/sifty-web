@@ -584,12 +584,18 @@ export interface components {
             startDate?: string;
         };
         Band: {
+            brokenMust: boolean;
             bucket: string;
             groups: components["schemas"]["RequirementGroup"][];
+            reasons: string[];
             /** Format: int64 */
             requirementCount: number;
             requirementsText: string;
             score: number | null;
+            /** Format: int64 */
+            scoredOf: number;
+            /** Format: int64 */
+            scoredOn: number;
             text: string;
             tiles: components["schemas"]["Tile"][];
         };
@@ -728,6 +734,7 @@ export interface components {
             title: string;
         };
         FitMark: {
+            brokenMust: boolean;
             bucket: string;
             dimmed: boolean;
             requirementsText: string;
