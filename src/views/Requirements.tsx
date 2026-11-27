@@ -10,9 +10,14 @@ function demanded(entry: SkillEntry): string {
   return entry.demand === 'Any' ? '' : entry.demand
 }
 
+function coveredBy(entry: SkillEntry, name: string): string {
+  const other = entry.skills.find((s) => s.name !== name && s.have && s.have !== 'No')
+  return entry.skills.find((s) => s.name === name)?.have || !other ? '' : `Covered by ${other.name} in your profile`
+}
+
 function skillClass(entry: SkillEntry, have?: string): string {
   if (have === 'No') return 'no'
-  if (!have) return 'unknown'
+  if (!have) return entry.verdict === '?' ? 'unknown' : 'covered'
   return VERDICT_CLASS[entry.verdict] ?? 'unknown'
 }
 
@@ -108,7 +113,7 @@ function SkillColumn({ label, skills, rows, check, open, onOpen, onPick, action 
               const key = entryKey(entry) + '#' + skill.name
               return (
                 <span key={skill.name} className={`skill ${skillClass(entry, skill.have)}${open === key ? ' open' : ''}`}>
-                  <button type="button" className="skill-chip" aria-expanded={open === key} title={entry.line} onClick={() => onOpen(open === key ? null : key)}>
+                  <button type="button" className="skill-chip" aria-expanded={open === key} title={coveredBy(entry, skill.name) || entry.line} onClick={() => onOpen(open === key ? null : key)}>
                     {skill.have === 'No' && <span className="skill-x" aria-hidden="true">✕</span>}
                     {skill.name}
                     {skill.have && skill.have !== 'No' && <small>{skill.have}</small>}
@@ -152,6 +157,7 @@ function LevelPicker({ entry, name, checked, onPick }: LevelPickerProps) {
         {demanded(entry) && <span>They ask: {demanded(entry)}</span>}
         <span>You: {have || 'not set'}</span>
         {entry.skills.length > 1 && <span>Any one of {joinNames(entry.skills.map((s) => s.name))} is enough</span>}
+        {coveredBy(entry, name) && <span>{coveredBy(entry, name)}</span>}
       </span>
       {checked && <span className="skill-picker-check">{checked.reason}</span>}
       <span className="skill-picker-levels" role="radiogroup" aria-label={`Your level in ${name}`}>

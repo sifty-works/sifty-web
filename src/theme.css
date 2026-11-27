@@ -363,7 +363,7 @@ html .profile-screen,html .settings-page>.settings-main,html .workspace>.detail{
 .detail .skill.ok .skill-chip{background:var(--fit-tint);color:var(--fit-good-ink)}
 .detail .skill.near .skill-chip{background:var(--warn-bg);color:var(--warn-ink)}
 .detail .skill.no .skill-chip{background:var(--fit-plain);color:var(--ink-4)}
-.detail .skill.unknown .skill-chip{background:#fff;outline:1.3px dashed var(--well-2);outline-offset:-1.3px}
+.detail .skill.covered .skill-chip{background:var(--fit-plain);color:var(--ink-4)}.detail .skill.unknown .skill-chip{background:#fff;outline:1.3px dashed var(--well-2);outline-offset:-1.3px}
 .detail .skill-chip:hover:not(:disabled){background:var(--well)}
 .detail .skill.open .skill-chip{outline:2px solid var(--ink);outline-offset:-2px}
 .skill-x{font-size:10px;font-weight:800;color:var(--fit-bad)}
