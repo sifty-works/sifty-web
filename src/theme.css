@@ -236,13 +236,13 @@
 html :is(.state-expired){background:var(--decide-pill)!important;color:var(--decide-ink)!important}
 
 @media (min-width:768px){
-  .workspace,.settings-page{background:var(--chrome);padding:8px;gap:0}
-  .workspace>.catalogue,.settings-page>.settings-nav{margin:0;border-radius:12px 0 0 12px}
+  .workspace,.settings-page{background:var(--chrome);padding:8px 8px 0;gap:0}
+  .workspace>.catalogue,.settings-page>.settings-nav{margin:0;border-radius:12px 0 0 0}
   .workspace>.detail,.settings-page>.settings-main{background:var(--paper);border-radius:0 12px 12px 0}
 }
 @media (min-width:768px){
   .sift-app:has(>.profile-screen){background:var(--chrome)}
-  .sift-app>.profile-screen{margin:8px;border-radius:12px;min-height:0}
+  .sift-app>.profile-screen{margin:8px 8px 0;border-radius:12px 12px 12px 0;min-height:0}
 }
 
 :root{--paper:#ececef;--well:#dfdfe3;--well-2:#d4d4d9;--well-hover:#d4d4d9}

@@ -26,23 +26,30 @@ function trouble(err: unknown) {
   announce(failure(err instanceof ServerError ? err : OFFLINE_MESSAGE), 'models')
 }
 
-export function useModels(): UseModelsResult {
+export function useModels(refreshMs = 0): UseModelsResult {
   const [state, setState] = useState<ModelsState>({ status: 'loading' })
   const chain = useRef<Promise<void>>(Promise.resolve())
   const checkSeq = useRef(new Map<string, number>())
 
   useEffect(() => {
     let cancelled = false
-    chain.current = chain.current.then(async () => {
-      try {
-        const models = await getModels()
-        if (!cancelled) setState({ status: 'ok', models })
-      } catch {
-        if (!cancelled) setState({ status: 'offline' })
-      }
-    })
-    return () => { cancelled = true }
-  }, [])
+    const load = () => {
+      chain.current = chain.current.then(async () => {
+        try {
+          const models = await getModels()
+          if (!cancelled) setState({ status: 'ok', models })
+        } catch {
+          if (!cancelled) setState({ status: 'offline' })
+        }
+      })
+    }
+    load()
+    const timer = refreshMs > 0 ? window.setInterval(load, refreshMs) : 0
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [refreshMs])
 
   const save = useCallback((patch: ModelsPatch): Promise<void> => {
     const run = chain.current.then(async () => {

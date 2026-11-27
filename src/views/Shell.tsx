@@ -62,7 +62,6 @@ export function Shell() {
   const collectText =
     status?.collecting?.text ??
     (status?.lastRun?.state === 'failed' ? status.lastRun.message : null)
-  const attentionText = status?.attention?.text ?? null
 
   return (
     <div className="sift-app">
@@ -91,15 +90,6 @@ export function Shell() {
         <Brand busy={collecting ? 'Collecting jobs…' : modelJob ? `${modelJob.label}…` : null} />
 
         <div className="header-actions">
-          {attentionText && (
-            <button
-              className="settings-button"
-              style={{ color: '#e0b45a', fontSize: 13 }}
-              onClick={() => openSettings()}
-            >
-              {attentionText}
-            </button>
-          )}
           <ProfileSwitcher
             profileOpen={page === 'profile'}
             onOpenProfile={(id) => { setProfileId(id); setPage('profile') }}
@@ -153,7 +143,7 @@ export function Shell() {
         />
       )}
 
-      <StatusBar status={statusState} work={work.state} onOpen={() => openSettings('monitor')} />
+      <StatusBar key={`status-${page}`} status={statusState} work={work.state} newToday={counts?.newToday ?? null} onOpen={openSettings} />
       <Toasts />
     </div>
   )

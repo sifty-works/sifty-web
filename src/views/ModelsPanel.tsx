@@ -8,11 +8,11 @@ const WORK_NAMES: Record<string, string> = {
   preparation: 'Preparation',
 }
 
-function workName(kind: string): string {
+export function workName(kind: string): string {
   return WORK_NAMES[kind] ?? kind.charAt(0).toUpperCase() + kind.slice(1)
 }
 
-function options(work: WorkView): string[] {
+export function options(work: WorkView): string[] {
   return work.provider && !work.choices.includes(work.provider)
     ? [work.provider, ...work.choices]
     : work.choices
@@ -172,7 +172,7 @@ function BackgroundWork({ models, onSave }: BackgroundWorkProps) {
           checked={models.paused}
           onChange={(e) => void onSave({ paused: e.target.checked })}
         />
-        Pause background model work
+        Pause all background work (collection, analysis and models; the Sifty switch in the status bar)
       </label>
       <label className="s-switch-row" style={{ marginTop: 12 }}>
         Daily limit of background model calls

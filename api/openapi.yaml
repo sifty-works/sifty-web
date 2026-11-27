@@ -282,6 +282,9 @@ components:
                 inbox:
                     format: int64
                     type: integer
+                newToday:
+                    format: int64
+                    type: integer
                 shortlist:
                     format: int64
                     type: integer
@@ -291,6 +294,7 @@ components:
                 - applied
                 - dismissed
                 - archive
+                - newToday
             type: object
         CreateProfileReq:
             properties:
@@ -1448,12 +1452,9 @@ components:
             type: object
         SkillsDecisionResp:
             properties:
-                notice:
-                    type: string
                 vacancyView:
                     $ref: '#/components/schemas/VacancyView'
             required:
-                - notice
                 - vacancyView
             type: object
         Source:
@@ -1934,6 +1935,11 @@ components:
             type: object
         workResp:
             properties:
+                load:
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
                 running:
                     items:
                         $ref: '#/components/schemas/workRunning'
@@ -1945,6 +1951,7 @@ components:
             required:
                 - running
                 - waiting
+                - load
             type: object
         workRunning:
             properties:
@@ -1995,6 +2002,11 @@ components:
                 count:
                     format: int64
                     type: integer
+                eta:
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
                 kind:
                     type: string
                 label:
@@ -2007,6 +2019,7 @@ components:
                 - kind
                 - label
                 - count
+                - eta
                 - reason
             type: object
 info:

@@ -29,29 +29,59 @@
 .sift-app:has(>.app-recovered){grid-template-rows:56px auto minmax(0,1fr)}
 @media(min-width:768px){.sift-app:has(>.app-recovered){grid-template-rows:64px auto minmax(0,1fr)}}
 .list-more{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 0 4px}.list-more button{min-height:34px;font-size:12px}
-.status-bar{display:flex;align-items:center;gap:16px;width:100%;min-height:32px;padding:6px 24px;border-radius:0;background:#000;color:#a3a3aa;font-size:12px;font-weight:400;text-align:left;white-space:nowrap}
-.status-bar:hover{background:#0e0e10}
-.status-bar-main{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.status-dot{flex:none;width:8px;height:8px;border-radius:50%;background:#5c5c63}
+.status-bar{position:relative;display:flex;align-items:stretch;width:100%;max-width:100vw;overflow:hidden;min-height:48px;background:#000;color:#d4d4d8;font-size:14px;white-space:nowrap}
+.status-bar>button,.status-left>button,.status-right>button,.status-right>.status-block,.status-model>button{border-radius:0;background:transparent;color:inherit;font-size:14px;font-weight:500;padding:0 18px;min-height:48px;display:flex;align-items:center;gap:10px}
+.status-bar>button:hover,.status-left>button:hover,.status-right>button:hover,.status-model>button:hover{background:#1c1c1f;color:#ececee}
+.status-main{flex:1 1 0;min-width:0;overflow:hidden;text-align:left;padding-left:14px!important}
+.status-main{display:flex;align-items:center;gap:10px}
+.status-left{flex:none;display:flex;margin-right:10%}
+.status-block{flex:none}
+.status-switch+.status-left>.status-block:first-child{border-left:1px solid #2a2a2e!important}
+.status-right>.status-block{flex:none}
+.status-problem{flex:1 1 0;min-width:0;justify-content:flex-start;padding-left:12px!important;color:#e0b45a!important}
+.status-right{flex:none;margin-left:auto;display:flex}
+.status-ticker{position:relative;display:block;flex:0 1 auto;min-width:0;height:20px;overflow:hidden}
+.status-tick{display:block;line-height:20px;overflow:hidden;text-overflow:ellipsis}
+.status-tick.in{animation:tick-in .45s ease both}
+.status-tick.out{position:absolute;inset:0;animation:tick-out .45s ease both}
+@keyframes tick-in{from{transform:translateY(-100%);opacity:0}to{transform:none;opacity:1}}
+@keyframes tick-out{from{transform:none;opacity:1}to{transform:translateY(100%);opacity:0}}
+.status-of{flex:none;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8a92}
+.status-calls{flex:none;font-family:'IBM Plex Mono',monospace;font-size:13px!important;color:#a3a3aa!important}
+.status-calls.amber{color:#e0b45a!important}
+.status-switch{flex:none;gap:10px!important;padding:0 16px 0 24px!important;font-size:14px!important;color:#8a8a92!important}
+.status-knob{position:relative;width:30px;height:18px;border-radius:9px;background:#3a3a3f;transition:background .2s}
+.status-knob::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#ececee;transition:transform .2s}
+.status-switch.on{color:#d4d4d8!important}
+.status-switch.on .status-knob{background:#4ca36b}
+.status-switch.on .status-knob::after{transform:translateX(12px)}
+.status-bar .status-problem>.status-dot{background:#e0b45a!important;animation:none!important}
+.status-problem:hover{background:#1c1810!important}
+.status-text{flex:none;min-width:4em;overflow:hidden;text-overflow:ellipsis;color:#ececee}
+.status-dot{flex:none;width:10px;height:10px;border-radius:50%;background:#8a8a92}
 .status-bar.running .status-dot{background:#8ab4ff;animation:pulse 1.6s ease-in-out infinite}
-.status-bar.amber .status-dot{background:#e0b45a}
 .status-bar.offline .status-dot{background:#f08a76}
-.status-bar-title{flex:none;color:#ececee;font-weight:500}
-.status-bar-detail{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.status-progress{display:flex;align-items:center;gap:8px;flex:none}
-.status-progress-track{width:96px;height:4px;border-radius:2px;background:#2b2b2f;overflow:hidden}
-.status-progress-track span{display:block;height:100%;background:#8ab4ff}
-.status-progress-text{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#ececee}
-.status-bar-queues{display:flex;align-items:center;gap:6px;flex:none;max-width:45%;overflow:hidden}
-.status-queue{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 8px;border-radius:999px;background:#1a1a1d;color:#a3a3aa}
-.status-queue b{font:500 11px 'IBM Plex Mono',monospace;color:#ececee;background:#2b2b2f;border-radius:999px;padding:0 6px}
-.status-queue.paused{background:#2b2419;color:#e0b45a}
-.status-queue.paused b{background:#4a3c1f;color:#f2d28c}
-.status-bar-open{flex:none;color:#5c5c63}
-.status-bar:hover .status-bar-open{color:#ececee}
-.status-bar.amber{background:#2b2419;color:#d9c39a}
-.status-bar.amber:hover{background:#352c1d}
-.status-bar.amber .status-bar-title{color:#e0b45a}
-.status-bar.offline{background:#2a1512;color:#e3b2a8}
-.status-bar.offline .status-bar-title{color:#f08a76}
-@media(max-width:767px){.status-bar{padding:6px 12px;gap:10px}.status-bar-queues,.status-bar-open,.status-progress-track{display:none}}
+.status-bar.offline .status-text{color:#f08a76}
+.status-progress{flex:none;display:flex;align-items:center;gap:8px}
+.status-track{width:80px;height:4px;border-radius:2px;background:#2a2a2e;overflow:hidden}
+.status-track>span{display:block;height:100%;background:#8ab4ff}
+.status-next{flex:none;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#a3a3aa;font-weight:400}
+.status-next{flex:none;display:inline-flex;align-items:center;gap:6px}
+.status-new{flex:none;color:#7fd29a;font-weight:500}
+.status-new::before,.status-next::before{content:'·';margin-right:10px;color:#5c5c63}
+.status-done{flex:none;align-self:center;padding:0 18px;color:#8a8a92}
+.status-load{flex:1 1 0;align-self:center;padding:0 12px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8a8a92}
+.status-count{font-family:'IBM Plex Mono',monospace;font-size:13px;color:#a3a3aa}
+.status-queue{flex:none;font-family:'IBM Plex Mono',monospace;font-size:13px!important}
+.status-model{position:relative;flex:none;display:flex}
+.status-model>button{padding-right:24px}
+.status-model>button>span{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.status-model>button.amber{color:#e0b45a}
+.status-model b{color:#8a8a92;font-weight:400}
+.status-picker{position:absolute;right:16px;bottom:calc(100% + 8px);z-index:6;width:300px;max-width:calc(100vw - 32px);display:grid;gap:12px;padding:14px;border-radius:12px;background:#1e1e21;color:#ececee;box-shadow:0 16px 40px #0009;white-space:normal}
+.status-picker label{display:grid;gap:4px;color:#a3a3aa}
+.status-picker select{width:100%;color:#ececee}
+.status-picker-link{justify-self:start;padding:0!important;background:transparent!important;color:#a3a3aa;font-size:13px}
+.status-picker-link:hover{color:#ececee}
+.status-bar.offline{background:#2a1512}
+@media(max-width:767px){.status-right{min-width:0;flex:0 1 auto}.status-left{flex:1 1 0;overflow:hidden;margin-right:0}.status-left>.status-block{flex:0 1 auto;min-width:0;overflow:hidden}.status-bar>button,.status-model>button{padding:0 12px}.status-main{padding-left:12px!important}.status-switch{padding-left:16px!important}.status-model>button{padding-right:16px}.status-model>button>span{max-width:30vw}.status-switch-word{display:none}.status-switch{padding:0 12px!important}.status-queue{display:none!important}.status-track{width:60px}.status-next,.status-right>.status-block,.status-done{display:none!important}.status-text{flex:0 1 auto}.status-problem{flex:none}.status-ticker,.status-of,.status-calls,.status-load,.status-new{display:none!important}.status-picker{right:16px}}

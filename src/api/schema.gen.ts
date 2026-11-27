@@ -656,6 +656,8 @@ export interface components {
             /** Format: int64 */
             inbox: number;
             /** Format: int64 */
+            newToday: number;
+            /** Format: int64 */
             shortlist: number;
         };
         CreateProfileReq: {
@@ -1060,7 +1062,6 @@ export interface components {
             vacancyId: number;
         };
         SkillsDecisionResp: {
-            notice: string;
             vacancyView: components["schemas"]["VacancyView"];
         };
         Source: {
@@ -1237,6 +1238,7 @@ export interface components {
             until?: string;
         };
         workResp: {
+            load: number | null;
             running: components["schemas"]["workRunning"][];
             waiting: components["schemas"]["workWaiting"][];
         };
@@ -1258,6 +1260,7 @@ export interface components {
         workWaiting: {
             /** Format: int64 */
             count: number;
+            eta: number | null;
             kind: string;
             label: string;
             reason: components["schemas"]["workReason"] | null;
