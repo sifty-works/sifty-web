@@ -15,6 +15,9 @@ function isStated(tile: Tile): boolean {
   return tile.value.trim() !== '' && tile.value !== 'Not stated'
 }
 
+const KEY = ['Money', 'Location', 'Work mode', 'Contract']
+const ORDER: Mod[] = ['mismatch', 'unknown', 'ok']
+
 function Mark({ mod }: { mod: Mod }) {
   return (
     <span className={`band-mark ${mod}`} aria-hidden="true">
@@ -44,14 +47,53 @@ function Card({ tile }: { tile: Tile }) {
   )
 }
 
+function Others({ tiles }: { tiles: Tile[] }) {
+  const rows = tiles.filter(isStated).sort((a, b) => ORDER.indexOf(verdictMod(a.verdict)) - ORDER.indexOf(verdictMod(b.verdict)))
+  const missing = tiles.filter((tile) => !isStated(tile) && tile.goal)
+  if (rows.length === 0 && missing.length === 0) return null
+  return (
+    <div className="band-others">
+      <h4>Key facts</h4>
+      {rows.length > 0 && (
+        <ul className="band-sheet">
+          {rows.map((tile) => {
+            const mod = verdictMod(tile.verdict)
+            return (
+              <li key={tile.name} className={`band-sheet-row ${mod}`} title={tile.line}>
+                <span className="band-line-name">
+                  <TileIcon name={tile.name} size={15} />
+                  {tile.name}
+                </span>
+                <Mark mod={mod} />
+                <span className="band-sheet-value" title={tile.full}>
+                  {tile.value}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {missing.length > 0 && (
+        <p className="band-missing">
+          <span>Not stated</span>
+          {missing.map((tile) => tile.name).join(' · ')}
+        </p>
+      )}
+    </div>
+  )
+}
+
 export function BandTiles({ tiles }: { tiles: Tile[] }) {
   return (
     <div className="band-body">
       <div className="band-grid">
-        {tiles.map((tile) => (
-          <Card key={tile.name} tile={tile} />
-        ))}
+        {tiles
+          .filter((tile) => KEY.includes(tile.name))
+          .map((tile) => (
+            <Card key={tile.name} tile={tile} />
+          ))}
       </div>
+      <Others tiles={tiles.filter((tile) => !KEY.includes(tile.name))} />
     </div>
   )
 }
@@ -89,6 +131,31 @@ const ICONS: Record<string, ReactNode> = {
     <>
       <rect x="3.5" y="7.5" width="17" height="12" rx="2" />
       <path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 12.5h17" />
+    </>
+  ),
+  Hours: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
+  Languages: (
+    <>
+      <path d="M4 5h16v11H9l-5 4z" />
+      <path d="M8 9h8M8 12h5" />
+    </>
+  ),
+  'Time zone': (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" />
+    </>
+  ),
+  'Work authorization': (
+    <>
+      <rect x="3.5" y="5" width="17" height="14" rx="2" />
+      <circle cx="9" cy="11" r="2.2" />
+      <path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3.5M14.5 13.5h3.5" />
     </>
   ),
 }

@@ -1535,6 +1535,8 @@ components:
                     type: string
                 full:
                     type: string
+                goal:
+                    type: boolean
                 line:
                     type: string
                 name:
@@ -1548,6 +1550,7 @@ components:
                 - value
                 - line
                 - verdict
+                - goal
             type: object
         VacancySource:
             properties:

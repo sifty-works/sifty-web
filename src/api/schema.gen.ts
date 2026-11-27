@@ -1090,6 +1090,7 @@ export interface components {
         Tile: {
             converted?: string;
             full?: string;
+            goal: boolean;
             line: string;
             name: string;
             value: string;
