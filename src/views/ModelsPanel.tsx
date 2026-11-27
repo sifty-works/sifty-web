@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ModelsPatch, ModelsResponse, ProviderView, WorkView } from '../api/client.ts'
 import { useModels } from '../state/models.ts'
-import { Message } from './Messages.tsx'
 
 const WORK_NAMES: Record<string, string> = {
   reading: 'Reading',
@@ -20,7 +19,7 @@ function options(work: WorkView): string[] {
 }
 
 export function ModelsPanel() {
-  const { state, note, save, check } = useModels()
+  const { state, save, check } = useModels()
   const [checking, setChecking] = useState<string | null>(null)
 
   if (state.status === 'loading') return <p className="muted">Loading…</p>
@@ -40,7 +39,6 @@ export function ModelsPanel() {
     <>
       <h1>Models</h1>
       <p className="lead">Each kind of work uses the provider you choose. Nothing paid is used in bulk unless you allow it.</p>
-      <Message note={note} />
 
       <section className="s-card">
         <h2>Work</h2>

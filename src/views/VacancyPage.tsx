@@ -1,9 +1,7 @@
 import { Fragment, useState } from 'react'
 import { SkillAnswer, VacancyAction, VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
-import type { Note } from '../state/messages.ts'
 import { FitBand } from './FitBand.tsx'
-import { Message } from './Messages.tsx'
 import { CheckLine, OtherRequirements } from './Requirements.tsx'
 
 type Place = 'main' | 'links' | 'segment'
@@ -24,14 +22,13 @@ export const ACTIONS: Record<string, ActionStyle> = {
 interface Props {
   view: VacancyView
   sessionDecision?: SessionDecision | null
-  actionError?: Note | null
   onAction: (key: string) => void
   onUndoDecision: () => void
   onSkillDecision: (answer: SkillAnswer) => Promise<void>
   onCheckRetry: () => Promise<void>
 }
 
-export function VacancyPage({ view, sessionDecision, actionError, onAction, onUndoDecision, onSkillDecision, onCheckRetry }: Props) {
+export function VacancyPage({ view, sessionDecision, onAction, onUndoDecision, onSkillDecision, onCheckRetry }: Props) {
   const placed = (place: Place) =>
     (view.actions ?? []).filter((a) => (ACTIONS[a.key]?.place ?? 'main') === place)
   const buttons = (list: VacancyAction[]) =>
@@ -100,7 +97,6 @@ export function VacancyPage({ view, sessionDecision, actionError, onAction, onUn
               )}
             </>
           )}
-          <Message note={actionError} inline />
         </div>
       </div>
 

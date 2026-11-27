@@ -10,7 +10,7 @@ import {
   ServerError,
   OfflineError,
 } from '../api/client.ts'
-import { failure, type Note } from './messages.ts'
+import { announce, failure, retract, type Note } from './messages.ts'
 
 export type SourcesState =
   | { status: 'loading' }
@@ -80,7 +80,9 @@ export function useSources(): UseSourcesResult {
     async (...a: A): Promise<void> => {
       try {
         applyList(setState, await call(...a))
-      } catch {
+        retract('sources')
+      } catch (err) {
+        announce(failure(err), 'sources')
         setVersion((v) => v + 1)
       }
     }, [])

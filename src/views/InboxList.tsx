@@ -19,13 +19,13 @@ import {
 } from '../api/client.ts'
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { ReturnedRow, SessionDecision } from '../state/decisions.ts'
-import { failure, type Note, silent } from '../state/messages.ts'
+import { announce, failure, retract, type Note, silent } from '../state/messages.ts'
 import { useCheckRefresh, useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { FilterPanel } from './FilterPanel.tsx'
 import { Icon } from './Icon.tsx'
 import { ListResizer, useListWidth } from './ListResizer.tsx'
-import { Message } from './Messages.tsx'
+import { Refusal } from './Refusal.tsx'
 import { SearchField } from './SearchField.tsx'
 import { ACTIONS, VacancyPage } from './VacancyPage.tsx'
 import { VacancyRow } from './VacancyRow.tsx'
@@ -78,7 +78,7 @@ export function InboxList({
 }: Props) {
   const [blockCount, setBlockCount] = useState(0)
   const {
-    state, query, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll, loadMore, loadingMore, moreError,
+    state, query, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll, loadMore, loadingMore,
   } = useVacancies(
     stage,
     (reloadTrigger ?? 0) + blockCount,
@@ -97,7 +97,6 @@ export function InboxList({
   const [listWidth, setListWidth] = useListWidth()
   const [sessionDecisions, setSessionDecisions] = useState<Map<number, SessionDecision>>(new Map())
   const [returnedRows, setReturnedRows] = useState<Map<number, ReturnedRow>>(new Map())
-  const [actionError, setActionError] = useState<Note | null>(null)
   const [rowFitUpdates, setRowFitUpdates] = useState<Map<number, FitMark>>(new Map())
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>({ kind: 'none' })
   const [applyDialogSaving, setApplyDialogSaving] = useState(false)
@@ -191,7 +190,7 @@ export function InboxList({
       setSelectedId(id)
       setPageView(null)
       setPageError(null)
-      setActionError(null)
+      retract('vacancy-action')
       void getVacancy(id, profile)
         .then((v) => {
           if (selectedIdRef.current === id) setPageView(v)
@@ -281,7 +280,7 @@ export function InboxList({
     if (!decision) return
     const id = decision.row.id
     const back = pageView.actions?.find((a) => a.key === 'inbox' || a.key === 'restore')
-    setActionError(null)
+    retract('vacancy-action')
     try {
       const { counts: newCounts } = await postDecision(id, {
         profile,
@@ -301,13 +300,13 @@ export function InboxList({
       })
       if (selectedIdRef.current === id) openRow(id)
     } catch (err) {
-      setActionError(failure(err instanceof ServerError ? err : null, 'Could not undo decision'))
+      announce(failure(err instanceof ServerError ? err : null, 'Could not undo decision'), 'vacancy-action')
     }
   }
 
   async function handleAction(key: string) {
     if (!pageView || profile === null) return
-    setActionError(null)
+    retract('vacancy-action')
 
     if (key === 'block') {
       try {
@@ -315,7 +314,7 @@ export function InboxList({
         setBlockCount((n) => n + 1)
         selectAfterRemoval((r) => r.company === pageView.company)
       } catch (err) {
-        setActionError(failure(err instanceof ServerError ? err : null, 'Could not block company'))
+        announce(failure(err instanceof ServerError ? err : null, 'Could not block company'), 'vacancy-action')
       }
       return
     }
@@ -400,7 +399,7 @@ export function InboxList({
         selectAfterRemoval((r) => r.id === pageView.id)
       }
     } catch (err) {
-      setActionError(failure(err instanceof ServerError ? err : null, 'Could not save decision'))
+      announce(failure(err instanceof ServerError ? err : null, 'Could not save decision'), 'vacancy-action')
     }
   }
 
@@ -450,6 +449,7 @@ export function InboxList({
 
   async function handleSkillDecision(answer: SkillAnswer): Promise<void> {
     if (!pageView) return
+    retract('vacancy-action')
     try {
       const { vacancyView } = await postSkillsDecision({
         ...answer,
@@ -462,16 +462,17 @@ export function InboxList({
         return next
       })
     } catch (err) {
-      setActionError(failure(err instanceof ServerError ? err : null, 'Could not save decision'))
+      announce(failure(err instanceof ServerError ? err : null, 'Could not save your skill'), 'vacancy-action')
     }
   }
 
   async function handleCheckRetry(): Promise<void> {
     if (!pageView || profile === null) return
+    retract('vacancy-action')
     try {
       setPageView(await postShortlistCheckRetry(pageView.id, profile))
     } catch (err) {
-      setActionError(failure(err instanceof ServerError ? err : null, 'Could not retry the check'))
+      announce(failure(err instanceof ServerError ? err : null, 'Could not retry the check'), 'vacancy-action')
     }
   }
 
@@ -593,7 +594,6 @@ export function InboxList({
           )}
           {!loading && !listNote && hasMore && (
             <div className="list-more">
-              <Message note={moreError} inline />
               <button type="button" disabled={loadingMore} onClick={() => loadMore(gone)}>
                 Show more roles
               </button>
@@ -610,15 +610,14 @@ export function InboxList({
 
       <main className="detail" aria-label="Selected vacancy">
         <div className="detail-inner">
-          <Message note={listNote} />
+          <Refusal note={listNote} />
 
           {pageError ? (
-            <Message note={pageError} />
+            <Refusal note={pageError} />
           ) : pageView ? (
             <VacancyPage
               view={pageView}
               sessionDecision={sessionDecisions.get(pageView.id) ?? null}
-              actionError={actionError}
               onAction={(key) => void handleAction(key)}
               onUndoDecision={() => void handleUndoDecision()}
               onSkillDecision={handleSkillDecision}

@@ -3,7 +3,7 @@ import {
   acceptProposal, listProposals, OfflineError, rejectProposal, type ProposalItem, type ProposalListResp,
 } from '../api/client.ts'
 import { OFFLINE_MESSAGE, trouble } from './documents.ts'
-import { describe, type Note } from './messages.ts'
+import { announce, describe, retract, type Note } from './messages.ts'
 
 const FADE_MS = 450
 
@@ -52,9 +52,10 @@ export function useProposals(onAccepted: () => void): UseProposalsResult {
       apply(data.proposals)
       setStatus('ok')
       setNote(null)
+      retract('suggestions')
     } catch (err) {
       if (mine !== latest.current) return
-      if (loaded.current) setNote(trouble(err, 'Could not refresh suggestions'))
+      if (loaded.current) announce(trouble(err, 'Could not refresh suggestions'), 'suggestions')
       else {
         setStatus('error')
         setNote({ kind: 'failure', text: err instanceof OfflineError ? OFFLINE_MESSAGE : describe(err, 'Could not load suggestions') })
@@ -69,7 +70,7 @@ export function useProposals(onAccepted: () => void): UseProposalsResult {
 
   const settle = useCallback(async (call: () => Promise<ProposalListResp>, accepted: boolean) => {
     apply((await call()).proposals)
-    setNote(null)
+    retract('suggestions')
     if (accepted) onAccepted()
   }, [apply, onAccepted])
 

@@ -13,12 +13,9 @@
 .sites-add-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-top:16px}
 .sites-add-form label{font-size:12px;font-weight:600;color:#a3a3aa;display:flex;flex-direction:column;gap:4px}
 .sites-add-form input{width:100%}
-.sites-add-form .msg{grid-column:1/-1;margin:0}
-.s-card .msg{margin:14px 0 0}
-html .msg.inline{display:inline-flex;align-items:center;max-width:100%;margin:0;padding:6px 8px 6px 30px!important;font-size:13px;line-height:1.4}
-html .msg.inline::before{left:8px;top:50%;width:14px;height:14px;margin-top:-7px}
-html .msg.inline button{float:none;height:auto;margin-left:8px;padding:0 6px;font-size:inherit}
 @media(max-width:767px){.sites-add-form{grid-template-columns:1fr}}
+.sites-add-form .refusal{grid-column:1/-1;margin:0}
+.s-card .refusal{margin:14px 0 0}
 
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -31,7 +28,7 @@ html .msg.inline button{float:none;height:auto;margin-left:8px;padding:0 6px;fon
 .app-recovered p{margin:0}
 .sift-app:has(>.app-recovered){grid-template-rows:56px auto minmax(0,1fr)}
 @media(min-width:768px){.sift-app:has(>.app-recovered){grid-template-rows:64px auto minmax(0,1fr)}}
-.list-more{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 0 4px}.list-more .msg.inline{margin:0}.list-more button{min-height:34px;font-size:12px}
+.list-more{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:8px 0 4px}.list-more button{min-height:34px;font-size:12px}
 .status-bar{display:flex;align-items:center;gap:16px;width:100%;min-height:32px;padding:6px 24px;border-radius:0;background:#000;color:#a3a3aa;font-size:12px;font-weight:400;text-align:left;white-space:nowrap}
 .status-bar:hover{background:#0e0e10}
 .status-bar-main{display:flex;align-items:center;gap:10px;flex:1;min-width:0}

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { trouble } from '../state/documents.ts'
-import { type Note } from '../state/messages.ts'
+import { announce, retract } from '../state/messages.ts'
 import type { ProposalRow, UseProposalsResult } from '../state/proposals.ts'
-import { Message } from './Messages.tsx'
+import { Refusal } from './Refusal.tsx'
 
 const LEAD_REVIEW = 'Accepting adds the fact to your profile, with its source.'
 const LEAD_EMPTY = 'Analyze a file to get new suggestions.'
@@ -20,12 +20,11 @@ function SuggestionCard({ row, onAccept, onReject }: {
 }) {
   const { item, leaving } = row
   const [busy, setBusy] = useState(false)
-  const [note, setNote] = useState<Note | null>(null)
 
   async function run(call: (id: number) => Promise<void>) {
-    setBusy(true); setNote(null)
+    setBusy(true); retract(`suggestion-${item.id}`)
     try { await call(item.id) }
-    catch (e) { setNote(trouble(e, 'Could not save')) }
+    catch (e) { announce(trouble(e, 'Could not save'), `suggestion-${item.id}`) }
     finally { setBusy(false) }
   }
 
@@ -44,7 +43,6 @@ function SuggestionCard({ row, onAccept, onReject }: {
     </>}
     {item.quote ? <blockquote>{item.quote}</blockquote> : null}
     <p className="profile-fact-source">{item.documentName}</p>
-    <Message note={note}/>
   </article>
 }
 
@@ -62,7 +60,7 @@ export function SuggestionsPanel({ proposals }: { proposals: UseProposalsResult 
       </div>
     </header>
     <div className="profile-card-body">
-      <Message note={note}/>
+      <Refusal note={note}/>
       {status === 'loading' ? <p className="profile-hint">Loading…</p> : null}
       {rows.length ? <div className="profile-fact-list">
         {rows.map((row) => <SuggestionCard key={row.item.id} row={row} onAccept={proposals.accept} onReject={proposals.reject}/>)}

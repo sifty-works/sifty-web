@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createProfile, deleteProfile, getProfiles, patchProfile, setActiveProfile, type ProfileListItem } from '../api/client.ts'
-import { failure, type Note, silent } from '../state/messages.ts'
+import { announce, failure, retract, silent } from '../state/messages.ts'
 import { colorFor } from '../state/profile.ts'
 import { useDismiss } from '../dismiss.ts'
 import { Icon } from './Icon.tsx'
-import { Message } from './Messages.tsx'
 
 export { colorFor }
 
@@ -22,7 +21,6 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
   const [renamingId, setRenamingId] = useState<number | null>(null)
   const [renameDraft, setRenameDraft] = useState('')
   const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [note, setNote] = useState<Note | null>(null)
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -34,26 +32,27 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
   }, [])
 
   useEffect(() => {
-    if (!menu) { setCreating(false); setRenamingId(null); setDeletingId(null); setNote(null) }
+    if (!menu) { setCreating(false); setRenamingId(null); setDeletingId(null) }
   }, [menu])
 
   useDismiss(menu, () => setMenu(false), box)
 
   async function switchTo(id: number) {
     if (id === activeId) { setMenu(false); onOpenProfile(id); return }
+    retract('profiles')
     try {
       const r = await setActiveProfile(id)
       setProfiles(r.profiles)
       setActiveId(id)
       setMenu(false)
       onSwitch(id)
-    } catch (e) { setNote(failure(e, 'Could not switch profile')) }
+    } catch (e) { announce(failure(e, 'Could not switch profile'), 'profiles') }
   }
 
   async function doCreate(e: React.FormEvent) {
     e.preventDefault()
     const name = createName.trim(); if (!name) return
-    setCreateBusy(true); setNote(null)
+    setCreateBusy(true); retract('profiles')
     try {
       const created = await createProfile(name)
       const r = await setActiveProfile(created.id)
@@ -62,28 +61,30 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
       setCreateName(''); setCreating(false); setMenu(false)
       onSwitch(created.id)
       onOpenProfile(created.id)
-    } catch (e) { setNote(failure(e, 'Could not create profile')) } finally { setCreateBusy(false) }
+    } catch (e) { announce(failure(e, 'Could not create profile'), 'profiles') } finally { setCreateBusy(false) }
   }
 
   async function doRename(e: React.FormEvent, p: ProfileListItem) {
     e.preventDefault()
     const name = renameDraft.trim(); if (!name) return
+    retract('profiles')
     try {
       await patchProfile(p.id, { name })
       const r = await getProfiles()
       setProfiles(r.profiles)
       setRenamingId(null)
-    } catch (e) { setNote(failure(e, 'Could not rename profile')) }
+    } catch (e) { announce(failure(e, 'Could not rename profile'), 'profiles') }
   }
 
   async function doDelete(id: number) {
+    retract('profiles')
     try {
       const r = await deleteProfile(id)
       setProfiles(r.profiles)
       const next = r.profiles.find((p) => p.active)
       if (next) { setActiveId(next.id); onSwitch(next.id) }
       setDeletingId(null)
-    } catch (e) { setNote(failure(e, 'Could not delete profile')) }
+    } catch (e) { announce(failure(e, 'Could not delete profile'), 'profiles') }
   }
 
   const active = profiles.find((p) => p.id === activeId)
@@ -99,7 +100,6 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
     </button>
     {menu ? <div className="profile-menu" role="menu" aria-label="Profiles">
       <p className="profile-menu-title">Profiles</p>
-      <Message note={note}/>
       {profiles.map((p, i) => renamingId === p.id
         ? <form key={p.id} className="profile-menu-rename" onSubmit={(e) => void doRename(e, p)}>
             <i className="profile-dot" style={{ background: colorFor(i) }} aria-hidden="true"/>

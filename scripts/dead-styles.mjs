@@ -370,13 +370,6 @@ const SITES = [
   },
   {
     step: 3,
-    site: 'Messages shape',
-    file: 'src/views/Messages.tsx',
-    needle: "visual ?? (note.kind === 'failure' ? 'retry' : 'info')",
-    names: () => ['retry', 'info'],
-  },
-  {
-    step: 3,
     site: 'WhatTheyAsk button kind',
     file: 'src/views/WhatTheyAsk.tsx',
     needle: 'className={kind}',

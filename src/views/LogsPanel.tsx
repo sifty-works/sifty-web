@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LogEntry } from '../api/client.ts'
 import { useLogs } from '../state/work.ts'
-import { Message } from './Messages.tsx'
+import { Refusal } from './Refusal.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 import { localTime, WorkSection } from './WorkTable.tsx'
 
@@ -27,7 +27,7 @@ export function LogsPanel() {
       <h1>Logs</h1>
       <p className="lead">What failed in the last 7 days, and the latest warnings and errors of the server log.</p>
       <p><button disabled={busy} onClick={() => void refresh()}>Refresh</button></p>
-      <Message note={note} />
+      <Refusal note={note} />
       {state.status === 'ok' && (
         <>
           <WorkSection

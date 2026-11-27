@@ -1,6 +1,6 @@
 import { WorkResponse, WorkRunning } from '../api/client.ts'
 import { type UseRemoteResult } from '../state/work.ts'
-import { Message } from './Messages.tsx'
+import { Refusal } from './Refusal.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
 import { localTime, WorkSection } from './WorkTable.tsx'
 
@@ -17,7 +17,7 @@ export function WorkPanel({ work: { state, note } }: { work: UseRemoteResult<Wor
     <>
       <h1>Background work</h1>
       <p className="lead">What Sifty is doing in the background, and what is waiting and why.</p>
-      <Message note={note} />
+      <Refusal note={note} />
       {state.status === 'ok' && (
         <>
           <WorkSection

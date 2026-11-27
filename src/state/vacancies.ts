@@ -13,7 +13,7 @@ import {
   VacancyRow,
   VacancyView,
 } from '../api/client.ts'
-import { failure, type Note, silent } from './messages.ts'
+import { announce, failure, retract, silent } from './messages.ts'
 
 const NEVER_LOADED = Symbol()
 
@@ -155,7 +155,6 @@ export interface UseVacanciesResult {
   resetAll: () => void
   loadMore: (gone: ReadonlySet<number>) => void
   loadingMore: boolean
-  moreError: Note | null
 }
 
 function mergeRows(held: VacancyRow[], more: VacancyRow[]): VacancyRow[] {
@@ -192,7 +191,6 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
   const generationRef = useRef(0)
   const loadingMoreRef = useRef(false)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [moreError, setMoreError] = useState<Note | null>(null)
 
   const setQuery = useCallback((q: string) => {
     setPending(q)
@@ -240,7 +238,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
     generationRef.current += 1
     loadingMoreRef.current = false
     setLoadingMore(false)
-    setMoreError(null)
+    retract('more-roles')
     if (prevQueryRef.current === NEVER_LOADED || prevQueryRef.current !== query) {
       setState({ status: 'loading' })
     }
@@ -292,7 +290,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
       const generation = generationRef.current
       loadingMoreRef.current = true
       setLoadingMore(true)
-      setMoreError(null)
+      retract('more-roles')
       listVacancies(profile, stage, query, filters, unread, sort, LIST_WINDOW, offset)
         .then((data) => {
           if (generation !== generationRef.current) return
@@ -314,7 +312,7 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
         })
         .catch((err: unknown) => {
           if (generation !== generationRef.current) return
-          setMoreError(failure(err instanceof OfflineError ? 'Server unreachable' : err, 'Could not load more roles'))
+          announce(failure(err instanceof OfflineError ? 'Server unreachable' : err, 'Could not load more roles'), 'more-roles')
         })
         .finally(() => {
           if (generation !== generationRef.current) return
@@ -327,6 +325,6 @@ export function useVacancies(stage: string, reloadTrigger = 0, profile: number |
 
   return {
     state, query: pending, setQuery, filters, setFilters, unread, setUnread, sort, setSort, resetAll,
-    loadMore, loadingMore, moreError,
+    loadMore, loadingMore,
   }
 }

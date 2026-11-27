@@ -4,9 +4,9 @@ import {
   OfflineError, refreshDocument, setDocumentEvidence, uploadDocument, type DocumentItem,
 } from '../api/client.ts'
 import { OFFLINE_MESSAGE, trouble, useDocuments, type UseDocumentsResult } from '../state/documents.ts'
-import { describe, failure, type Note } from '../state/messages.ts'
+import { announce, describe, failure, retract } from '../state/messages.ts'
 import { Icon } from './Icon.tsx'
-import { Message } from './Messages.tsx'
+import { Refusal } from './Refusal.tsx'
 import { SuggestionsPanel } from './SuggestionsPanel.tsx'
 import { ContactsSection, Field, SectionShell, useSectionEditor, type FilesTabProps } from './ProfilePage.tsx'
 
@@ -56,44 +56,44 @@ export function DocumentCard({ doc, onChange, onRemove, onOpenSettings }: {
   onOpenSettings: () => void
 }) {
   const [busy, setBusy] = useState(false)
-  const [note, setNote] = useState<Note | null>(null)
   const [text, setText] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   const reason = doc.stateReason ?? ''
+  const place = `document-${doc.id}`
 
   async function run(call: () => Promise<DocumentItem>, fallback: string) {
-    setBusy(true); setNote(null)
+    setBusy(true); retract(place)
     try { onChange(await call()) }
-    catch (e) { setNote(trouble(e, fallback)) }
+    catch (e) { announce(trouble(e, fallback), place) }
     finally { setBusy(false) }
   }
 
   async function toggleText() {
     if (text !== null) { setText(null); return }
-    setBusy(true); setNote(null)
+    setBusy(true); retract(place)
     try { setText(await getDocumentText(doc.id)) }
-    catch (e) { setNote(trouble(e, 'Could not load the text')) }
+    catch (e) { announce(trouble(e, 'Could not load the text'), place) }
     finally { setBusy(false) }
   }
 
   async function openOriginal() {
     const tab = window.open('', '_blank')
-    setBusy(true); setNote(null)
+    setBusy(true); retract(place)
     try {
       const url = URL.createObjectURL(await getDocumentOriginal(doc.id))
       if (tab) tab.location.href = url
-      else setNote(failure('The browser blocked the new tab.'))
+      else announce(failure('The browser blocked the new tab.'), place)
       setTimeout(() => URL.revokeObjectURL(url), ORIGINAL_REVOKE_MS)
     } catch (e) {
       tab?.close()
-      setNote(trouble(e, 'Could not open the original'))
+      announce(trouble(e, 'Could not open the original'), place)
     } finally { setBusy(false) }
   }
 
   async function remove() {
-    setBusy(true); setNote(null)
+    setBusy(true); retract(place)
     try { await deleteDocument(doc.id); onRemove(doc.id) }
-    catch (e) { setNote(trouble(e, 'Could not delete')); setConfirming(false); setBusy(false) }
+    catch (e) { announce(trouble(e, 'Could not delete'), place); setConfirming(false); setBusy(false) }
   }
 
   const hasText = doc.charCount > 0
@@ -126,7 +126,6 @@ export function DocumentCard({ doc, onChange, onRemove, onOpenSettings }: {
     {doc.state === 'analysing' ? <p className="profile-hint">Analysing…</p> : null}
     {doc.state === 'ready' || doc.state === 'unavailable' ? (reason ? <p className="profile-hint">{reason}</p> : null) : null}
     {doc.state === 'error' ? <ErrorReason reason={reason} onOpenSettings={onOpenSettings}/> : null}
-    <Message note={note}/>
     <div className="profile-document-actions">
       {analyse}
       {doc.state === 'ready'
@@ -165,7 +164,7 @@ function Listing({ documents, items, empty, onOpenSettings }: {
 }) {
   const { state } = documents
   if (state.status === 'loading') return <p className="profile-hint">Loading…</p>
-  if (state.status === 'error') return <Message note={{ kind: 'failure', text: state.message }}/>
+  if (state.status === 'error') return <Refusal note={failure(state.message)}/>
   if (items.length === 0) return empty ? <p className="profile-hint">{empty}</p> : null
   return <div className="document-list">{items.map((doc) => <DocumentCard key={doc.id} doc={doc}
     onChange={documents.replace} onRemove={documents.drop} onOpenSettings={onOpenSettings}/>)}</div>
@@ -180,7 +179,6 @@ function FilesSection({ documents, items, onOpenSettings }: {
   const [body, setBody] = useState('')
   const [uploading, setUploading] = useState(false)
   const [over, setOver] = useState(false)
-  const [report, setReport] = useState<{ note: Note; refresh: boolean } | null>(null)
   const chooser = useRef<HTMLInputElement>(null)
 
   const editor = useSectionEditor(
@@ -190,7 +188,7 @@ function FilesSection({ documents, items, onOpenSettings }: {
 
   async function upload(files: File[]) {
     if (files.length === 0) return
-    setReport(null); setUploading(true)
+    retract('upload'); setUploading(true)
     let failed = 0
     let reason = ''
     let offline = false
@@ -205,9 +203,8 @@ function FilesSection({ documents, items, onOpenSettings }: {
     setUploading(false)
     await documents.reload()
     if (offline || failed === 0) return
-    setReport(files.length === 1
-      ? { note: failure(reason), refresh: false }
-      : { note: failure(`${failed} of ${files.length} uploads failed. Successful files are kept.`), refresh: true })
+    if (files.length === 1) announce(failure(reason), 'upload')
+    else announce(failure(`${failed} of ${files.length} uploads failed. Successful files are kept.`), 'upload', { label: 'Refresh', onClick: () => { retract('upload'); void documents.reload() } })
   }
 
   const adding = <button type="button" className="primary" disabled={uploading} onClick={() => chooser.current?.click()}>
@@ -231,10 +228,6 @@ function FilesSection({ documents, items, onOpenSettings }: {
         <strong>{uploading ? 'Uploading…' : 'Drop files here'}</strong>
         <span>pdf, md, txt · up to 2 MB</span>
       </button>
-      <Message note={report?.note} onDismiss={() => setReport(null)}/>
-      {report?.refresh ? <div className="profile-document-actions">
-        <button type="button" onClick={() => { setReport(null); void documents.reload() }}>Refresh</button>
-      </div> : null}
       <Listing documents={documents} items={items} empty="No documents yet." onOpenSettings={onOpenSettings}/>
     </div>
   </SectionShell>
@@ -290,7 +283,6 @@ export function FilesTab({ me, saveMe, proposals, onOpenSettings }: FilesTabProp
 
   return <div className="profile-cols-files">
     <div className="profile-col-files-docs">
-      <Message note={documents.note}/>
       <FilesSection documents={documents} items={all.filter((d) => !d.address)} onOpenSettings={onOpenSettings}/>
       <ContactsSection me={me} onSave={saveMe}
         extra={(editing) => <FetchedPages documents={documents} items={all.filter((d) => d.address)} editing={editing} onOpenSettings={onOpenSettings}/>}/>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Outcome } from '../api/client.ts'
 import type { Note } from '../state/messages.ts'
-import { Message } from './Messages.tsx'
+import { Refusal } from './Refusal.tsx'
 
 const UNSAVED =
   'The outcome could not be saved. The role has not been changed by this action. Try again, or close this dialog to review the error.'
@@ -56,7 +56,7 @@ export function ApplyOutcomeDialog({ title, company, note, outcomes, saving, mes
         after you have submitted it yourself. You can also confirm later from
         Shortlist. Choose a negative outcome only if you will not apply.
       </p>
-      <Message note={message && { ...message, text: UNSAVED }} />
+      <Refusal note={message && { ...message, text: UNSAVED }} />
       <div className="confirmation-actions">
         {outcomes.map((outcome) => (
           <button
@@ -106,7 +106,7 @@ export function DeleteConfirmDialog({ title, company, saving, message, onKeep, o
       <p>{company}</p>
       <p>This permanently deletes this role, its answers and application history. This cannot be undone. Automatic collection will not restore it.</p>
       <p className="muted">Remembered candidate facts and shared files remain available.</p>
-      <Message note={message} />
+      <Refusal note={message} />
       <div className="draft-actions">
         <button autoFocus disabled={saving} onClick={onKeep}>Keep role</button>
         <button className="no-button" disabled={saving} onClick={() => { if (pending.current) return; pending.current = true; onDelete() }}>

@@ -17,7 +17,7 @@
 .profile-avatar:disabled{cursor:default}
 .profile-avatar img{width:68px;height:68px;border-radius:999px;object-fit:cover;display:block}
 .profile-avatar-cam{position:absolute;right:-3px;bottom:-3px;width:24px;height:24px;border-radius:50%;background:#141416;color:#fff;font:600 15px/24px 'IBM Plex Sans',sans-serif;text-align:center;box-shadow:0 0 0 3px var(--paper,#f4f4f5)}
-.profile-avatar-error{flex-basis:100%;margin:0;font-size:12px}
+.profile-identity>.refusal{flex-basis:100%;margin:0;font-size:12px}
 .profile-identity-main{flex:1;min-width:min(260px,100%)}
 .profile-identity h1{display:flex;align-items:center;gap:10px;font-size:28px;line-height:1.1;letter-spacing:-.03em;margin:0 0 4px;color:#111}
 .profile-identity-meta{display:flex!important;align-items:center;gap:6px;flex-wrap:wrap;margin:0;font-size:14px;color:var(--ink-2)}
@@ -203,7 +203,6 @@
 .profile-fact blockquote:before{content:'“'}
 .profile-fact blockquote:after{content:'”'}
 .profile-fact .profile-fact-source{margin:0;font-size:11px;color:var(--ink-4);overflow-wrap:anywhere}
-.profile-fact .msg{margin:8px 0 0}
 .profile-conflict{margin:8px 0;border-radius:8px;padding:10px;background:var(--decide-b)}
 .profile-conflict p{margin:0 0 5px;overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){.profile-fact{transition:none}}

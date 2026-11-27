@@ -7,7 +7,7 @@ import {
   removeExclusion,
   ServerError,
 } from '../api/client.ts'
-import { failure, type Note } from './messages.ts'
+import { announce, failure, retract, type Note } from './messages.ts'
 
 export type ExclusionState =
   | { status: 'loading' }
@@ -49,12 +49,12 @@ export function useExclusions() {
   }, [])
 
   const remove = useCallback(async (id: number): Promise<void> => {
-    setNote(null)
+    retract('exclusions')
     try {
       const d = await removeExclusion(id)
       setState(applyResponse(d))
     } catch (err) {
-      setNote(failure(err instanceof ServerError ? err : null, 'Could not remove exclusion.'))
+      announce(failure(err instanceof ServerError ? err : null, 'Could not remove exclusion.'), 'exclusions')
     }
   }, [])
 

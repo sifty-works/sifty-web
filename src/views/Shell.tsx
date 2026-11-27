@@ -12,6 +12,7 @@ import { ProfileTab } from './ProfileSearch.tsx'
 import { ProfileSwitcher } from './ProfileSwitcher.tsx'
 import { SourcesPage } from './SourcesPage.tsx'
 import { StatusBar } from './StatusBar.tsx'
+import { Toasts } from './Toasts.tsx'
 
 type Page = 'inbox' | 'settings' | 'profile'
 type MainTab = 'inbox' | 'shortlist' | 'archive'
@@ -152,6 +153,7 @@ export function Shell() {
       )}
 
       <StatusBar status={statusState} work={work.state} onOpen={() => openSettings('monitor')} />
+      <Toasts />
     </div>
   )
 }

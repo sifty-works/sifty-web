@@ -3,8 +3,8 @@ import { previewExclusion, Source, StatusExtra, triggerCollect, WorkResponse } f
 import { useExclusions } from '../state/exclusions.ts'
 import { useSources } from '../state/sources.ts'
 import { type UseRemoteResult } from '../state/work.ts'
-import { failure, type Note } from '../state/messages.ts'
-import { Message } from './Messages.tsx'
+import { announce, failure, retract, type Note } from '../state/messages.ts'
+import { Refusal } from './Refusal.tsx'
 import { LogsPanel } from './LogsPanel.tsx'
 import { ModelsPanel } from './ModelsPanel.tsx'
 import { OfflineNotice } from './OfflineNotice.tsx'
@@ -47,7 +47,6 @@ export function SourcesPage({ startPanel, opened, status, applyStatus, statusTex
   const [urlVal, setUrlVal] = useState('')
   const [busy, setBusy] = useState(false)
   const [nav, setNav] = useState(startPanel ?? 'sources')
-  const [collectNote, setCollectNote] = useState<Note | null>(null)
   const [ageDraft, setAgeDraft] = useState<string | null>(null)
   const [ageNote, setAgeNote] = useState<Note | null>(null)
 
@@ -78,8 +77,8 @@ export function SourcesPage({ startPanel, opened, status, applyStatus, statusTex
   }
 
   function collect() {
-    setCollectNote(null)
-    triggerCollect(true).then(applyStatus).catch((e: unknown) => setCollectNote(failure(e, 'Could not start collection')))
+    retract('collect')
+    triggerCollect(true).then(applyStatus).catch((e: unknown) => announce(failure(e, 'Could not start collection'), 'collect'))
   }
 
   const sources = state.status === 'ok' ? state.sources : []
@@ -114,7 +113,6 @@ export function SourcesPage({ startPanel, opened, status, applyStatus, statusTex
                 nameVal={nameVal}
                 urlVal={urlVal}
                 addNote={addNote}
-                collectNote={collectNote}
                 ageVal={ageDraft ?? storedAge}
                 ageSaved={ageDraft === null}
                 ageNote={ageNote}
@@ -199,7 +197,6 @@ interface SourcesPanelProps {
   nameVal: string
   urlVal: string
   addNote: Note | null
-  collectNote: Note | null
   ageVal: string
   ageSaved: boolean
   ageNote: Note | null
@@ -216,7 +213,7 @@ interface SourcesPanelProps {
 
 function SourcesPanel({
   sources, auto, interval, intervalOpts, busy, isCollecting, statusText,
-  nameVal, urlVal, addNote, collectNote, ageVal, ageSaved, ageNote, onAgeChange, onAgeSave,
+  nameVal, urlVal, addNote, ageVal, ageSaved, ageNote, onAgeChange, onAgeSave,
   onToggle, onRemove, onAdd, onNameChange, onUrlChange, onUpdateSchedule, onCollect,
 }: SourcesPanelProps) {
   return (
@@ -300,7 +297,7 @@ function SourcesPanel({
         <button className="primary" type="submit" disabled={busy || (!nameVal.trim() && !urlVal.trim())}>
           Add site
         </button>
-        <Message note={addNote} />
+        <Refusal note={addNote} />
       </form>
 
       <section className="s-card" style={{ marginTop: 14 }}>
@@ -344,14 +341,13 @@ function SourcesPanel({
           <span>months ago</span>
           <button type="submit" disabled={busy || ageSaved}>Save</button>
         </form>
-        <Message note={ageNote} />
+        <Refusal note={ageNote} />
         <div style={{ marginTop: 14 }}>
           <button className="primary" disabled={isCollecting} onClick={onCollect}>
             Collect jobs
           </button>
           {statusText && <span className="muted" style={{ marginLeft: 10 }}>{statusText}</span>}
         </div>
-        <Message note={collectNote} />
       </section>
     </>
   )
@@ -401,7 +397,7 @@ function ExclusionsPanel() {
         />
         <button type="submit">Add</button>
         {preview && <p className="muted">{preview}</p>}
-        <Message note={note} />
+        <Refusal note={note} />
       </form>
 
       {exclusions.length > 0 && (

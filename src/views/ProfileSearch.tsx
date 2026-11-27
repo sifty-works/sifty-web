@@ -5,11 +5,11 @@ import {
   type Compensation, type Exclusion, type Location, type MePatchReq,
   type ProfilePatchReq, type WorkAuthorization,
 } from '../api/client.ts'
-import { describe, failure, type Note } from '../state/messages.ts'
+import { announce, describe, failure, retract, type Note } from '../state/messages.ts'
 import { geoLabel, labelOf, regionLabel } from '../state/profile.ts'
 import { DateInput } from './DateInputs.tsx'
 import { BUCKETS, CountryTypeahead, GoalsTable, fromLists, mapLists, toLists, type GeoItem, type GoalRow, type Lists } from './GoalsTable.tsx'
-import { Message } from './Messages.tsx'
+import { Refusal } from './Refusal.tsx'
 import { type ProfilePageData, Field, NotSet, SectionShell, TagInput, useSectionEditor } from './ProfilePage.tsx'
 
 function fmtMoney(amount: number | null | undefined, currency: string | null | undefined): string {
@@ -122,9 +122,10 @@ function WhatSection({ data }: { data: ProfilePageData }) {
   async function removeExcl(id: number) {
     if (!profile) return
     try {
+      retract('excluded-words')
       const r = await removeExclusion(id, profile.id)
       setExclusions(r.exclusions.filter((e) => e.kind === 'word')); setExclNote(null)
-    } catch (e) { setExclNote(failure(e, 'Could not remove the word')) }
+    } catch (e) { announce(failure(e, 'Could not remove the word'), 'excluded-words') }
   }
 
   return <SectionShell title="What you're looking for"
@@ -145,7 +146,7 @@ function WhatSection({ data }: { data: ProfilePageData }) {
             </span>)}
             <label className="profile-tag-add"><span aria-hidden="true">+</span><ExclInput onAdd={(v) => void addExcl(v)} disabled={exclLoading}/></label>
           </div>
-          <Message note={exclNote}/>
+          <Refusal note={exclNote}/>
         </div>
       </div>
     </div> : <div className="profile-read">
@@ -336,7 +337,6 @@ function GoalsSection({ data }: { data: ProfilePageData }) {
   const items = useGeoItems(ref)
   const book = placeBook(items, ref, eff?.locations ? BUCKETS.flatMap((b) => eff.locations?.[b] ?? []) : [])
   const [pending, setPending] = useState<Partial<Record<Crit, Lists>>>({})
-  const [note, setNote] = useState<Note | null>(null)
 
   const saved: Record<Crit, Lists> = {
     workMode: toLists(eff?.workMode), engagementType: toLists(eff?.engagementType), workingTime: toLists(eff?.workingTime), domain: toLists(eff?.domain),
@@ -348,12 +348,12 @@ function GoalsSection({ data }: { data: ProfilePageData }) {
   function enqueue(patch: ProfilePatchReq, fail: string, done: () => void) {
     queue.current = queue.current
       .then(() => data.saveProfile(patch))
-      .then(() => setNote(null), (e) => setNote(failure(e, fail)))
+      .then(() => retract('goals'), (e) => announce(failure(e, fail), 'goals'))
       .finally(done)
   }
 
   function change(key: Crit, lists: Lists) {
-    setPending((p) => ({ ...p, [key]: lists })); setNote(null)
+    setPending((p) => ({ ...p, [key]: lists })); retract('goals')
     const value = key === 'locations' ? fromLists(mapLists(lists, (v) => v.map(book.loc))) : fromLists(lists)
     enqueue({ [key]: value } as ProfilePatchReq, 'Could not save the goals', () => setPending((p) => (p[key] === lists ? omit(p, key) : p)))
   }
@@ -382,7 +382,6 @@ function GoalsSection({ data }: { data: ProfilePageData }) {
         <p className="muted">What raises the fit, what is fine, what lowers it and what you never want. Drag a value to another column, or click it for a menu; every change is saved at once. A place is a country, a region or a city with its country (Berlin, Germany); one that is not in the list is marked and matches nothing.</p>
       </div>
     </header>
-    <Message note={note}/>
     <div className="profile-card-body">
       <GoalsTable rows={rows}/>
       {part ? <div className={`profile-fields${inherited.has('hours') ? ' profile-inherited-value' : ''}`}>
