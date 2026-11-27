@@ -186,7 +186,7 @@ export function OtherRequirements({ band, check, onDecision }: OtherProps) {
     <section className="other-requirements">
       <button type="button" className="other-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
         <strong>Other requirements</strong>
-        <span>{rows.length} other requirement{rows.length === 1 ? '' : 's'}</span>
+        <span>({rows.length})</span>
         <span aria-hidden="true">{open ? '▴' : '▾'}</span>
       </button>
       {open && (
