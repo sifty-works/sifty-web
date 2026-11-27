@@ -42,8 +42,7 @@ function runningLine(status: StatusExtra, work: WorkResponse | null): Omit<Line,
 
 function idleDetail(status: StatusExtra): string {
   const last = status.lastRun?.state === 'failed' ? null : status.lastRun
-  const when = last ? `Last collection ${localTime(last.finished)}` : 'No collection yet'
-  return `${when} · ${status.catalogue} in the catalogue`
+  return last ? `Last collection ${localTime(last.finished)}` : 'No collection yet'
 }
 
 function lineOf(state: StatusState, work: RemoteState<WorkResponse>): Line | null {

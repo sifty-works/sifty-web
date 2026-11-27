@@ -59,7 +59,7 @@ export function BandTiles({ tiles }: { tiles: Tile[] }) {
 export function FitScore({ score, bucket }: { score: number | null; bucket: string }) {
   const token = score === null || bucket === 'Not scored' ? 'none' : bucket.toLowerCase().replace(/\s+/g, '-')
   return (
-    <span className={`band-fit ${token}`} data-digits={String(score ?? "").length} aria-label={score === null ? 'Not scored' : `${score} of 100, ${bucket}`} title={bucket}>
+    <span className={`band-fit ${token}`} aria-label={score === null ? 'Not scored' : `${score} of 100, ${bucket}`} title={bucket}>
       {score ?? '–'}
     </span>
   )
