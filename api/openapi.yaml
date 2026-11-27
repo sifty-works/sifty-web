@@ -849,6 +849,8 @@ components:
                     oneOf:
                         - $ref: '#/components/schemas/Compensation'
                         - type: "null"
+                domain:
+                    $ref: '#/components/schemas/Buckets'
                 engagementType:
                     $ref: '#/components/schemas/Buckets'
                 headline:
@@ -886,6 +888,7 @@ components:
                 - engagementType
                 - workingTime
                 - workMode
+                - domain
                 - locations
             type: object
         ProfileDetailResp:
@@ -949,6 +952,10 @@ components:
                 compensation:
                     oneOf:
                         - $ref: '#/components/schemas/Compensation'
+                        - type: "null"
+                domain:
+                    oneOf:
+                        - $ref: '#/components/schemas/Buckets'
                         - type: "null"
                 engagementType:
                     oneOf:
@@ -1150,6 +1157,10 @@ components:
                     items:
                         $ref: '#/components/schemas/OptionItem'
                     type: array
+                domains:
+                    items:
+                        $ref: '#/components/schemas/OptionItem'
+                    type: array
                 engagement:
                     items:
                         $ref: '#/components/schemas/OptionItem'
@@ -1215,6 +1226,7 @@ components:
                 - engagement
                 - workingTime
                 - workModes
+                - domains
                 - relocation
                 - noticeUnits
                 - gender

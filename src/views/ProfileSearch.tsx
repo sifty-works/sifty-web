@@ -306,6 +306,7 @@ const CRITERIA = [
   { key: 'workMode', title: 'Work mode', sub: 'How you work', options: 'workModes' },
   { key: 'engagementType', title: 'Engagement', sub: 'Kind of contract', options: 'engagement' },
   { key: 'workingTime', title: 'Hours', sub: 'Full or part of the week', options: 'workingTime' },
+  { key: 'domain', title: 'Domain', sub: 'What the company does', options: 'domains' },
 ] as const
 
 type Crit = (typeof CRITERIA)[number]['key'] | 'locations'
@@ -338,7 +339,7 @@ function GoalsSection({ data }: { data: ProfilePageData }) {
   const [note, setNote] = useState<Note | null>(null)
 
   const saved: Record<Crit, Lists> = {
-    workMode: toLists(eff?.workMode), engagementType: toLists(eff?.engagementType), workingTime: toLists(eff?.workingTime),
+    workMode: toLists(eff?.workMode), engagementType: toLists(eff?.engagementType), workingTime: toLists(eff?.workingTime), domain: toLists(eff?.domain),
     locations: mapLists(toLists<Location>(eff?.locations), (v) => v.map(book.text)),
   }
   const cur = { ...saved, ...pending }

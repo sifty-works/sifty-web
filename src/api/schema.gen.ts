@@ -858,6 +858,7 @@ export interface components {
         ProfileData: {
             allOf?: string[];
             compensation?: components["schemas"]["Compensation"] | null;
+            domain: components["schemas"]["Buckets"];
             engagementType: components["schemas"]["Buckets"];
             headline?: string;
             hours?: components["schemas"]["Hours"] | null;
@@ -895,6 +896,7 @@ export interface components {
         ProfilePatchReq: {
             allOf?: string[] | null;
             compensation?: components["schemas"]["Compensation"] | null;
+            domain?: components["schemas"]["Buckets"] | null;
             engagementType?: components["schemas"]["Buckets"] | null;
             headline?: string | null;
             hours?: components["schemas"]["Hours"] | null;
@@ -964,6 +966,7 @@ export interface components {
             criminalRecord: components["schemas"]["OptionItem"][];
             currencies: components["schemas"]["OptionItem"][];
             disability: components["schemas"]["OptionItem"][];
+            domains: components["schemas"]["OptionItem"][];
             engagement: components["schemas"]["OptionItem"][];
             ethnicity: components["schemas"]["OptionItem"][];
             gender: components["schemas"]["OptionItem"][];
