@@ -16,6 +16,7 @@ function isStated(tile: Tile): boolean {
 }
 
 const KEY = ['Money', 'Location', 'Work mode', 'Contract']
+const FACTS = ['Experience', 'Seniority', 'Company stage']
 const ORDER: Mod[] = ['mismatch', 'unknown', 'ok']
 
 function toneOf(tile: Tile, mod: Mod): string {
@@ -53,9 +54,12 @@ function Card({ tile }: { tile: Tile }) {
 }
 
 function Others({ tiles }: { tiles: Tile[] }) {
-  const rows = tiles
-    .filter((tile) => isStated(tile) || tile.goal)
-    .sort((a, b) => ORDER.indexOf(verdictMod(a.verdict)) - ORDER.indexOf(verdictMod(b.verdict)))
+  const rows = [
+    ...tiles
+      .filter((tile) => !FACTS.includes(tile.name) && (isStated(tile) || tile.goal))
+      .sort((a, b) => ORDER.indexOf(verdictMod(a.verdict)) - ORDER.indexOf(verdictMod(b.verdict))),
+    ...tiles.filter((tile) => FACTS.includes(tile.name)),
+  ]
   if (rows.length === 0) return null
   return (
     <div className="band-others">
@@ -147,6 +151,23 @@ const ICONS: Record<string, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" />
+    </>
+  ),
+  Experience: (
+    <>
+      <path d="M5 19V9M12 19V5M19 19v-7" />
+      <path d="M3.5 19h17" />
+    </>
+  ),
+  Seniority: (
+    <>
+      <path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" />
+    </>
+  ),
+  'Company stage': (
+    <>
+      <path d="M4 20V10l5 3V9l5 3V6l6 3v11z" />
+      <path d="M4 20h16" />
     </>
   ),
   'Work authorization': (
