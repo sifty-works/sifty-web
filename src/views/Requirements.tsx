@@ -42,8 +42,15 @@ interface SkillsProps {
   action?: ReactNode
 }
 
+function shownOnce(entries: SkillEntry[], seen: Set<string>): { entry: SkillEntry; skills: SkillEntry['skills'] }[] {
+  return sortedByVerdict(entries)
+    .map((entry) => ({ entry, skills: entry.skills.filter((s) => !seen.has(s.name) && !!seen.add(s.name)) }))
+    .filter((row) => row.skills.length > 0)
+}
+
 export function Skills({ band, check, onDecision, action }: SkillsProps) {
-  const columns = band.groups.filter((g) => g.skills.length > 0)
+  const seen = new Set<string>()
+  const columns = band.groups.map((g) => ({ label: g.label, skills: g.skills, rows: shownOnce(g.skills, seen) })).filter((g) => g.rows.length > 0)
   const [open, setOpen] = useState<{ label: string; key: string } | null>(null)
   const close = () => setOpen(null)
   useDismiss(open !== null, close, '.skill-picker, .skill-chip')
@@ -58,6 +65,7 @@ export function Skills({ band, check, onDecision, action }: SkillsProps) {
             key={group.label}
             label={group.label}
             skills={group.skills}
+            rows={group.rows}
             check={check}
             open={open?.label === group.label ? open.key : null}
             onOpen={(key) => setOpen(key === null ? null : { label: group.label, key })}
@@ -76,13 +84,14 @@ interface SkillColumnProps {
   action?: ReactNode
   label: string
   skills: SkillEntry[]
+  rows: { entry: SkillEntry; skills: SkillEntry['skills'] }[]
   check?: CheckView | null
   open: string | null
   onOpen: (key: string | null) => void
   onPick: (skill: string, level: string) => Promise<void>
 }
 
-function SkillColumn({ label, skills, check, open, onOpen, onPick, action }: SkillColumnProps) {
+function SkillColumn({ label, skills, rows, check, open, onOpen, onPick, action }: SkillColumnProps) {
   const current = skills.find((e) => open?.startsWith(entryKey(e) + '#'))
   const currentName = current && open ? open.slice(entryKey(current).length + 1) : ''
   return (
@@ -93,9 +102,9 @@ function SkillColumn({ label, skills, check, open, onOpen, onPick, action }: Ski
       <div className="skill-row">
       {action}
       <ul className="skill-list">
-        {sortedByVerdict(skills).map((entry) => (
+        {rows.map(({ entry, skills: shown }) => (
           <li key={entryKey(entry)} className="skill-group">
-            {entry.skills.map((skill) => {
+            {shown.map((skill) => {
               const key = entryKey(entry) + '#' + skill.name
               return (
                 <span key={skill.name} className={`skill ${skillClass(entry, skill.have)}${open === key ? ' open' : ''}`}>
