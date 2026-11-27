@@ -16,7 +16,7 @@ function isStated(tile: Tile): boolean {
 }
 
 const KEY = ['Money', 'Location', 'Work mode', 'Contract']
-const FACTS = ['Experience', 'Seniority', 'Company stage']
+const FACTS = ['Experience', 'Seniority', 'Company stage', 'Apply by', 'Contract length', 'Citizenship or clearance', 'Relocation', 'Visa']
 const ORDER: Mod[] = ['mismatch', 'unknown', 'ok']
 
 function toneOf(tile: Tile, mod: Mod): string {
@@ -168,6 +168,36 @@ const ICONS: Record<string, ReactNode> = {
     <>
       <path d="M4 20V10l5 3V9l5 3V6l6 3v11z" />
       <path d="M4 20h16" />
+    </>
+  ),
+  'Apply by': (
+    <>
+      <rect x="4" y="5.5" width="16" height="14" rx="2" />
+      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+    </>
+  ),
+  'Contract length': (
+    <>
+      <path d="M7 4h10M7 20h10M8 4c0 4 4 4 4 8s-4 4-4 8M16 4c0 4-4 4-4 8s4 4 4 8" />
+    </>
+  ),
+  'Citizenship or clearance': (
+    <>
+      <path d="M12 3.5l7 2.8v5.4c0 4.2-2.8 7.4-7 8.8-4.2-1.4-7-4.6-7-8.8V6.3z" />
+      <path d="M9 12l2.2 2.2L15.2 10" />
+    </>
+  ),
+  Relocation: (
+    <>
+      <path d="M3.5 9l8.5-5 8.5 5" />
+      <path d="M12 21v-8M8.5 16.5 12 13l3.5 3.5" />
+    </>
+  ),
+  Visa: (
+    <>
+      <rect x="4" y="3.5" width="16" height="17" rx="2" />
+      <circle cx="12" cy="10.5" r="3" />
+      <path d="M9 17h6" />
     </>
   ),
   'Work authorization': (
