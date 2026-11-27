@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import { VacancyAction, VacancyView } from '../api/client.ts'
+import { SkillAnswer, VacancyAction, VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
 import type { Note } from '../state/messages.ts'
 import { FitBand } from './FitBand.tsx'
@@ -30,7 +30,7 @@ interface Props {
   onAction: (key: string) => void
   onUndoDecision: () => void
   onClearNotice: () => void
-  onSkillDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
+  onSkillDecision: (answer: SkillAnswer) => Promise<void>
   onCheckRetry: () => Promise<void>
 }
 

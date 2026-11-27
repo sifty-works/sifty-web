@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
+import { useDismiss } from '../dismiss.ts'
 
 export const BUCKETS = ['preferred', 'possible', 'unwanted', 'never'] as const
 export type Bucket = (typeof BUCKETS)[number]
@@ -104,14 +105,7 @@ export function GoalsTable({ rows }: { rows: GoalRow[] }) {
   const [over, setOver] = useState<string | null>(null)
   const [adding, setAdding] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (menu === null) return
-    const away = (e: MouseEvent) => { if (!(e.target as Element).closest('.goal-menu, .goal-chip-label')) setMenu(null) }
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenu(null) }
-    document.addEventListener('mousedown', away)
-    document.addEventListener('keydown', esc)
-    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc) }
-  }, [menu])
+  useDismiss(menu !== null, () => setMenu(null), '.goal-menu, .goal-chip-label')
 
   function put(row: GoalRow, value: string, zone: Zone) {
     row.onChange(move(row.lists, value, zone)); setMenu(null)

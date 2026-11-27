@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
+import { useDismiss } from '../dismiss.ts'
 import { SourceCount, VacancyFilters } from '../api/client.ts'
 
 interface SourceEntry {
@@ -36,22 +37,7 @@ export function FilterPanel({
 }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    function handleMouseDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onClose()
-      }
-    }
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { e.preventDefault(); onClose() }
-    }
-    document.addEventListener('mousedown', handleMouseDown)
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', handleMouseDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [onClose])
+  useDismiss(true, onClose, ref)
 
   const sourceCountMap = useMemo(
     () => new Map(sourceCounts.map((sc) => [sc.name, sc.count])),

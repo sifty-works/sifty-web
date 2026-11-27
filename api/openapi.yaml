@@ -169,6 +169,10 @@ components:
                     type: string
                 requirement:
                     type: string
+                skills:
+                    items:
+                        type: string
+                    type: array
                 verdict:
                     type: string
             required:
@@ -1318,8 +1322,13 @@ components:
                     type: array
                 label:
                     type: string
+                skills:
+                    items:
+                        $ref: '#/components/schemas/SkillEntry'
+                    type: array
             required:
                 - label
+                - skills
                 - items
             type: object
         RequirementLine:
@@ -1335,10 +1344,6 @@ components:
                     type: integer
                 level:
                     type: string
-                namedSkills:
-                    items:
-                        type: string
-                    type: array
                 text:
                     type: string
                 verdict:
@@ -1410,22 +1415,53 @@ components:
             required:
                 - name
             type: object
+        SkillEntry:
+            properties:
+                demand:
+                    type: string
+                line:
+                    type: string
+                skills:
+                    items:
+                        $ref: '#/components/schemas/SkillHave'
+                    type: array
+                verdict:
+                    type: string
+            required:
+                - skills
+                - demand
+                - line
+                - verdict
+            type: object
+        SkillHave:
+            properties:
+                have:
+                    type: string
+                name:
+                    type: string
+            required:
+                - name
+            type: object
         SkillsDecisionReq:
             properties:
-                chosenSkill:
-                    type: string
                 have:
-                    type: boolean
+                    oneOf:
+                        - type: boolean
+                        - type: "null"
+                level:
+                    type: string
                 requirementIndex:
-                    format: int64
-                    type: integer
+                    oneOf:
+                        - format: int64
+                          type: integer
+                        - type: "null"
+                skill:
+                    type: string
                 vacancyId:
                     format: int64
                     type: integer
             required:
                 - vacancyId
-                - requirementIndex
-                - have
             type: object
         SkillsDecisionResp:
             properties:

@@ -1,30 +1,40 @@
-import { useEffect, useRef, useState } from 'react'
-import { Band, CheckAnswer, CheckView, RequirementLine } from '../api/client.ts'
+import { useState } from 'react'
+import { Band, CheckAnswer, CheckView, RequirementLine, SkillAnswer, SkillEntry } from '../api/client.ts'
+import { useDismiss } from '../dismiss.ts'
+import { useReference } from '../state/profile.ts'
 
 interface Props {
   band: Band
   check?: CheckView | null
-  onDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
+  onDecision: (answer: SkillAnswer) => Promise<void>
   onRetry: () => Promise<void>
+}
+
+const VERDICT_RANK: Record<string, number> = { '✕': 0, '≈': 1, '?': 2, '✓': 3 }
+const VERDICT_CLASS: Record<string, string> = { '✕': 'no', '≈': 'near', '?': 'unknown', '✓': 'ok' }
+
+function demanded(entry: SkillEntry): string {
+  return entry.demand === 'Any' ? '' : entry.demand
+}
+
+function sortedByVerdict(skills: SkillEntry[]): SkillEntry[] {
+  return [...skills].sort((a, b) => (VERDICT_RANK[a.verdict] ?? 2) - (VERDICT_RANK[b.verdict] ?? 2))
+}
+
+function joinNames(names: string[]): string {
+  if (names.length < 2) return names.join('')
+  return `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`
 }
 
 export function WhatTheyAsk({ band, check, onDecision, onRetry }: Props) {
   const answers = new Map((check?.answers ?? []).map((a) => [a.index, a]))
-  const totalItems = band.groups.reduce((sum, g) => sum + g.items.length, 0)
-  const hasItems = totalItems > 0
-
-  let okCount = 0, noCount = 0, nsCount = 0
-  for (const group of band.groups) {
-    for (const item of group.items) {
-      if (item.verdict === '✓') okCount++
-      else if (item.verdict === '✕') noCount++
-      else nsCount++
-    }
-  }
-
-  const subtitle = hasItems
-    ? `${totalItems} requirement${totalItems === 1 ? '' : 's'}`
-    : band.requirementsText
+  const columns = band.groups.filter((g) => g.skills.length > 0)
+  const rows = band.groups.flatMap((g) => g.items)
+  const hasItems = columns.length > 0 || rows.length > 0
+  const [open, setOpen] = useState<{ label: string; key: string } | null>(null)
+  const close = () => setOpen(null)
+  useDismiss(open !== null, close, '.ask-picker, .ask-skill-chip')
+  const current = columns.flatMap((g) => g.skills.map((entry) => ({ label: g.label, entry }))).find((c) => open?.label === c.label && open.key === entryKey(c.entry))
 
   return (
     <section className="what-ask">
@@ -38,15 +48,8 @@ export function WhatTheyAsk({ band, check, onDecision, onRetry }: Props) {
         </span>
         <div className="card-title-block">
           <span className="card-title">What they ask</span>
-          <span className="card-subtitle">{subtitle}</span>
+          <span className="card-subtitle">{band.requirementsText}</span>
         </div>
-        {hasItems && (okCount > 0 || noCount > 0 || nsCount > 0) && (
-          <div className="card-counts" aria-label="Requirement counts">
-            {okCount > 0 && <span className="count-pill ok">✓ {okCount}</span>}
-            {noCount > 0 && <span className="count-pill no">✕ {noCount}</span>}
-            {nsCount > 0 && <span className="count-pill ns">? {nsCount}</span>}
-          </div>
-        )}
       </div>
 
       {check && <CheckLine check={check} onRetry={onRetry} />}
@@ -54,18 +57,116 @@ export function WhatTheyAsk({ band, check, onDecision, onRetry }: Props) {
       {!hasItems ? (
         <p className="ask-not-found">{band.requirementsText}</p>
       ) : (
-        band.groups.map((group) => (
-          <div key={group.label}>
-            <div className="ask-section-label">{group.label.toUpperCase()}</div>
-            <ul className="ask-list" style={{ marginTop: 8 }}>
-              {group.items.map((item) => (
-                <AskRow key={item.index} item={item} checked={answers.get(item.index)} onDecision={onDecision} />
+        <>
+          {columns.length > 0 && (
+            <div className="ask-skill-cols">
+              {columns.map((group) => (
+                <SkillColumn key={group.label} label={group.label} skills={group.skills} open={open?.label === group.label ? open.key : null} onOpen={(key) => setOpen(key === null ? null : { label: group.label, key })} />
               ))}
-            </ul>
-          </div>
-        ))
+              {current && (
+                <LevelPicker
+                  key={open?.label + '|' + open?.key}
+                  entry={current.entry}
+                  checked={check?.answers.find((a) => a.requirement === current.entry.line && (a.skills?.length ?? 0) > 0)}
+                  onPick={async (skill, level) => {
+                    close()
+                    await onDecision({ skill, level })
+                  }}
+                />
+              )}
+            </div>
+          )}
+          {rows.length > 0 && (
+            <div>
+              <div className="ask-section-label">OTHER REQUIREMENTS</div>
+              <ul className="ask-list" style={{ marginTop: 8 }}>
+                {rows.map((item) => (
+                  <AskRow key={item.index} item={item} checked={answers.get(item.index)} onDecision={onDecision} />
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
     </section>
+  )
+}
+
+interface SkillColumnProps {
+  label: string
+  skills: SkillEntry[]
+  open: string | null
+  onOpen: (key: string | null) => void
+}
+
+function SkillColumn({ label, skills, open, onOpen }: SkillColumnProps) {
+  const have = skills.filter((e) => e.verdict === '✓').length
+  return (
+    <div className="ask-skill-col">
+      <div className="ask-skill-head">
+        <span>{label}</span>
+        <small>{have} of {skills.length}</small>
+      </div>
+      <ul className="ask-skill-list">
+        {sortedByVerdict(skills).map((entry) => {
+          const key = entryKey(entry)
+          return (
+            <li key={key} className={`ask-skill ${VERDICT_CLASS[entry.verdict] ?? 'unknown'}${open === key ? ' open' : ''}`}>
+              <button type="button" className="ask-skill-chip" aria-expanded={open === key} title={entry.line} onClick={() => onOpen(open === key ? null : key)}>
+                <span className="ask-skill-mark" aria-hidden="true">{entry.verdict}</span>
+                {joinNames(entry.skills.map((s) => s.name))}
+                {demanded(entry) && <small>{demanded(entry)}</small>}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+function entryKey(entry: SkillEntry): string {
+  return entry.line + '|' + entry.skills.map((s) => s.name).join()
+}
+
+interface LevelPickerProps {
+  entry: SkillEntry
+  checked?: CheckAnswer
+  onPick: (skill: string, level: string) => Promise<void>
+}
+
+function LevelPicker({ entry, checked, onPick }: LevelPickerProps) {
+  const [name, setName] = useState(entry.skills[0]?.name ?? '')
+  const have = entry.skills.find((s) => s.name === name)?.have ?? ''
+  const levels = [...(useReference()?.options.skillLevels ?? []), { value: 'No', label: 'No' }]
+
+  return (
+    <div className="ask-picker">
+      {entry.skills.length > 1 ? (
+        <span className="ask-picker-alts" role="radiogroup" aria-label="Skill">
+          {entry.skills.map((s) => (
+            <button key={s.name} type="button" role="radio" aria-checked={s.name === name} className={s.name === name ? 'on' : ''} onClick={() => setName(s.name)}>
+              {s.name}
+            </button>
+          ))}
+        </span>
+      ) : (
+        <strong>{name}</strong>
+      )}
+      <q>{entry.line}</q>
+      <span className="ask-picker-facts">
+        {demanded(entry) && <span>They ask: {demanded(entry)}</span>}
+        <span>You: {have || 'not set'}</span>
+      </span>
+      {checked && <span className="ask-picker-check">{checked.reason}</span>}
+      <span className="ask-picker-levels" role="radiogroup" aria-label={`Your level in ${name}`}>
+        {levels.map(({ value, label }) => (
+          <button key={value} type="button" role="radio" aria-checked={have === value} autoFocus={have === value} className={have === value ? 'on' : ''} onClick={() => void onPick(name, value)}>
+            {label}
+          </button>
+        ))}
+      </span>
+    </div>
   )
 }
 
@@ -91,115 +192,27 @@ function CheckLine({ check, onRetry }: { check: CheckView; onRetry: () => Promis
 interface AskRowProps {
   item: RequirementLine
   checked?: CheckAnswer
-  onDecision: (index: number, have: boolean, chosenSkill?: string) => Promise<void>
+  onDecision: (answer: SkillAnswer) => Promise<void>
 }
 
 type Answer = 'add' | 'dismiss'
 
-const ANSWERS = {
-  add: {
-    glyph: '+',
-    label: 'I have this',
-    skillLine: (skill: string) => `I have ${skill}`,
-    wholeLine: 'I have this requirement',
-  },
-  dismiss: {
-    glyph: '−',
-    label: 'I do not have this',
-    skillLine: (skill: string) => `I do not have ${skill}`,
-    wholeLine: 'I do not have this requirement',
-  },
-}
-
-interface AnswerControlProps {
-  kind: Answer
-  skills: string[]
-  busy: Answer | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onChoose: (chosenSkill?: string) => void
-}
-
-function AnswerControl({ kind, skills, busy, open, onOpenChange, onChoose }: AnswerControlProps) {
-  const hostRef = useRef<HTMLSpanElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const copy = ANSWERS[kind]
-  const hasList = skills.length > 1
-
-  useEffect(() => {
-    if (!open) return
-    function onPointerDown(e: PointerEvent) {
-      if (hostRef.current && !hostRef.current.contains(e.target as Node)) onOpenChange(false)
-    }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Escape') return
-      e.stopPropagation()
-      onOpenChange(false)
-      buttonRef.current?.focus()
-    }
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown, true)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown, true)
-    }
-  }, [open, onOpenChange])
-
-  function choose(chosenSkill?: string) {
-    onOpenChange(false)
-    onChoose(chosenSkill)
-  }
-
-  const button = (
-    <button
-      ref={buttonRef}
-      className={kind}
-      disabled={!!busy}
-      onClick={() => (hasList ? onOpenChange(!open) : onChoose(kind === 'add' ? skills[0] : undefined))}
-      aria-label={copy.label}
-      {...(hasList ? { 'aria-haspopup': 'menu' as const, 'aria-expanded': open } : {})}
-    >
-      {busy === kind ? '…' : copy.glyph}
-    </button>
-  )
-
-  if (!hasList) return button
-
-  return (
-    <span className="ask-choice" ref={hostRef}>
-      {button}
-      {open && (
-        <div className="ask-menu" role="menu">
-          {skills.map((skill) => (
-            <button key={skill} role="menuitem" onClick={() => choose(skill)}>
-              {copy.skillLine(skill)}
-            </button>
-          ))}
-          <button role="menuitem" onClick={() => choose()}>
-            {copy.wholeLine}
-          </button>
-        </div>
-      )}
-    </span>
-  )
+const ANSWERS: Record<Answer, { glyph: string; label: string }> = {
+  add: { glyph: '+', label: 'I have this' },
+  dismiss: { glyph: '−', label: 'I do not have this' },
 }
 
 function AskRow({ item, checked, onDecision }: AskRowProps) {
   const [busy, setBusy] = useState<Answer | null>(null)
-  const [openList, setOpenList] = useState<Answer | null>(null)
 
   const isUnknown = item.verdict === '?'
-  const namedSkills = item.namedSkills ?? []
 
-  async function answer(kind: Answer, chosenSkill?: string) {
+  async function answer(kind: Answer) {
     if (busy) return
     setBusy(kind)
-    try { await onDecision(item.index, kind === 'add', chosenSkill) }
+    try { await onDecision({ requirementIndex: item.index, have: kind === 'add' }) }
     finally { setBusy(null) }
   }
-
-  const setListOpen = (kind: Answer) => (open: boolean) =>
-    setOpenList((current) => (open ? kind : current === kind ? null : current))
 
   const mark = item.verdict === '✓' ? '✓' : item.verdict === '✕' ? '✕' : '?'
   const rowCls = item.verdict === '✓' ? 'match' : item.verdict === '✕' ? 'no' : 'unknown'
@@ -222,15 +235,9 @@ function AskRow({ item, checked, onDecision }: AskRowProps) {
       {isUnknown && (
         <div className="ask-actions">
           {(['add', 'dismiss'] as const).map((kind) => (
-            <AnswerControl
-              key={kind}
-              kind={kind}
-              skills={namedSkills}
-              busy={busy}
-              open={openList === kind}
-              onOpenChange={setListOpen(kind)}
-              onChoose={(chosenSkill) => void answer(kind, chosenSkill)}
-            />
+            <button key={kind} className={kind} disabled={!!busy} onClick={() => void answer(kind)} aria-label={ANSWERS[kind].label}>
+              {busy === kind ? '…' : ANSWERS[kind].glyph}
+            </button>
           ))}
         </div>
       )}

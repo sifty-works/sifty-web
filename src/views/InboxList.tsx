@@ -12,6 +12,7 @@ import {
   postShortlistCheckRetry,
   postSkillsDecision,
   ServerError,
+  SkillAnswer,
   VacancyCounts,
   VacancyRow as VacancyRowData,
   VacancyView,
@@ -438,14 +439,12 @@ export function InboxList({
 
   handleActionRef.current = (key) => void handleAction(key)
 
-  async function handleSkillDecision(index: number, have: boolean, chosenSkill?: string): Promise<void> {
+  async function handleSkillDecision(answer: SkillAnswer): Promise<void> {
     if (!pageView) return
     try {
       const { notice, vacancyView } = await postSkillsDecision({
+        ...answer,
         vacancyId: pageView.id,
-        requirementIndex: index,
-        have,
-        chosenSkill,
       })
       setPageView(vacancyView)
       setSkillNotice(notice ? report(notice) : null)
@@ -616,7 +615,7 @@ export function InboxList({
               onAction={(key) => void handleAction(key)}
               onUndoDecision={() => void handleUndoDecision()}
               onClearNotice={() => setSkillNotice(null)}
-              onSkillDecision={(index, have, chosenSkill) => handleSkillDecision(index, have, chosenSkill)}
+              onSkillDecision={handleSkillDecision}
               onCheckRetry={handleCheckRetry}
             />
           ) : loading || listNote ? null : (

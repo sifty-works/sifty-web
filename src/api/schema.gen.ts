@@ -611,6 +611,7 @@ export interface components {
             index: number;
             reason: string;
             requirement: string;
+            skills?: string[];
             verdict: string;
         };
         CheckRetryReq: {
@@ -1011,6 +1012,7 @@ export interface components {
         RequirementGroup: {
             items: components["schemas"]["RequirementLine"][];
             label: string;
+            skills: components["schemas"]["SkillEntry"][];
         };
         RequirementLine: {
             alts?: string[];
@@ -1018,7 +1020,6 @@ export interface components {
             /** Format: int64 */
             index: number;
             level: string;
-            namedSkills?: string[];
             text: string;
             verdict: string;
         };
@@ -1047,11 +1048,21 @@ export interface components {
             name: string;
             source?: string;
         };
+        SkillEntry: {
+            demand: string;
+            line: string;
+            skills: components["schemas"]["SkillHave"][];
+            verdict: string;
+        };
+        SkillHave: {
+            have?: string;
+            name: string;
+        };
         SkillsDecisionReq: {
-            chosenSkill?: string;
-            have: boolean;
-            /** Format: int64 */
-            requirementIndex: number;
+            have?: boolean | null;
+            level?: string;
+            requirementIndex?: number | null;
+            skill?: string;
             /** Format: int64 */
             vacancyId: number;
         };

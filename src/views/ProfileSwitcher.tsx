@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createProfile, deleteProfile, getProfiles, patchProfile, setActiveProfile, type ProfileListItem } from '../api/client.ts'
 import { failure, type Note, silent } from '../state/messages.ts'
 import { colorFor } from '../state/profile.ts'
+import { useDismiss } from '../dismiss.ts'
 import { Icon } from './Icon.tsx'
 import { Message } from './Messages.tsx'
 
@@ -33,13 +34,10 @@ export function ProfileSwitcher({ profileOpen, onOpenProfile, onSwitch }: {
   }, [])
 
   useEffect(() => {
-    if (!menu) { setCreating(false); setRenamingId(null); setDeletingId(null); setNote(null); return }
-    const outside = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setMenu(false) }
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); setMenu(false) } }
-    document.addEventListener('pointerdown', outside)
-    document.addEventListener('keydown', esc)
-    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', esc) }
+    if (!menu) { setCreating(false); setRenamingId(null); setDeletingId(null); setNote(null) }
   }, [menu])
+
+  useDismiss(menu, () => setMenu(false), box)
 
   async function switchTo(id: number) {
     if (id === activeId) { setMenu(false); onOpenProfile(id); return }
