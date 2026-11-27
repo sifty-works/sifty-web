@@ -1171,6 +1171,7 @@ export interface components {
             allowPaidBulk?: boolean | null;
             dailyLimit?: number | null;
             paused?: boolean | null;
+            preciseReading?: boolean | null;
             work?: {
                 [key: string]: string;
             };
@@ -1180,6 +1181,7 @@ export interface components {
             /** Format: int64 */
             dailyLimit: number;
             paused: boolean;
+            preciseReading: boolean;
             providers: components["schemas"]["providerView"][];
             /** Format: int64 */
             todayCalls: number;

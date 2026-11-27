@@ -128,6 +128,9 @@ function BackgroundWork({ models, onSave }: BackgroundWorkProps) {
 
   useEffect(() => { setLimit(String(models.dailyLimit)) }, [models.dailyLimit])
 
+  const readingName = models.work.find((w) => w.kind === 'reading')?.provider ?? ''
+  const readingPaid = models.providers.some((p) => p.name === readingName && p.cost === 'paid')
+
   function commitLimit() {
     const text = limit.trim()
     const value = Number(text)
@@ -149,6 +152,22 @@ function BackgroundWork({ models, onSave }: BackgroundWorkProps) {
         />
         Allow paid bulk work
       </label>
+      <label className="s-switch-row" style={{ marginTop: 8 }}>
+        <input
+          type="checkbox"
+          checked={models.preciseReading}
+          disabled={readingName === ''}
+          onChange={(e) => void onSave({ preciseReading: e.target.checked })}
+        />
+        Precise reading
+      </label>
+      <p className="muted" style={{ margin: '4px 0 0' }}>
+        Reads every new vacancy's company with the Reading model; uses your local machine or a paid provider. Off: only vacancies you open are read.
+      </p>
+      {readingName === '' && <p className="muted" style={{ margin: '4px 0 0' }}>Choose a Reading model first</p>}
+      {readingPaid && !models.allowPaidBulk && (
+        <p className="muted" style={{ margin: '4px 0 0' }}>Needs Allow paid bulk work to read in the background.</p>
+      )}
       <label className="s-switch-row" style={{ marginTop: 8 }}>
         <input
           type="checkbox"

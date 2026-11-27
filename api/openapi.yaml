@@ -1765,6 +1765,10 @@ components:
                     oneOf:
                         - type: boolean
                         - type: "null"
+                preciseReading:
+                    oneOf:
+                        - type: boolean
+                        - type: "null"
                 work:
                     additionalProperties:
                         type: string
@@ -1778,6 +1782,8 @@ components:
                     format: int64
                     type: integer
                 paused:
+                    type: boolean
+                preciseReading:
                     type: boolean
                 providers:
                     items:
@@ -1797,6 +1803,7 @@ components:
                 - paused
                 - dailyLimit
                 - todayCalls
+                - preciseReading
             type: object
         providerView:
             properties:

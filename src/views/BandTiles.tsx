@@ -16,7 +16,7 @@ function isStated(tile: Tile): boolean {
 }
 
 const KEY = ['Money', 'Location', 'Work mode', 'Contract']
-const FACTS = ['Experience', 'Seniority', 'Company stage', 'Apply by', 'Contract length', 'Citizenship or clearance', 'Relocation', 'Visa']
+const FACTS = ['Experience', 'Seniority', 'Company stage', 'Domain', 'Apply by', 'Contract length', 'Citizenship or clearance', 'Relocation', 'Visa']
 const ORDER: Mod[] = ['mismatch', 'unknown', 'ok']
 
 function toneOf(tile: Tile, mod: Mod): string {
@@ -169,6 +169,12 @@ const ICONS: Record<string, ReactNode> = {
     <>
       <path d="M4 20V10l5 3V9l5 3V6l6 3v11z" />
       <path d="M4 20h16" />
+    </>
+  ),
+  Domain: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M4 12h16M12 4v16" />
     </>
   ),
   'Apply by': (
