@@ -317,21 +317,49 @@ const SITES = [
     step: 3,
     site: 'BandTiles card verdict',
     file: 'src/views/BandTiles.tsx',
-    needle: '`band-card ${mod}`',
+    needle: '`band-card ${tone}`',
     names: (src) => {
       const fn = /function verdictMod[\s\S]*?\n}/.exec(src)[0]
-      return [...fn.matchAll(/return '([a-z]+)'/g)].map((m) => m[1])
+      return [...[...fn.matchAll(/return '([a-z]+)'/g)].map((m) => m[1]), 'never', 'unwanted']
     },
   },
   {
     step: 3,
     site: 'BandTiles mark verdict',
     file: 'src/views/BandTiles.tsx',
-    needle: '`band-mark ${mod}`',
+    needle: '`band-mark ${tone}`',
     names: (src) => {
       const fn = /function verdictMod[\s\S]*?\n}/.exec(src)[0]
-      return [...fn.matchAll(/return '([a-z]+)'/g)].map((m) => m[1])
+      return [...[...fn.matchAll(/return '([a-z]+)'/g)].map((m) => m[1]), 'never', 'unwanted']
     },
+  },
+  {
+    step: 3,
+    site: 'GoalsTable goal-cell',
+    file: 'src/views/GoalsTable.tsx',
+    needle: '`goal-cell ${zone}',
+    names: () => ['preferred', 'possible', 'unwanted', 'never', 'neutral'],
+  },
+  {
+    step: 3,
+    site: 'GoalsTable goal-chip',
+    file: 'src/views/GoalsTable.tsx',
+    needle: '`goal-chip ${zone}',
+    names: () => ['preferred', 'possible', 'unwanted', 'never', 'neutral'],
+  },
+  {
+    step: 3,
+    site: 'GoalsTable goal-col',
+    file: 'src/views/GoalsTable.tsx',
+    needle: '`goal-col ${z}',
+    names: () => ['preferred', 'possible', 'unwanted', 'never', 'neutral'],
+  },
+  {
+    step: 3,
+    site: 'GoalsTable goal-dot',
+    file: 'src/views/GoalsTable.tsx',
+    needle: '`goal-dot ${z}',
+    names: () => ['preferred', 'possible', 'unwanted', 'never', 'neutral'],
   },
   {
     step: 3,

@@ -8,6 +8,7 @@ import {
 import { describe, failure, type Note } from '../state/messages.ts'
 import { geoLabel, labelOf, regionLabel } from '../state/profile.ts'
 import { DateInput } from './DateInputs.tsx'
+import { BUCKETS, CountryTypeahead, GoalsTable, fromLists, mapLists, toLists, type GeoItem, type GoalRow, type Lists } from './GoalsTable.tsx'
 import { Message } from './Messages.tsx'
 import { type ProfilePageData, Field, NotSet, SectionShell, TagInput, useSectionEditor } from './ProfilePage.tsx'
 
@@ -17,8 +18,6 @@ function fmtMoney(amount: number | null | undefined, currency: string | null | u
   try { return new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount) }
   catch { return `${currency} ${amount.toLocaleString()}` }
 }
-
-type GeoItem = { code: string; label: string; group: 'region' | 'country' }
 
 function useGeoItems(ref: ProfilePageData['ref']) {
   return useMemo<GeoItem[]>(() => {
@@ -31,90 +30,6 @@ function useGeoItems(ref: ProfilePageData['ref']) {
     }))
     return [...regions, ...countries]
   }, [ref])
-}
-
-function CountryTypeahead({ value, onChange, label, allItems, placeholder }: {
-  value: string; onChange: (v: string) => void; label: string; allItems: GeoItem[]; placeholder?: string
-}) {
-  const [text, setText] = useState(() => {
-    const found = allItems.find((i) => i.code === value)
-    return found ? found.label : value
-  })
-  const [open, setOpen] = useState(false)
-  const [cursor, setCursor] = useState(-1)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const listRef = useRef<HTMLUListElement>(null)
-
-  useEffect(() => {
-    const found = allItems.find((i) => i.code === value)
-    setText(found ? found.label : value)
-  }, [value, allItems])
-
-  const matches = useMemo(() => {
-    if (!text.trim()) return allItems.slice(0, 50)
-    const q = text.toLowerCase()
-    return allItems.filter((i) => i.label.toLowerCase().includes(q) || i.code.toLowerCase().includes(q)).slice(0, 60)
-  }, [text, allItems])
-
-  function select(item: GeoItem) {
-    onChange(item.code); setText(item.label); setOpen(false); setCursor(-1)
-  }
-
-  function handleBlur() {
-    setTimeout(() => {
-      if (!listRef.current?.contains(document.activeElement)) {
-        setOpen(false)
-
-        const found = allItems.find((i) => i.label.toLowerCase() === text.toLowerCase())
-        if (found) onChange(found.code)
-        else if (text.trim()) onChange(text.trim())
-      }
-    }, 150)
-  }
-
-  return <div className="country-typeahead">
-    <input ref={inputRef} aria-label={label} aria-autocomplete="list" aria-expanded={open}
-      value={text} placeholder={placeholder ?? 'Country or region…'}
-      onChange={(e) => { setText(e.target.value); setOpen(true); setCursor(-1) }}
-      onFocus={() => setOpen(true)} onBlur={handleBlur}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowDown') { e.preventDefault(); setCursor((c) => Math.min(c + 1, matches.length - 1)) }
-        if (e.key === 'ArrowUp') { e.preventDefault(); setCursor((c) => Math.max(c - 1, -1)) }
-        if (e.key === 'Enter' && cursor >= 0 && matches[cursor]) { e.preventDefault(); select(matches[cursor]) }
-        if (e.key === 'Escape') { setOpen(false); setCursor(-1) }
-      }}/>
-    {open && matches.length > 0 ? <ul ref={listRef} className="country-typeahead-listbox" role="listbox" aria-label={label}>
-      {matches.map((item, i) => <li key={item.code} role="option" aria-selected={item.code === value}
-        className={`country-typeahead-option${i === cursor ? ' active' : ''}`}
-        onMouseDown={() => select(item)}>{item.label}</li>)}
-    </ul> : null}
-  </div>
-}
-
-function LocationsEditor({ locations, onChange, label, allItems }: {
-  locations: Location[]; onChange: (v: Location[]) => void; label: string; allItems: GeoItem[]
-}) {
-  function add() { onChange([...locations, { country: '' }]) }
-  function remove(i: number) { onChange(locations.filter((_, j) => j !== i)) }
-  function update(i: number, loc: Location) { onChange(locations.map((l, j) => j === i ? loc : l)) }
-
-  return <div>
-    <div className="profile-rows">
-      {locations.map((loc, i) => <div key={i} className="profile-row profile-row-location">
-        <div className="profile-fields-grid">
-          <div className="profile-field-block"><span>Country or region</span>
-            <CountryTypeahead value={loc.country} allItems={allItems} label={`${label} ${i + 1} country`}
-              onChange={(v) => update(i, { ...loc, country: v })}/>
-          </div>
-          <Field label="City"><input value={loc.city ?? ''} placeholder="City (optional)"
-            onChange={(e) => update(i, { ...loc, city: e.target.value || undefined })}/></Field>
-        </div>
-        <button type="button" className="profile-remove" aria-label={`Remove location ${i + 1}`}
-          onClick={() => remove(i)}>×</button>
-      </div>)}
-    </div>
-    <button type="button" className="profile-add" onClick={add}>+ Add location</button>
-  </div>
 }
 
 function AuthorizationEditor({ items, onChange, allItems, statusOpts }: {
@@ -387,120 +302,115 @@ function CompensationSection({ data }: { data: ProfilePageData }) {
   </SectionShell>
 }
 
-function EngagementSection({ data }: { data: ProfilePageData }) {
+const CRITERIA = [
+  { key: 'workMode', title: 'Work mode', sub: 'How you work', options: 'workModes' },
+  { key: 'engagementType', title: 'Engagement', sub: 'Kind of contract', options: 'engagement' },
+  { key: 'workingTime', title: 'Hours', sub: 'Full or part of the week', options: 'workingTime' },
+] as const
+
+type Crit = (typeof CRITERIA)[number]['key'] | 'locations'
+
+function omit<T extends object>(o: T, key: keyof T): T {
+  const { [key]: _, ...rest } = o
+  return rest as T
+}
+
+function placeBook(items: GeoItem[], ref: ProfilePageData['ref'], saved: Location[]) {
+  const text = (l: Location) => geoLabel(l, ref?.countries ?? [], ref?.regions ?? [])
+  const origin = new Map(saved.map((l) => [text(l), l]))
+  const find = (t: string) => items.find((i) => i.label.toLowerCase() === t.trim().toLowerCase() || i.code.toLowerCase() === t.trim().toLowerCase())
+  const loc = (t: string): Location => {
+    const whole = find(t)
+    const cut = t.lastIndexOf(',')
+    const tail = cut > 0 ? find(t.slice(cut + 1)) : undefined
+    if (whole) return { country: whole.code }
+    return origin.get(t) ?? (tail ? { country: tail.code, city: t.slice(0, cut).trim() } : { country: t })
+  }
+  return { text, loc, known: (t: string) => items.some((i) => i.code.toLowerCase() === loc(t).country.toLowerCase()) }
+}
+
+function GoalsSection({ data }: { data: ProfilePageData }) {
   const { profile, inherited, firstProfileName, ref } = data
   const eff = profile?.effective
-  const opts = ref?.options
+  const items = useGeoItems(ref)
+  const book = placeBook(items, ref, eff?.locations ? BUCKETS.flatMap((b) => eff.locations?.[b] ?? []) : [])
+  const [pending, setPending] = useState<Partial<Record<Crit, Lists>>>({})
+  const [note, setNote] = useState<Note | null>(null)
 
-  const [engagement, setEngagement] = useState<string[]>([])
-  const [workModes, setWorkModes] = useState<string[]>([])
-  const [hoursMode, setHoursMode] = useState('')
-  const [weekly, setWeekly] = useState('')
-  const [weeklyMin, setWeeklyMin] = useState('')
-  const [weeklyMax, setWeeklyMax] = useState('')
+  const saved: Record<Crit, Lists> = {
+    workMode: toLists(eff?.workMode), engagementType: toLists(eff?.engagementType), workingTime: toLists(eff?.workingTime),
+    locations: mapLists(toLists<Location>(eff?.locations), (v) => v.map(book.text)),
+  }
+  const cur = { ...saved, ...pending }
 
-  function beginEdit() {
-    setEngagement(eff?.engagement ?? [])
-    setWorkModes(eff?.workModes ?? [])
-    setHoursMode(eff?.hours?.mode ?? '')
-    setWeekly(eff?.hours?.weekly != null ? String(eff.hours.weekly) : '')
-    setWeeklyMin(eff?.hours?.weeklyMin != null ? String(eff.hours.weeklyMin) : '')
-    setWeeklyMax(eff?.hours?.weeklyMax != null ? String(eff.hours.weeklyMax) : '')
+  const queue = useRef(Promise.resolve())
+  function enqueue(patch: ProfilePatchReq, fail: string, done: () => void) {
+    queue.current = queue.current
+      .then(() => data.saveProfile(patch))
+      .then(() => setNote(null), (e) => setNote(failure(e, fail)))
+      .finally(done)
   }
 
-  async function save() {
-    const isPartTime = hoursMode === 'part_time'
-    const patch: ProfilePatchReq = {
-      engagement: engagement.length ? engagement : null,
-      workModes: workModes.length ? workModes : null,
-      hours: hoursMode ? {
-        mode: hoursMode,
-        weekly: isPartTime && weekly ? Number(weekly) : null,
-        weeklyMin: isPartTime && weeklyMin ? Number(weeklyMin) : null,
-        weeklyMax: isPartTime && weeklyMax ? Number(weeklyMax) : null,
-      } : null,
-    }
-    await data.saveProfile(patch)
+  function change(key: Crit, lists: Lists) {
+    setPending((p) => ({ ...p, [key]: lists })); setNote(null)
+    const value = key === 'locations' ? fromLists(mapLists(lists, (v) => v.map(book.loc))) : fromLists(lists)
+    enqueue({ [key]: value } as ProfilePatchReq, 'Could not save the goals', () => setPending((p) => (p[key] === lists ? omit(p, key) : p)))
   }
 
-  const editor = useSectionEditor(beginEdit, save)
-
-  function toggleArr(arr: string[], v: string): string[] {
-    return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]
+  function saveHours(key: string, value: string) {
+    const h = { weekly: eff?.hours?.weekly ?? null, weeklyMin: eff?.hours?.weeklyMin ?? null, weeklyMax: eff?.hours?.weeklyMax ?? null, [key]: value ? Number(value) : null }
+    enqueue({ hours: h }, 'Could not save the hours', () => {})
   }
 
-  const inhEng = inherited.has('engagement')
-  const inhWM = inherited.has('workModes')
-  const inhHr = inherited.has('hours')
+  const from = (key: string) => (inherited.has(key) ? firstProfileName() : undefined)
+  const rows: GoalRow[] = [
+    ...CRITERIA.map((c) => ({
+      key: c.key, title: c.title, sub: c.sub, lists: cur[c.key], options: ref?.options[c.options] ?? [], from: from(c.key),
+      onChange: (l: Lists) => change(c.key, l),
+    })),
+    {
+      key: 'locations', title: 'Location', sub: 'Countries, regions, cities', lists: cur.locations, from: from('locations'),
+      suggest: items, known: book.known, onChange: (l: Lists) => change('locations', l),
+    },
+  ]
+  const part = BUCKETS.some((b) => b !== 'never' && cur.workingTime[b].includes('part_time'))
 
-  return <SectionShell title="Engagement, hours and work modes"
-    description="Used by Fits you. Employment and Contract may both be acceptable."
-    {...editor}>
-    {editor.editing ? <div className="profile-fields">
-      <p className="profile-group-heading">Engagement</p>
-      <div className={`profile-checks${inhEng ? ' profile-inherited-value' : ''}`}>
-        {opts?.engagement.map((o) => <label key={o.value}>
-          <input type="checkbox" checked={engagement.includes(o.value)} onChange={() => setEngagement(toggleArr(engagement, o.value))}/>{o.label}
-        </label>)}
+  return <section className="profile-card">
+    <header className="profile-card-head">
+      <div><h2>Goals</h2>
+        <p className="muted">What raises the fit, what is fine, what lowers it and what you never want. Drag a value to another column, or click it for a menu; every change is saved at once. A place is a country, a region or a city with its country (Berlin, Germany); one that is not in the list is marked and matches nothing.</p>
       </div>
-      <p className="profile-hint">Consultant work belongs to Contract.</p>
-      <InheritedNote fieldName="engagement" inherited={inherited} firstProfileName={firstProfileName}/>
-      <p className="profile-group-heading">Working time</p>
-      <div className={inhHr ? ' profile-inherited-value' : ''}>
-        <Field label="Full- or part-time">
-          <select value={hoursMode} onChange={(e) => setHoursMode(e.target.value)}>
-            <option value="">Not set</option>
-            {opts?.workingTime.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </Field>
+    </header>
+    <Message note={note}/>
+    <div className="profile-card-body">
+      <GoalsTable rows={rows}/>
+      {part ? <div className={`profile-fields${inherited.has('hours') ? ' profile-inherited-value' : ''}`}>
+        <p className="profile-group-heading">Part-time hours</p>
+        <div className="profile-fields-grid">
+          {([['weekly', 'Hours / week'], ['weeklyMin', 'Min hours'], ['weeklyMax', 'Max hours']] as const).map(([k, label]) => {
+            const v = eff?.hours?.[k]
+            return <Field key={`${k}${v}`} label={label}><input type="number" min={1} max={40} defaultValue={v ?? ''}
+              onBlur={(e) => { if (e.target.value !== String(v ?? '')) saveHours(k, e.target.value) }}/></Field>
+          })}
+        </div>
         <InheritedNote fieldName="hours" inherited={inherited} firstProfileName={firstProfileName}/>
-      </div>
-      {hoursMode === 'part_time' ? <div className="profile-fields-grid">
-        <Field label="Hours / week"><input type="number" min={1} max={40} value={weekly} onChange={(e) => setWeekly(e.target.value)}/></Field>
-        <Field label="Min hours"><input type="number" min={1} max={40} value={weeklyMin} onChange={(e) => setWeeklyMin(e.target.value)}/></Field>
-        <Field label="Max hours"><input type="number" min={1} max={40} value={weeklyMax} onChange={(e) => setWeeklyMax(e.target.value)}/></Field>
       </div> : null}
-      <p className="profile-group-heading">Work modes</p>
-      <div className={`profile-checks${inhWM ? ' profile-inherited-value' : ''}`}>
-        {opts?.workModes.map((o) => <label key={o.value}>
-          <input type="checkbox" checked={workModes.includes(o.value)} onChange={() => setWorkModes(toggleArr(workModes, o.value))}/>{o.label}
-        </label>)}
-      </div>
-      <InheritedNote fieldName="workModes" inherited={inherited} firstProfileName={firstProfileName}/>
-    </div> : <div className="profile-read">
-      <div className={`profile-read-line${inhEng ? ' profile-inherited-value' : ''}`}>
-        <strong>Engagement</strong>
-        {eff?.engagement?.length ? <ReadTags values={eff.engagement.map((v) => labelOf(opts?.engagement ?? [], v))}/> : <NotSet/>}
-      </div>
-      <div className={`profile-read-line${inhHr ? ' profile-inherited-value' : ''}`}>
-        <strong>Working time</strong>
-        {eff?.hours?.mode ? <span>
-          {labelOf(opts?.workingTime ?? [], eff.hours.mode)}
-          {eff.hours.mode === 'part_time' && eff.hours.weekly != null ? ` · ${eff.hours.weekly}h/week` : ''}
-        </span> : <NotSet/>}
-      </div>
-      <div className={`profile-read-line${inhWM ? ' profile-inherited-value' : ''}`}>
-        <strong>Work modes</strong>
-        {eff?.workModes?.length ? <ReadTags values={eff.workModes.map((v) => labelOf(opts?.workModes ?? [], v))}/> : <NotSet/>}
-      </div>
-    </div>}
-  </SectionShell>
+    </div>
+  </section>
 }
 
 function GeoSection({ data }: { data: ProfilePageData }) {
-  const { profile, me, inherited, firstProfileName, ref } = data
+  const { profile, me, ref } = data
   const eff = profile?.effective
   const opts = ref?.options
   const allItems = useGeoItems(ref)
 
-  const [locations, setLocations] = useState<Location[]>([])
   const [relocation, setRelocation] = useState('')
   const [timeZones, setTimeZones] = useState<string[]>([])
   const [curLoc, setCurLoc] = useState<Location | null>(null)
   const [authorizations, setAuthorizations] = useState<WorkAuthorization[]>([])
 
   function beginEdit() {
-    setLocations(eff?.preferredLocations ?? [])
     setRelocation(eff?.relocation ?? '')
     setTimeZones(eff?.timeZones ?? [])
     setCurLoc(me?.currentLocation ?? null)
@@ -510,7 +420,6 @@ function GeoSection({ data }: { data: ProfilePageData }) {
   async function save() {
     await Promise.all([
       data.saveProfile({
-        preferredLocations: locations.length ? locations : null,
         relocation: relocation || null,
         timeZones: timeZones.length ? timeZones : null,
       } as ProfilePatchReq),
@@ -527,11 +436,6 @@ function GeoSection({ data }: { data: ProfilePageData }) {
     setTimeZones((z) => z.includes(code) ? z.filter((x) => x !== code) : [...z, code])
   }
 
-  const inh = inherited.has('preferredLocations')
-
-  const prefRegions = eff?.preferredLocations?.filter((l) => ref?.regions.some((r) => r.name.toUpperCase() === l.country.toUpperCase())) ?? []
-  const prefWork = eff?.preferredLocations?.filter((l) => !ref?.regions.some((r) => r.name.toUpperCase() === l.country.toUpperCase())) ?? []
-
   return <SectionShell title="Geography and authorization"
     description="Used by the detailed assessment and preparation; not the quick score. No stated eligibility is not ineligibility, and current residence does not prove work authorization."
     {...editor}>
@@ -547,9 +451,6 @@ function GeoSection({ data }: { data: ProfilePageData }) {
           onChange={(e) => setCurLoc((l) => ({ country: l?.country ?? '', city: e.target.value || undefined }))}/></Field>
       </div>
       <p className="profile-hint">Where you live now. It does not by itself prove work authorization in that country.</p>
-      <p className={`profile-group-heading${inh ? ' profile-inherited-value' : ''}`}>Preferred work locations</p>
-      <LocationsEditor locations={locations} onChange={setLocations} label="Location" allItems={allItems}/>
-      <InheritedNote fieldName="preferredLocations" inherited={inherited} firstProfileName={firstProfileName}/>
       <p className="profile-group-heading">Work authorization</p>
       <AuthorizationEditor items={authorizations} onChange={setAuthorizations} allItems={allItems} statusOpts={opts?.workAuthorization ?? []}/>
       <Field label="Willing to relocate">
@@ -569,19 +470,6 @@ function GeoSection({ data }: { data: ProfilePageData }) {
         <strong>Current location</strong>
         {me?.currentLocation?.country ? geoLabel(me.currentLocation, ref?.countries ?? [], ref?.regions ?? []) : <NotSet/>}
       </div>
-      <div className="profile-read-line">
-        <strong>Preferred regions</strong>
-        {prefRegions.length ? <div className="profile-tags">
-          {prefRegions.map((l, i) => <span key={i}>{geoLabel(l, ref?.countries ?? [], ref?.regions ?? [])}</span>)}
-        </div> : <NotSet/>}
-      </div>
-      <div className={`profile-read-line${inh ? ' profile-inherited-value' : ''}`}>
-        <strong>Preferred work locations</strong>
-        {prefWork.length ? <div className="profile-tags">
-          {prefWork.map((l, i) => <span key={i}>{geoLabel(l, ref?.countries ?? [], ref?.regions ?? [])}</span>)}
-        </div> : <NotSet/>}
-      </div>
-      <InheritedNote fieldName="preferredLocations" inherited={inherited} firstProfileName={firstProfileName}/>
       {me?.workAuthorizations?.length ? <div className="profile-read-line">
         <strong>Work authorization</strong>
         <ul className="profile-list">
@@ -681,11 +569,11 @@ function OtherRequirementsSection({ data }: { data: ProfilePageData }) {
 
 export function ProfileTab(data: ProfilePageData) {
   return <div className="profile-cols-profile">
+    <div className="profile-wide"><GoalsSection data={data}/></div>
     <div className="profile-col-left">
       <p className="profile-col-heading">Search setup</p>
       <WhatSection data={data}/>
       <CompensationSection data={data}/>
-      <EngagementSection data={data}/>
       <GeoSection data={data}/>
       <AvailabilitySection data={data}/>
       <OtherRequirementsSection data={data}/>

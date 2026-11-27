@@ -18,9 +18,13 @@ function isStated(tile: Tile): boolean {
 const KEY = ['Money', 'Location', 'Work mode', 'Contract']
 const ORDER: Mod[] = ['mismatch', 'unknown', 'ok']
 
-function Mark({ mod }: { mod: Mod }) {
+function toneOf(tile: Tile, mod: Mod): string {
+  return tile.bucket === 'never' || tile.bucket === 'unwanted' ? tile.bucket : mod
+}
+
+function Mark({ mod, tone }: { mod: Mod; tone: string }) {
   return (
-    <span className={`band-mark ${mod}`} aria-hidden="true">
+    <span className={`band-mark ${tone}`} aria-hidden="true">
       {MARKS[mod]}
     </span>
   )
@@ -29,14 +33,15 @@ function Mark({ mod }: { mod: Mod }) {
 function Card({ tile }: { tile: Tile }) {
   const stated = isStated(tile)
   const mod = stated ? verdictMod(tile.verdict) : 'unknown'
+  const tone = stated ? toneOf(tile, mod) : mod
   return (
-    <div className={`band-card ${mod}`} aria-label={`${tile.name}: ${stated ? tile.value : 'Not stated'}`}>
+    <div className={`band-card ${tone}`} aria-label={`${tile.name}: ${stated ? tile.value : 'Not stated'}`}>
       <div className="band-card-head">
         <span className="band-card-name">
           <TileIcon name={tile.name} size={22} />
           {tile.name}
         </span>
-        <Mark mod={mod} />
+        <Mark mod={mod} tone={tone} />
       </div>
       <span className={stated ? 'band-card-value' : 'band-card-value blank'} title={tile.full}>
         {stated ? tile.value : 'Not stated'}
@@ -48,37 +53,30 @@ function Card({ tile }: { tile: Tile }) {
 }
 
 function Others({ tiles }: { tiles: Tile[] }) {
-  const rows = tiles.filter(isStated).sort((a, b) => ORDER.indexOf(verdictMod(a.verdict)) - ORDER.indexOf(verdictMod(b.verdict)))
-  const missing = tiles.filter((tile) => !isStated(tile) && tile.goal)
-  if (rows.length === 0 && missing.length === 0) return null
+  const rows = tiles
+    .filter((tile) => isStated(tile) || tile.goal)
+    .sort((a, b) => ORDER.indexOf(verdictMod(a.verdict)) - ORDER.indexOf(verdictMod(b.verdict)))
+  if (rows.length === 0) return null
   return (
     <div className="band-others">
       <h4>Key facts</h4>
-      {rows.length > 0 && (
-        <ul className="band-sheet">
-          {rows.map((tile) => {
-            const mod = verdictMod(tile.verdict)
-            return (
-              <li key={tile.name} className={`band-sheet-row ${mod}`} title={tile.line}>
-                <span className="band-line-name">
-                  <TileIcon name={tile.name} size={15} />
-                  {tile.name}
-                </span>
-                <Mark mod={mod} />
-                <span className="band-sheet-value" title={tile.full}>
-                  {tile.value}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-      {missing.length > 0 && (
-        <p className="band-missing">
-          <span>Not stated</span>
-          {missing.map((tile) => tile.name).join(' · ')}
-        </p>
-      )}
+      <ul className="band-sheet">
+        {rows.map((tile) => {
+          const mod = isStated(tile) ? verdictMod(tile.verdict) : 'unknown'
+          return (
+            <li key={tile.name} className={`band-sheet-row ${toneOf(tile, mod)}`} title={tile.line}>
+              <span className="band-line-name">
+                <TileIcon name={tile.name} size={15} />
+                {tile.name}
+              </span>
+              <Mark mod={mod} tone={toneOf(tile, mod)} />
+              <span className="band-sheet-value" title={tile.full}>
+                {isStated(tile) ? tile.value : 'Not stated'}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

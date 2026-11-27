@@ -133,7 +133,7 @@ function SkillsSection({ data }: { data: ProfilePageData }) {
         <h4>Copy to search</h4>
         <p className="profile-absent-note">Add skill names as search terms for this profile. Skills already in search are skipped.</p>
         <div className="profile-document-actions">
-          <button type="button" disabled={copyBusy} onClick={() => void copyToSearch()}>
+          <button type="button" className="primary" disabled={copyBusy} onClick={() => void copyToSearch()}>
             {copyBusy ? 'Copying…' : 'Copy all skills to search'}
           </button>
         </div>

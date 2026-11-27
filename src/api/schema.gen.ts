@@ -599,6 +599,12 @@ export interface components {
             text: string;
             tiles: components["schemas"]["Tile"][];
         };
+        Buckets: {
+            never?: string[];
+            possible?: string[];
+            preferred?: string[];
+            unwanted?: string[];
+        };
         CheckAnswer: {
             excerpt: string;
             /** Format: int64 */
@@ -742,7 +748,6 @@ export interface components {
             text: string;
         };
         Hours: {
-            mode?: string;
             weekly?: number | null;
             weeklyMax?: number | null;
             weeklyMin?: number | null;
@@ -852,23 +857,30 @@ export interface components {
             /** @enum {string} */
             to?: "inbox" | "shortlist" | "applied" | "dismissed";
         };
+        PlaceBuckets: {
+            never?: components["schemas"]["Location"][];
+            possible?: components["schemas"]["Location"][];
+            preferred?: components["schemas"]["Location"][];
+            unwanted?: components["schemas"]["Location"][];
+        };
         PreviewResp: {
             text: string;
         };
         ProfileData: {
             allOf?: string[];
             compensation?: components["schemas"]["Compensation"] | null;
-            engagement?: string[];
+            engagementType: components["schemas"]["Buckets"];
             headline?: string;
             hours?: components["schemas"]["Hours"] | null;
             keywords?: string[];
+            locations: components["schemas"]["PlaceBuckets"];
             name: string;
             otherRequirements?: string;
-            preferredLocations?: components["schemas"]["Location"][];
             relocation?: string;
             targetRoles?: string[];
             timeZones?: string[];
-            workModes?: string[];
+            workMode: components["schemas"]["Buckets"];
+            workingTime: components["schemas"]["Buckets"];
         };
         ProfileDetailResp: {
             active: boolean;
@@ -894,17 +906,18 @@ export interface components {
         ProfilePatchReq: {
             allOf?: string[] | null;
             compensation?: components["schemas"]["Compensation"] | null;
-            engagement?: string[] | null;
+            engagementType?: components["schemas"]["Buckets"] | null;
             headline?: string | null;
             hours?: components["schemas"]["Hours"] | null;
             keywords?: string[] | null;
+            locations?: components["schemas"]["PlaceBuckets"] | null;
             name?: string | null;
             otherRequirements?: string | null;
-            preferredLocations?: components["schemas"]["Location"][] | null;
             relocation?: string | null;
             targetRoles?: string[] | null;
             timeZones?: string[] | null;
-            workModes?: string[] | null;
+            workMode?: components["schemas"]["Buckets"] | null;
+            workingTime?: components["schemas"]["Buckets"] | null;
         };
         ProposalItem: {
             createdAt: string;
@@ -1088,6 +1101,7 @@ export interface components {
             version: string;
         };
         Tile: {
+            bucket?: string;
             converted?: string;
             full?: string;
             goal: boolean;

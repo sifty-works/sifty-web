@@ -139,6 +139,25 @@ components:
                 - reasons
                 - brokenMust
             type: object
+        Buckets:
+            properties:
+                never:
+                    items:
+                        type: string
+                    type: array
+                possible:
+                    items:
+                        type: string
+                    type: array
+                preferred:
+                    items:
+                        type: string
+                    type: array
+                unwanted:
+                    items:
+                        type: string
+                    type: array
+            type: object
         CheckAnswer:
             properties:
                 excerpt:
@@ -502,8 +521,6 @@ components:
             type: object
         Hours:
             properties:
-                mode:
-                    type: string
                 weekly:
                     oneOf:
                         - format: double
@@ -825,6 +842,25 @@ components:
                 - key
                 - label
             type: object
+        PlaceBuckets:
+            properties:
+                never:
+                    items:
+                        $ref: '#/components/schemas/Location'
+                    type: array
+                possible:
+                    items:
+                        $ref: '#/components/schemas/Location'
+                    type: array
+                preferred:
+                    items:
+                        $ref: '#/components/schemas/Location'
+                    type: array
+                unwanted:
+                    items:
+                        $ref: '#/components/schemas/Location'
+                    type: array
+            type: object
         PreviewResp:
             properties:
                 text:
@@ -842,10 +878,8 @@ components:
                     oneOf:
                         - $ref: '#/components/schemas/Compensation'
                         - type: "null"
-                engagement:
-                    items:
-                        type: string
-                    type: array
+                engagementType:
+                    $ref: '#/components/schemas/Buckets'
                 headline:
                     type: string
                 hours:
@@ -856,14 +890,12 @@ components:
                     items:
                         type: string
                     type: array
+                locations:
+                    $ref: '#/components/schemas/PlaceBuckets'
                 name:
                     type: string
                 otherRequirements:
                     type: string
-                preferredLocations:
-                    items:
-                        $ref: '#/components/schemas/Location'
-                    type: array
                 relocation:
                     type: string
                 targetRoles:
@@ -874,12 +906,16 @@ components:
                     items:
                         type: string
                     type: array
-                workModes:
-                    items:
-                        type: string
-                    type: array
+                workMode:
+                    $ref: '#/components/schemas/Buckets'
+                workingTime:
+                    $ref: '#/components/schemas/Buckets'
             required:
                 - name
+                - engagementType
+                - workingTime
+                - workMode
+                - locations
             type: object
         ProfileDetailResp:
             properties:
@@ -943,11 +979,9 @@ components:
                     oneOf:
                         - $ref: '#/components/schemas/Compensation'
                         - type: "null"
-                engagement:
+                engagementType:
                     oneOf:
-                        - items:
-                            type: string
-                          type: array
+                        - $ref: '#/components/schemas/Buckets'
                         - type: "null"
                 headline:
                     oneOf:
@@ -963,6 +997,10 @@ components:
                             type: string
                           type: array
                         - type: "null"
+                locations:
+                    oneOf:
+                        - $ref: '#/components/schemas/PlaceBuckets'
+                        - type: "null"
                 name:
                     oneOf:
                         - type: string
@@ -970,12 +1008,6 @@ components:
                 otherRequirements:
                     oneOf:
                         - type: string
-                        - type: "null"
-                preferredLocations:
-                    oneOf:
-                        - items:
-                            $ref: '#/components/schemas/Location'
-                          type: array
                         - type: "null"
                 relocation:
                     oneOf:
@@ -993,11 +1025,13 @@ components:
                             type: string
                           type: array
                         - type: "null"
-                workModes:
+                workMode:
                     oneOf:
-                        - items:
-                            type: string
-                          type: array
+                        - $ref: '#/components/schemas/Buckets'
+                        - type: "null"
+                workingTime:
+                    oneOf:
+                        - $ref: '#/components/schemas/Buckets'
                         - type: "null"
             type: object
         ProposalItem:
@@ -1531,6 +1565,8 @@ components:
             type: object
         Tile:
             properties:
+                bucket:
+                    type: string
                 converted:
                     type: string
                 full:
