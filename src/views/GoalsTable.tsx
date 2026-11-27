@@ -11,7 +11,7 @@ const ZONES: Zone[] = [...BUCKETS, 'neutral']
 const NAME: Record<Zone, string> = { preferred: 'Preferred', possible: 'Possible', unwanted: 'Unwanted', never: 'Never', neutral: 'Neutral' }
 const HINT: Record<Zone, string> = {
   preferred: 'Raises the fit.', possible: 'Is fine.', unwanted: 'Lowers the fit.',
-  never: 'Goes to the end of the Inbox, with the reason.', neutral: 'No effect on the fit.',
+  never: 'Caps the fit; when the vacancy itself states it, goes to the end of Best fit.', neutral: 'No effect on the fit.',
 }
 
 export function mapLists<A, B>(l: Lists<A>, f: (v: A[]) => B[]): Lists<B> {
