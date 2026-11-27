@@ -307,21 +307,38 @@ const SITES = [
   },
   {
     step: 3,
-    site: 'FitBand bucket token',
-    file: 'src/views/FitBand.tsx',
-    needle: '`qm-bucket ${bucketToken(band.bucket)}`',
-    names: () => ['strong', 'partial', 'weak'],
-    unconfirmed: 'bucket text is supplied by the server and cannot be enumerated from the client; these three are the names the stylesheet pairs with qm-bucket',
+    site: 'FitScore bucket token',
+    file: 'src/views/BandTiles.tsx',
+    needle: '`band-fit ${token}`',
+    names: () => ['strong', 'partial', 'weak', 'none'],
+    unconfirmed: 'bucket text is supplied by the server and cannot be enumerated from the client; these are the names the stylesheet pairs with band-fit',
   },
   {
     step: 3,
-    site: 'FitBand tile verdict',
-    file: 'src/views/FitBand.tsx',
-    needle: '`band-tile ${mod}`',
+    site: 'BandTiles card verdict',
+    file: 'src/views/BandTiles.tsx',
+    needle: '`band-card ${mod}`',
     names: (src) => {
       const fn = /function verdictMod[\s\S]*?\n}/.exec(src)[0]
       return [...fn.matchAll(/return '([a-z]+)'/g)].map((m) => m[1])
     },
+  },
+  {
+    step: 3,
+    site: 'BandTiles mark verdict',
+    file: 'src/views/BandTiles.tsx',
+    needle: '`band-mark ${mod}`',
+    names: (src) => {
+      const fn = /function verdictMod[\s\S]*?\n}/.exec(src)[0]
+      return [...fn.matchAll(/return '([a-z]+)'/g)].map((m) => m[1])
+    },
+  },
+  {
+    step: 3,
+    site: 'StatusBar tone',
+    file: 'src/views/StatusBar.tsx',
+    needle: '`status-bar ${line.tone}`',
+    names: (src) => [.../type Tone = ([^\n]*)/.exec(src)[1].matchAll(/'([a-z]+)'/g)].map((m) => m[1]),
   },
   {
     step: 3,
@@ -398,7 +415,6 @@ const HAND_DEAD = {
   evidence: "the property item.evidence (its text goes into className=\"ask-evidence\") and prose",
   import: 'the TypeScript keyword',
   page: "a state variable, aria-current='page' and prose; settings-page is a different token",
-  running: 'only in the sentence "Sifty is not running"',
 }
 
 const HAND_LIVE = {
