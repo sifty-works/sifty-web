@@ -113,10 +113,10 @@ function SkillColumn({ label, skills, rows, check, open, onOpen, onPick, action 
               const key = entryKey(entry) + '#' + skill.name
               return (
                 <span key={skill.name} className={`skill ${skillClass(entry, skill.have)}${open === key ? ' open' : ''}`}>
-                  <button type="button" className="skill-chip" aria-expanded={open === key} title={coveredBy(entry, skill.name) || entry.line} onClick={() => onOpen(open === key ? null : key)}>
+                  <button type="button" className="skill-chip" aria-expanded={open === key} title={skill.assumed ? `Assumed from ${skill.from}` : coveredBy(entry, skill.name) || entry.line} onClick={() => onOpen(open === key ? null : key)}>
                     {skill.have === 'No' && <span className="skill-x" aria-hidden="true">✕</span>}
                     {skill.name}
-                    {skill.have && skill.have !== 'No' && <small>{skill.have}</small>}
+                    {skill.have && skill.have !== 'No' && <small>{skill.assumed ? `~${skill.have}` : skill.have}</small>}
                   </button>
                 </span>
               )
@@ -146,7 +146,8 @@ interface LevelPickerProps {
 }
 
 function LevelPicker({ entry, name, checked, onPick }: LevelPickerProps) {
-  const have = entry.skills.find((s) => s.name === name)?.have ?? ''
+  const skill = entry.skills.find((s) => s.name === name)
+  const have = skill?.assumed ? '' : skill?.have ?? ''
   const levels = [...(useReference()?.options.skillLevels ?? []), { value: 'No', label: 'No' }]
 
   return (
@@ -155,7 +156,7 @@ function LevelPicker({ entry, name, checked, onPick }: LevelPickerProps) {
       <q>{entry.line}</q>
       <span className="skill-picker-facts">
         {demanded(entry) && <span>They ask: {demanded(entry)}</span>}
-        <span>You: {have || 'not set'}</span>
+        <span>You: {skill?.assumed ? `${skill.have}, assumed from ${skill.from}` : have || 'not set'}</span>
         {entry.skills.length > 1 && <span>Any one of {joinNames(entry.skills.map((s) => s.name))} is enough</span>}
         {coveredBy(entry, name) && <span>{coveredBy(entry, name)}</span>}
       </span>

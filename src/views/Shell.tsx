@@ -58,6 +58,7 @@ export function Shell() {
   }, [applyStatus])
 
   const collecting = status?.collecting != null
+  const modelJob = work.state.status === 'ok' ? work.state.data.running.find((r) => r.model) : undefined
   const collectText =
     status?.collecting?.text ??
     (status?.lastRun?.state === 'failed' ? status.lastRun.message : null)
@@ -87,7 +88,7 @@ export function Shell() {
           ))}
         </nav>
 
-        <Brand collecting={collecting} />
+        <Brand busy={collecting ? 'Collecting jobs…' : modelJob ? `${modelJob.label}…` : null} />
 
         <div className="header-actions">
           {attentionText && (

@@ -1414,6 +1414,10 @@ components:
             type: object
         SkillHave:
             properties:
+                assumed:
+                    type: boolean
+                from:
+                    type: string
                 have:
                     type: string
                 name:

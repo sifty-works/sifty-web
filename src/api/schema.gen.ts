@@ -1046,6 +1046,8 @@ export interface components {
             verdict: string;
         };
         SkillHave: {
+            assumed?: boolean;
+            from?: string;
             have?: string;
             name: string;
         };

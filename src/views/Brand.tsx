@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { CELLS } from './Logo.tsx'
 
 const CAP = 18                        
@@ -6,7 +7,15 @@ const SIZE = CAP * 1024 / 640
 const ADV = [640, 256, 640, 512, 512] 
 const SWEEP = 1.8, PAUSE = 1.4       
 
-export function Brand({ collecting = false }: { collecting?: boolean }) {
+export function Brand({ busy }: { busy: string | null }) {
+  const [flash, setFlash] = useState(false)
+  const sweep = useRef<SVGAnimateTransformElement>(null)
+  const play = () => {
+    if (busy) return
+    setFlash(true)
+    requestAnimationFrame(() => sweep.current?.beginElement())
+    window.setTimeout(() => setFlash(false), SWEEP * 1000)
+  }
   let x = 0
   const letters = 'SIFTY'.split('').map((ch, i) => {
     const at = x
@@ -36,10 +45,11 @@ export function Brand({ collecting = false }: { collecting?: boolean }) {
 
   return (
     <div
-      className={`brand${collecting ? ' working' : ''}`}
+      className={`brand${busy ? ' working' : ''}`}
       role="img"
-      aria-label={collecting ? 'Sifty, collecting jobs' : 'Sifty'}
-      title={collecting ? 'Collecting jobs…' : undefined}
+      aria-label={busy ? `Sifty, ${busy}` : 'Sifty'}
+      title={busy ?? undefined}
+      onClick={play}
     >
       <svg
         width={W}
@@ -60,7 +70,7 @@ export function Brand({ collecting = false }: { collecting?: boolean }) {
             <stop offset="0" stopColor="#fff" stopOpacity="0" />
             <stop offset=".5" stopColor="#fff" stopOpacity=".8" />
             <stop offset="1" stopColor="#fff" stopOpacity="0" />
-            {collecting && (
+            {busy && (
               <animateTransform
                 attributeName="gradientTransform"
                 type="translate"
@@ -68,6 +78,16 @@ export function Brand({ collecting = false }: { collecting?: boolean }) {
                 keyTimes={`0;${(SWEEP / dur).toFixed(3)};1`}
                 dur={`${dur}s`}
                 repeatCount="indefinite"
+              />
+            )}
+            {flash && !busy && (
+              <animateTransform
+                ref={sweep}
+                attributeName="gradientTransform"
+                type="translate"
+                values={`0 0;${end} 0`}
+                dur={`${SWEEP}s`}
+                begin="indefinite"
               />
             )}
           </linearGradient>
@@ -81,7 +101,7 @@ export function Brand({ collecting = false }: { collecting?: boolean }) {
         </defs>
         {cells(false)}
         <rect x={wx} y="0" width={wordW} height={H} fill="url(#brand-word)" mask="url(#brand-letters)" />
-        {collecting && (
+        {(busy || flash) && (
           <rect className="brand-sheen" x="0" y="0" width={W} height={H} fill="url(#brand-sheen)" mask="url(#brand-all)" />
         )}
       </svg>
