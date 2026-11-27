@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { Band, CheckAnswer, CheckView, RequirementLine, SkillAnswer, SkillEntry } from '../api/client.ts'
 import { useDismiss } from '../dismiss.ts'
 import { useReference } from '../state/profile.ts'
@@ -8,6 +8,12 @@ const VERDICT_CLASS: Record<string, string> = { '✕': 'no', '≈': 'near', '?':
 
 function demanded(entry: SkillEntry): string {
   return entry.demand === 'Any' ? '' : entry.demand
+}
+
+function skillClass(entry: SkillEntry, have?: string): string {
+  if (have === 'No') return 'no'
+  if (!have) return 'unknown'
+  return VERDICT_CLASS[entry.verdict] ?? 'unknown'
 }
 
 function sortedByVerdict(skills: SkillEntry[]): SkillEntry[] {
@@ -33,9 +39,10 @@ interface SkillsProps {
   band: Band
   check?: CheckView | null
   onDecision: (answer: SkillAnswer) => Promise<void>
+  action?: ReactNode
 }
 
-export function Skills({ band, check, onDecision }: SkillsProps) {
+export function Skills({ band, check, onDecision, action }: SkillsProps) {
   const columns = band.groups.filter((g) => g.skills.length > 0)
   const [open, setOpen] = useState<{ label: string; key: string } | null>(null)
   const close = () => setOpen(null)
@@ -45,8 +52,9 @@ export function Skills({ band, check, onDecision }: SkillsProps) {
   return (
     <div className="skills">
       <div className="skill-cols">
-        {columns.map((group) => (
+        {columns.map((group, i) => (
           <SkillColumn
+            action={i === 0 ? action : undefined}
             key={group.label}
             label={group.label}
             skills={group.skills}
@@ -65,6 +73,7 @@ export function Skills({ band, check, onDecision }: SkillsProps) {
 }
 
 interface SkillColumnProps {
+  action?: ReactNode
   label: string
   skills: SkillEntry[]
   check?: CheckView | null
@@ -73,33 +82,40 @@ interface SkillColumnProps {
   onPick: (skill: string, level: string) => Promise<void>
 }
 
-function SkillColumn({ label, skills, check, open, onOpen, onPick }: SkillColumnProps) {
-  const have = skills.filter((e) => e.verdict === '✓').length
-  const current = skills.find((e) => entryKey(e) === open)
+function SkillColumn({ label, skills, check, open, onOpen, onPick, action }: SkillColumnProps) {
+  const current = skills.find((e) => open?.startsWith(entryKey(e) + '#'))
+  const currentName = current && open ? open.slice(entryKey(current).length + 1) : ''
   return (
     <div className="skill-col">
       <div className="skill-head">
         <h4>Skills {label}</h4>
-        <small>({have} of {skills.length})</small>
       </div>
+      <div className="skill-row">
+      {action}
       <ul className="skill-list">
-        {sortedByVerdict(skills).map((entry) => {
-          const key = entryKey(entry)
-          return (
-            <li key={key} className={`skill ${VERDICT_CLASS[entry.verdict] ?? 'unknown'}${open === key ? ' open' : ''}`}>
-              <button type="button" className="skill-chip" aria-expanded={open === key} title={entry.line} onClick={() => onOpen(open === key ? null : key)}>
-                {entry.verdict === '✕' && <span className="skill-x" aria-hidden="true">✕</span>}
-                {joinNames(entry.skills.map((s) => s.name))}
-                {demanded(entry) && <small>{demanded(entry)}</small>}
-              </button>
-            </li>
-          )
-        })}
+        {sortedByVerdict(skills).map((entry) => (
+          <li key={entryKey(entry)} className="skill-group">
+            {entry.skills.map((skill) => {
+              const key = entryKey(entry) + '#' + skill.name
+              return (
+                <span key={skill.name} className={`skill ${skillClass(entry, skill.have)}${open === key ? ' open' : ''}`}>
+                  <button type="button" className="skill-chip" aria-expanded={open === key} title={entry.line} onClick={() => onOpen(open === key ? null : key)}>
+                    {skill.have === 'No' && <span className="skill-x" aria-hidden="true">✕</span>}
+                    {skill.name}
+                    {skill.have && skill.have !== 'No' && <small>{skill.have}</small>}
+                  </button>
+                </span>
+              )
+            })}
+          </li>
+        ))}
       </ul>
+      </div>
       {current && (
         <LevelPicker
           key={open}
           entry={current}
+          name={currentName}
           checked={check?.answers.find((a) => a.requirement === current.line && (a.skills?.length ?? 0) > 0)}
           onPick={onPick}
         />
@@ -110,34 +126,23 @@ function SkillColumn({ label, skills, check, open, onOpen, onPick }: SkillColumn
 
 interface LevelPickerProps {
   entry: SkillEntry
+  name: string
   checked?: CheckAnswer
   onPick: (skill: string, level: string) => Promise<void>
 }
 
-function LevelPicker({ entry, checked, onPick }: LevelPickerProps) {
-  const [name, setName] = useState(entry.skills[0]?.name ?? '')
+function LevelPicker({ entry, name, checked, onPick }: LevelPickerProps) {
   const have = entry.skills.find((s) => s.name === name)?.have ?? ''
-  const matched = entry.skills.filter((s) => s.have)
   const levels = [...(useReference()?.options.skillLevels ?? []), { value: 'No', label: 'No' }]
 
   return (
     <div className="skill-picker">
-      {entry.skills.length > 1 ? (
-        <span className="skill-picker-alts" role="radiogroup" aria-label="Skill">
-          {entry.skills.map((s) => (
-            <button key={s.name} type="button" role="radio" aria-checked={s.name === name} className={s.name === name ? 'on' : ''} onClick={() => setName(s.name)}>
-              {s.name}
-            </button>
-          ))}
-        </span>
-      ) : (
-        <strong>{name}</strong>
-      )}
+      <strong>{name}</strong>
       <q>{entry.line}</q>
       <span className="skill-picker-facts">
         {demanded(entry) && <span>They ask: {demanded(entry)}</span>}
         <span>You: {have || 'not set'}</span>
-        {entry.skills.length > 1 && matched.length > 0 && <span>{matched.map((s) => s.name).join(' and ')} in your profile</span>}
+        {entry.skills.length > 1 && <span>Any one of {joinNames(entry.skills.map((s) => s.name))} is enough</span>}
       </span>
       {checked && <span className="skill-picker-check">{checked.reason}</span>}
       <span className="skill-picker-levels" role="radiogroup" aria-label={`Your level in ${name}`}>

@@ -1,13 +1,14 @@
 import { ReactNode } from 'react'
 import { Tile } from '../api/client.ts'
 
-type Mod = 'ok' | 'mismatch' | 'unknown'
+type Mod = 'ok' | 'mismatch' | 'unknown' | 'none'
 
-const MARKS: Record<Mod, string> = { ok: '✓', mismatch: '✕', unknown: '?' }
+const MARKS: Record<Mod, string> = { ok: '✓', mismatch: '✕', unknown: '?', none: '✓' }
 
 function verdictMod(verdict: string): Mod {
   if (verdict === '✓') return 'ok'
   if (verdict === '✕') return 'mismatch'
+  if (verdict === '–') return 'none'
   return 'unknown'
 }
 
@@ -17,7 +18,7 @@ function isStated(tile: Tile): boolean {
 
 const KEY = ['Money', 'Location', 'Work mode', 'Contract']
 const FACTS = ['Experience', 'Seniority', 'Company stage', 'Domain', 'Apply by', 'Contract length', 'Citizenship or clearance', 'Relocation', 'Visa']
-const ORDER: Mod[] = ['mismatch', 'unknown', 'ok']
+const ORDER: Mod[] = ['mismatch', 'unknown', 'ok', 'none']
 
 function toneOf(tile: Tile, mod: Mod): string {
   return tile.bucket === 'never' || tile.bucket === 'unwanted' ? tile.bucket : mod

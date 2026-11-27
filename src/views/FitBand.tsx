@@ -8,16 +8,15 @@ interface Props {
   onDecision: (answer: SkillAnswer) => Promise<void>
 }
 
-function requirementsLine(band: Band): string {
-  if (band.requirementsText) return band.requirementsText
-  const open = skillsToAnswer(band)
-  if (open === null) return ''
-  return open > 0 ? `${open} skill${open === 1 ? '' : 's'} to answer` : 'All skills answered'
+
+function answerFirstSkill(event: React.MouseEvent<HTMLButtonElement>) {
+  event.currentTarget.closest('.fit-band')?.querySelector<HTMLButtonElement>('.skill.unknown .skill-chip')?.click()
 }
 
 export function FitBand({ band, check, onDecision }: Props) {
   const never = band.tiles.filter((tile) => tile.bucket === 'never')
-  const line = requirementsLine(band)
+  const line = band.requirementsText ?? ''
+  const open = band.requirementsText ? 0 : skillsToAnswer(band)
   return (
     <div className="band-wrap">
       {never.length > 0 && (
@@ -38,7 +37,16 @@ export function FitBand({ band, check, onDecision }: Props) {
           {line && line !== band.text && <span className="band-score-reason band-req">{line}</span>}
         </div>
         <BandTiles tiles={band.tiles}>
-          <Skills band={band} check={check} onDecision={onDecision} />
+          <Skills
+            band={band}
+            check={check}
+            onDecision={onDecision}
+            action={!!open && (
+              <button type="button" className="band-answer" onClick={answerFirstSkill}>
+                Mark your skills →
+              </button>
+            )}
+          />
         </BandTiles>
       </section>
     </div>

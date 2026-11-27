@@ -288,7 +288,7 @@ html .profile-screen,html .settings-page>.settings-main,html .workspace>.detail{
 .band-body{flex:1 1 auto;min-width:0;display:grid;gap:16px;align-content:start}
 :root{--fit-good:#1f9d55;--fit-good-ink:#16793f;--fit-tint:linear-gradient(135deg,#fbfdfb 0%,#d6ecd9 100%);--fit-plain:linear-gradient(135deg,#fbfbfb 0%,#ececee 100%);--fit-bad:#c2410c;--fit-mute:#8a8a91}
 .band-mark{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;line-height:1;background:var(--well);color:var(--fit-mute)}
-.band-mark.ok{background:var(--fit-good);color:#fff}
+.band-mark.ok{background:var(--fit-good);color:#fff}.band-mark.none{background:var(--well);color:var(--fit-mute)}
 .band-mark:is(.mismatch,.never){background:var(--fit-bad);color:#fff}
 .band-mark.unwanted{background:#fff;color:#a35a06;border:1.5px solid #a35a06}
 .band-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -357,8 +357,7 @@ html .profile-screen,html .settings-page>.settings-main,html .workspace>.detail{
 .skill-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px}
 .skill-cols:has(> :only-child){grid-template-columns:minmax(0,1fr)}
 .skill-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
-.skill-head small{font:500 12px 'IBM Plex Mono',monospace;color:var(--ink-4)}
-.skill-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.skill-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}.skill-group,.skill-group .skill{display:inline-flex;align-items:center;gap:6px}
 .detail .skill-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px 6px 12px;border:0;border-radius:999px;background:var(--paper);color:var(--ink-2);font-size:13px;font-weight:500;line-height:18px;cursor:pointer}
 .skill-chip small{font-size:11px;font-weight:500;color:var(--ink-4)}
 .detail .skill.ok .skill-chip{background:var(--fit-tint);color:var(--fit-good-ink)}
@@ -377,10 +376,10 @@ html .profile-screen,html .settings-page>.settings-main,html .workspace>.detail{
 .skill-picker-levels button,.skill-picker-alts button{padding:5px 12px;border:0;border-radius:7px;background:transparent;color:var(--ink-3);font-size:12px;font-weight:600;cursor:pointer}
 .skill-picker-levels button:hover,.skill-picker-alts button:hover{background:var(--well-2)}
 .skill-picker-levels button.on,.skill-picker-alts button.on{background:#fff;color:var(--ink)}
-.band-req{font-weight:600;color:var(--ink-2);margin-top:auto}
+.band-req{font-weight:600;color:var(--ink-2);margin-top:auto}.skill-row{position:relative}.detail .band-answer{position:absolute;right:calc(100% + 40px);top:0;height:30px;display:inline-flex;align-items:center;white-space:nowrap;padding:0;border:0;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer}.detail .band-answer:hover:not(:disabled){background:transparent;text-decoration:underline}@keyframes band-answer-wave{0%{background-position:100% 0}35%,100%{background-position:0 0}}.detail .band-answer{background:linear-gradient(90deg,var(--ink-2) 0 40%,#b2b04f 43%,#3db328 47%,#22aa6e 50%,#258f99 53%,#3a95d0 57%,var(--ink-2) 60% 100%) 100% 0/300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:band-answer-wave 3.5s ease-in-out 1s infinite}.detail .band-answer:hover:not(:disabled){background:linear-gradient(90deg,var(--ink-2) 0 40%,#b2b04f 43%,#3db328 47%,#22aa6e 50%,#258f99 53%,#3a95d0 57%,var(--ink-2) 60% 100%) 100% 0/300% 100%;-webkit-background-clip:text;background-clip:text}@media (prefers-reduced-motion:reduce){.detail .band-answer{animation:none}}
 .other-requirements{display:grid;gap:14px;margin-top:12px;padding:20px;border-radius:14px;background:var(--card)}
 .detail .other-toggle{display:flex;align-items:center;flex-wrap:wrap;white-space:normal;gap:4px 12px;width:100%;padding:0;border:0;background:transparent;text-align:left;font-size:15px;color:var(--ink)}
 .detail .other-toggle:hover:not(:disabled){background:transparent}
 .other-toggle span{font-size:13px;color:var(--ink-4)}
 .other-toggle span:last-child{margin-left:auto}
-@media(max-width:900px){.skill-cols{grid-template-columns:minmax(0,1fr);gap:16px}}
+@media(max-width:900px){.skill-cols{grid-template-columns:minmax(0,1fr);gap:16px}.detail .band-answer{position:static;height:auto;margin-bottom:8px}}
