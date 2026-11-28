@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
-import { ModelsPatch, ModelsResponse, ProviderView, WorkView } from '../api/client.ts'
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
+import { ModelsPatch, ModelsResponse, ProviderView, SecretView, WorkView } from '../api/client.ts'
+import { type Note } from '../state/messages.ts'
 import { useModels } from '../state/models.ts'
+import { useSecrets } from '../state/secrets.ts'
+import { Refusal } from './Refusal.tsx'
 
 const WORK_NAMES: Record<string, string> = {
   reading: 'Reading',
@@ -20,6 +23,7 @@ export function options(work: WorkView): string[] {
 
 export function ModelsPanel() {
   const { state, save, check } = useModels()
+  const secrets = useSecrets()
   const [checking, setChecking] = useState<string | null>(null)
 
   if (state.status === 'loading') return <p className="muted">Loading…</p>
@@ -28,6 +32,10 @@ export function ModelsPanel() {
   }
 
   const models = state.models
+  const names = models.providers.map((p) => p.name)
+  const keyOf = (provider: string) => secrets.keys.find(
+    (k) => names.find((n) => k.providers.includes(n)) === provider,
+  )
 
   async function runCheck(name: string) {
     setChecking(name)
@@ -88,7 +96,7 @@ export function ModelsPanel() {
                 </tr>
               </thead>
               <tbody>
-                {models.providers.map((p: ProviderView) => (
+                {models.providers.map((p: ProviderView) => [
                   <tr key={p.name}>
                     <td>{p.name}</td>
                     <td>{p.kind}</td>
@@ -104,14 +112,113 @@ export function ModelsPanel() {
                         Check
                       </button>
                     </td>
-                  </tr>
-                ))}
+                  </tr>,
+                  keyOf(p.name) && (
+                    <tr key={`${p.name}-key`}>
+                      <td colSpan={6} className="key-cell">
+                        <KeyLine
+                          view={keyOf(p.name)!}
+                          provider={p.name}
+                          onSave={secrets.save}
+                          onRemove={secrets.remove}
+                        />
+                      </td>
+                    </tr>
+                  ),
+                ])}
               </tbody>
             </table>
           )}
       </section>
 
       <BackgroundWork models={models} onSave={save} />
+    </>
+  )
+}
+
+interface KeyLineProps {
+  view: SecretView
+  provider: string
+  onSave: (name: string, value: string) => Promise<Note | null>
+  onRemove: (name: string) => Promise<Note | null>
+}
+
+function KeyLine({ view, provider, onSave, onRemove }: KeyLineProps) {
+  const [mode, setMode] = useState<'shown' | 'replace' | 'remove'>('shown')
+  const [value, setValue] = useState('')
+  const [note, setNote] = useState<Note | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const others = view.providers.filter((n) => n !== provider)
+  const typing = view.source !== 'environment' && (!view.set || mode === 'replace')
+
+  async function run(call: () => Promise<Note | null>) {
+    setBusy(true)
+    setNote(null)
+    setValue('')
+    const answer = await call()
+    setBusy(false)
+    setNote(answer)
+    if (answer === null) setMode('shown')
+  }
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    const typed = value
+    if (typed.trim() === '') return
+    void run(() => onSave(view.name, typed))
+  }
+
+  let line: ReactNode
+  if (view.source === 'environment') {
+    line = <span>From the environment</span>
+  } else if (typing) {
+    line = (
+      <form className="key-line" onSubmit={submit}>
+        <input
+          type="password"
+          autoComplete="off"
+          value={value}
+          placeholder={view.name}
+          aria-label={`API key for ${provider}`}
+          disabled={busy}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <button type="submit" disabled={busy || value.trim() === ''}>Save</button>
+        {view.set && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => { setValue(''); setNote(null); setMode('shown') }}
+          >
+            Cancel
+          </button>
+        )}
+      </form>
+    )
+  } else if (mode === 'remove') {
+    line = (
+      <span className="key-line">
+        <span>Remove this key?</span>
+        <button disabled={busy} onClick={() => void run(() => onRemove(view.name))}>Remove</button>
+        <button disabled={busy} onClick={() => setMode('shown')}>Cancel</button>
+      </span>
+    )
+  } else {
+    line = (
+      <span className="key-line">
+        <span>Key set{view.last4 && <> ••••{view.last4}</>}</span>
+        <button onClick={() => { setNote(null); setMode('replace') }}>Replace</button>
+        <button onClick={() => { setNote(null); setMode('remove') }}>Remove</button>
+      </span>
+    )
+  }
+
+  return (
+    <>
+      {line}
+      {others.length > 0 && <p className="muted key-also">Also used by {others.join(', ')}</p>}
+      <Refusal note={note} />
     </>
   )
 }

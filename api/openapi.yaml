@@ -36,6 +36,8 @@ components:
                     items:
                         $ref: '#/components/schemas/Outcome'
                     type: array
+                search:
+                    type: boolean
                 to:
                     enum:
                         - inbox
@@ -44,6 +46,8 @@ components:
                         - dismissed
                     type: string
                 url:
+                    type: string
+                via:
                     type: string
             required:
                 - key
@@ -498,6 +502,135 @@ components:
                 - company
                 - title
             type: object
+        FillAnswer:
+            properties:
+                key:
+                    type: string
+                note:
+                    type: string
+                source:
+                    type: string
+                value:
+                    type: string
+                values:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - key
+                - source
+                - note
+            type: object
+        FillField:
+            properties:
+                format:
+                    type: string
+                key:
+                    type: string
+                kind:
+                    type: string
+                label:
+                    type: string
+                options:
+                    items:
+                        $ref: '#/components/schemas/FillOption'
+                    type: array
+                required:
+                    type: boolean
+                value:
+                    type: string
+                values:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - key
+                - label
+                - kind
+                - required
+                - options
+            type: object
+        FillLeft:
+            properties:
+                key:
+                    type: string
+                reason:
+                    type: string
+            required:
+                - key
+                - reason
+            type: object
+        FillOption:
+            properties:
+                label:
+                    type: string
+                value:
+                    type: string
+            required:
+                - value
+                - label
+            type: object
+        FillRequest:
+            properties:
+                fields:
+                    items:
+                        $ref: '#/components/schemas/FillField'
+                    type: array
+                text:
+                    type: string
+                title:
+                    type: string
+                url:
+                    type: string
+            required:
+                - url
+                - title
+                - text
+                - fields
+            type: object
+        FillResponse:
+            properties:
+                answers:
+                    items:
+                        $ref: '#/components/schemas/FillAnswer'
+                    type: array
+                form:
+                    format: int64
+                    type: integer
+                left:
+                    items:
+                        $ref: '#/components/schemas/FillLeft'
+                    type: array
+                open:
+                    type: string
+                state:
+                    type: string
+                vacancy:
+                    oneOf:
+                        - $ref: '#/components/schemas/FillVacancy'
+                        - type: "null"
+            required:
+                - form
+                - vacancy
+                - state
+                - answers
+                - left
+                - open
+            type: object
+        FillVacancy:
+            properties:
+                company:
+                    type: string
+                id:
+                    format: int64
+                    type: integer
+                title:
+                    type: string
+            required:
+                - id
+                - title
+                - company
+            type: object
         FitMark:
             properties:
                 brokenMust:
@@ -627,6 +760,14 @@ components:
             required:
                 - model
                 - startedAt
+            type: object
+        LocateReq:
+            properties:
+                profile:
+                    format: int64
+                    type: integer
+            required:
+                - profile
             type: object
         Location:
             properties:
@@ -1864,6 +2005,43 @@ components:
                 - interval
                 - max_age_months
             type: object
+        secretPut:
+            properties:
+                value:
+                    type: string
+            required:
+                - value
+            type: object
+        secretView:
+            properties:
+                last4:
+                    type: string
+                name:
+                    type: string
+                providers:
+                    items:
+                        type: string
+                    type: array
+                set:
+                    type: boolean
+                source:
+                    type: string
+            required:
+                - name
+                - providers
+                - set
+                - last4
+                - source
+            type: object
+        secretsResp:
+            properties:
+                keys:
+                    items:
+                        $ref: '#/components/schemas/secretView'
+                    type: array
+            required:
+                - keys
+            type: object
         toggleSourceReq:
             properties:
                 enabled:
@@ -2237,6 +2415,36 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/PreviewResp'
                     description: OK
+    /api/extension/fill:
+        post:
+            operationId: postApiExtensionFill
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/FillRequest'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/FillResponse'
+                    description: OK
+    /api/extension/fill/{form}:
+        get:
+            operationId: getApiExtensionFillForm
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/FillResponse'
+                    description: OK
     /api/logs:
         get:
             operationId: getApiLogs
@@ -2535,6 +2743,47 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ReferenceResp'
                     description: OK
+    /api/secrets:
+        get:
+            operationId: getApiSecrets
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/secretsResp'
+                    description: OK
+    /api/secrets/{name}:
+        delete:
+            operationId: deleteApiSecretsName
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/secretsResp'
+                    description: OK
+        put:
+            operationId: putApiSecretsName
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/secretPut'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/secretsResp'
+                    description: OK
     /api/sources:
         delete:
             operationId: deleteApiSources
@@ -2747,6 +2996,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/DecisionResp'
+                    description: OK
+    /api/vacancies/{id}/locate:
+        post:
+            operationId: postApiVacanciesIdLocate
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LocateReq'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/VacancyView'
                     description: OK
     /api/vacancies/{id}/seen:
         post:

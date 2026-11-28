@@ -62,6 +62,8 @@ export type ModelsResponse = components['schemas']['modelsResp']
 export type ModelsPatch = components['schemas']['modelsPatch']
 export type ProviderView = components['schemas']['providerView']
 export type WorkView = components['schemas']['workView']
+export type SecretsResponse = components['schemas']['secretsResp']
+export type SecretView = components['schemas']['secretView']
 export type CheckResponse = components['schemas']['checkResp']
 export type WorkResponse = components['schemas']['workResp']
 export type WorkRunning = components['schemas']['workRunning']
@@ -361,6 +363,18 @@ export function getModels(): Promise<ModelsResponse> {
 
 export function patchModels(patch: ModelsPatch): Promise<ModelsResponse> {
   return request<ModelsResponse>('PATCH', '/api/models', patch)
+}
+
+export function getSecrets(): Promise<SecretsResponse> {
+  return request<SecretsResponse>('GET', '/api/secrets')
+}
+
+export function putSecret(name: string, value: string): Promise<SecretsResponse> {
+  return request<SecretsResponse>('PUT', `/api/secrets/${encodeURIComponent(name)}`, { value })
+}
+
+export function deleteSecret(name: string): Promise<SecretsResponse> {
+  return request<SecretsResponse>('DELETE', `/api/secrets/${encodeURIComponent(name)}`)
 }
 
 export function checkProvider(name: string): Promise<CheckResponse> {

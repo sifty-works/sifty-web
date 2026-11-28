@@ -85,3 +85,8 @@
 .status-picker-link:hover{color:#ececee}
 .status-bar.offline{background:#2a1512}
 @media(max-width:767px){.status-right{min-width:0;flex:0 1 auto}.status-left{flex:1 1 0;overflow:hidden;margin-right:0}.status-left>.status-block{flex:0 1 auto;min-width:0;overflow:hidden}.status-bar>button,.status-model>button{padding:0 12px}.status-main{padding-left:12px!important}.status-switch{padding-left:16px!important}.status-model>button{padding-right:16px}.status-model>button>span{max-width:30vw}.status-switch-word{display:none}.status-switch{padding:0 12px!important}.status-queue{display:none!important}.status-track{width:60px}.status-next,.status-right>.status-block,.status-done{display:none!important}.status-text{flex:0 1 auto}.status-problem{flex:none}.status-ticker,.status-of,.status-calls,.status-load,.status-new{display:none!important}.status-picker{right:16px}}
+.sites-table td.key-cell{text-align:left;padding-top:0}
+.key-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.key-line input{width:min(360px,100%)}
+.key-also{margin:6px 0 0;font-size:12px}
+.key-cell .refusal{margin:8px 0 0}

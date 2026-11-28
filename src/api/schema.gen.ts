@@ -180,6 +180,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/extension/fill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiExtensionFill"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/fill/{form}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiExtensionFillForm"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/logs": {
         parameters: {
             query?: never;
@@ -388,6 +420,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/secrets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiSecrets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/secrets/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiSecretsName"];
+        post?: never;
+        delete: operations["deleteApiSecretsName"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sources": {
         parameters: {
             query?: never;
@@ -484,6 +548,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vacancies/{id}/locate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiVacanciesIdLocate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/vacancies/{id}/seen": {
         parameters: {
             query?: never;
@@ -562,9 +642,11 @@ export interface components {
             label: string;
             message?: string;
             outcomes?: components["schemas"]["Outcome"][];
+            search?: boolean;
             /** @enum {string} */
             to?: "inbox" | "shortlist" | "applied" | "dismissed";
             url?: string;
+            via?: string;
         };
         AddExclusionReq: {
             /** @enum {string} */
@@ -740,6 +822,52 @@ export interface components {
             summary?: string;
             title: string;
         };
+        FillAnswer: {
+            key: string;
+            note: string;
+            source: string;
+            value?: string;
+            values?: string[];
+        };
+        FillField: {
+            format?: string;
+            key: string;
+            kind: string;
+            label: string;
+            options: components["schemas"]["FillOption"][];
+            required: boolean;
+            value?: string;
+            values?: string[];
+        };
+        FillLeft: {
+            key: string;
+            reason: string;
+        };
+        FillOption: {
+            label: string;
+            value: string;
+        };
+        FillRequest: {
+            fields: components["schemas"]["FillField"][];
+            text: string;
+            title: string;
+            url: string;
+        };
+        FillResponse: {
+            answers: components["schemas"]["FillAnswer"][];
+            /** Format: int64 */
+            form: number;
+            left: components["schemas"]["FillLeft"][];
+            open: string;
+            state: string;
+            vacancy: components["schemas"]["FillVacancy"] | null;
+        };
+        FillVacancy: {
+            company: string;
+            /** Format: int64 */
+            id: number;
+            title: string;
+        };
         FitMark: {
             brokenMust: boolean;
             bucket: string;
@@ -787,6 +915,10 @@ export interface components {
         LoadingInfo: {
             model: string;
             startedAt: string;
+        };
+        LocateReq: {
+            /** Format: int64 */
+            profile: number;
         };
         Location: {
             city?: string;
@@ -1208,6 +1340,19 @@ export interface components {
             interval: string;
             max_age_months: number | null;
         };
+        secretPut: {
+            value: string;
+        };
+        secretView: {
+            last4: string;
+            name: string;
+            providers: string[];
+            set: boolean;
+            source: string;
+        };
+        secretsResp: {
+            keys: components["schemas"]["secretView"][];
+        };
         toggleSourceReq: {
             enabled: boolean;
             key: string;
@@ -1613,6 +1758,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreviewResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiExtensionFill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FillRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FillResponse"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiExtensionFillForm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FillResponse"];
                 };
             };
             "4XX": components["responses"]["Error"];
@@ -2125,6 +2316,73 @@ export interface operations {
             "4XX": components["responses"]["Error"];
         };
     };
+    getApiSecrets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["secretsResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    putApiSecretsName: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["secretPut"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["secretsResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    deleteApiSecretsName: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["secretsResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
     getApiSources: {
         parameters: {
             query?: never;
@@ -2365,6 +2623,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DecisionResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiVacanciesIdLocate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocateReq"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VacancyView"];
                 };
             };
             "4XX": components["responses"]["Error"];
