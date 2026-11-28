@@ -152,3 +152,26 @@
 .app-edit :is(textarea, select) { width: 100%; background: var(--soft); }
 .app-field .refusal { margin: 6px 0 0; font-size: 13px; }
 .app-extension { margin: 18px 0 0; font-size: 13px; }
+.app-split { display: grid; gap: 24px; }
+.app-chat { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; min-height: 0; }
+.app-chat-title { margin: 0; font-size: 13px; }
+.app-chat-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 200px; max-height: 420px; scrollbar-width: thin; }
+.app-chat-empty { font-size: 13px; }
+.app-bubble { max-width: 92%; padding: 8px 12px; border-radius: 12px; font-size: 14px; background: var(--soft); }
+.app-bubble p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.app-bubble-user { align-self: flex-end; background: var(--well); }
+.app-bubble-model { align-self: flex-start; }
+.app-proposal { display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--well-2); }
+.app-proposal button { justify-self: start; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.app-chat-refusal .refusal { margin: 0; font-size: 13px; }
+.app-discussed { margin: 0 -10px; padding: 14px 10px 10px; border-radius: 10px; background: var(--soft); border-top-color: transparent; }
+.app-discussing { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin: 0; font-size: 12px; color: var(--ink-3); }
+.app-discussing button { padding: 2px 8px; font-size: 12px; font-weight: 600; }
+.app-chat-box { display: grid; gap: 8px; justify-items: end; }
+.app-chat-box textarea { width: 100%; background: var(--soft); resize: vertical; }
+@media (min-width: 1000px) {
+  .app-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .app-left { max-height: calc(100dvh - 240px); min-height: 360px; overflow-y: auto; scrollbar-width: thin; }
+  .app-chat { height: calc(100dvh - 240px); min-height: 360px; }
+  .app-chat-log { max-height: none; min-height: 0; }
+}

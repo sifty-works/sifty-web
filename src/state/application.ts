@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  getApplication, OfflineError, patchApplicationField, retryApplication, ServerError,
-  type ApplicationView,
+  getApplication, getApplicationChat, OfflineError, patchApplicationField, retryApplication, sendApplicationChat,
+  ServerError, type ApplicationView, type ChatMessage, type ChatSend,
 } from '../api/client.ts'
 import { announce, describe, failure, retract } from './messages.ts'
 
@@ -77,4 +77,59 @@ export function useApplication(id: number) {
   }, [id, reload])
 
   return { state, retry, save }
+}
+
+const errorText = (err: unknown, fallback: string) =>
+  err instanceof OfflineError ? OFFLINE_MESSAGE : describe(err, fallback)
+
+export function useApplicationChat(id: number) {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [pending, setPending] = useState<ChatSend | null>(null)
+  const [unsent, setUnsent] = useState<ChatSend | null>(null)
+  const [refusal, setRefusal] = useState<string | null>(null)
+  const latest = useRef(0)
+  const count = useRef(0)
+
+  const load = useCallback(async (): Promise<ChatMessage[] | null> => {
+    const mine = ++latest.current
+    try {
+      const chat = await getApplicationChat(id)
+      if (mine !== latest.current) return null
+      count.current = chat.messages.length
+      setMessages(chat.messages)
+      return chat.messages
+    } catch (err) {
+      if (mine === latest.current) setRefusal(errorText(err, 'Could not load the conversation'))
+      return null
+    }
+  }, [id])
+
+  useEffect(() => {
+    void load()
+    return () => { latest.current++ }
+  }, [load])
+
+  const send = useCallback(async (item: ChatSend): Promise<boolean> => {
+    const before = count.current
+    setPending(item)
+    setUnsent(null)
+    setRefusal(null)
+    try {
+      const chat = await sendApplicationChat(id, item)
+      latest.current++
+      count.current = chat.messages.length
+      setMessages(chat.messages)
+      setPending(null)
+      return true
+    } catch (err) {
+      setRefusal(errorText(err, 'The model could not answer'))
+      setUnsent(item)
+      setPending(null)
+      const after = await load()
+      if (after && after.length > before) setUnsent(null)
+      return false
+    }
+  }, [id, load])
+
+  return { messages, pending, unsent, refusal, send }
 }

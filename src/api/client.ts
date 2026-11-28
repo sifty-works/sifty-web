@@ -36,6 +36,9 @@ export type VacancySource = components['schemas']['VacancySource']
 export type VacancyView = components['schemas']['VacancyView']
 export type ApplicationView = components['schemas']['ApplicationView']
 export type ApplicationField = components['schemas']['Field']
+export type ChatMessage = components['schemas']['ChatMessage']
+export type ApplicationChatView = components['schemas']['chatView']
+export type ChatSend = components['schemas']['chatPost']
 export type CheckView = components['schemas']['CheckView']
 export type CheckAnswer = components['schemas']['CheckAnswer']
 export type SourceStatus = components['schemas']['SourceStatus']
@@ -116,7 +119,7 @@ async function parseErrorBody(res: Response): Promise<string | null> {
   }
 }
 
-async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
+async function request<T>(method: string, url: string, body?: unknown, missing?: T): Promise<T> {
   let res: Response
   try {
     const init: RequestInit = { method }
@@ -131,6 +134,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     throw new OfflineError()
   }
   if (!res.ok) {
+    if (missing !== undefined && res.status === 404) return missing
     const message = await parseErrorBody(res)
     if (message !== null) throw new ServerError(message)
     throw new OfflineError()
@@ -239,6 +243,14 @@ export function getApplication(id: number): Promise<ApplicationView> {
 
 export function retryApplication(id: number): Promise<ApplicationView> {
   return request<ApplicationView>('POST', `/api/vacancies/${id}/application/retry`)
+}
+
+export function getApplicationChat(id: number): Promise<ApplicationChatView> {
+  return request<ApplicationChatView>('GET', `/api/vacancies/${id}/application/chat`, undefined, { messages: [] })
+}
+
+export function sendApplicationChat(id: number, send: ChatSend): Promise<ApplicationChatView> {
+  return request<ApplicationChatView>('POST', `/api/vacancies/${id}/application/chat`, send)
 }
 
 export function patchApplicationField(id: number, field: string, values: string[], revision: number): Promise<ApplicationView> {

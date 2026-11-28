@@ -548,6 +548,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vacancies/{id}/application/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiVacanciesIdApplicationChat"];
+        put?: never;
+        post: operations["postApiVacanciesIdApplicationChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/vacancies/{id}/application/fields/{field}": {
         parameters: {
             query?: never;
@@ -739,6 +755,15 @@ export interface components {
             possible?: string[];
             preferred?: string[];
             unwanted?: string[];
+        };
+        ChatMessage: {
+            created_at: string;
+            field: string;
+            /** Format: int64 */
+            position: number;
+            proposal: string[];
+            role: string;
+            text: string;
         };
         CheckAnswer: {
             excerpt: string;
@@ -1352,6 +1377,14 @@ export interface components {
         addSourceReq: {
             name: string;
             url: string;
+        };
+        chatPost: {
+            field: string;
+            message: string;
+            values: string[];
+        };
+        chatView: {
+            messages: components["schemas"]["ChatMessage"][];
         };
         checkResp: {
             state: string;
@@ -2692,6 +2725,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApplicationView"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiVacanciesIdApplicationChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["chatView"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiVacanciesIdApplicationChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["chatPost"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["chatView"];
                 };
             };
             "4XX": components["responses"]["Error"];

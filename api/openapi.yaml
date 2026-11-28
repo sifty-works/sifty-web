@@ -179,6 +179,31 @@ components:
                         type: string
                     type: array
             type: object
+        ChatMessage:
+            properties:
+                created_at:
+                    type: string
+                field:
+                    type: string
+                position:
+                    format: int64
+                    type: integer
+                proposal:
+                    items:
+                        type: string
+                    type: array
+                role:
+                    type: string
+                text:
+                    type: string
+            required:
+                - position
+                - role
+                - text
+                - field
+                - proposal
+                - created_at
+            type: object
         CheckAnswer:
             properties:
                 excerpt:
@@ -1912,6 +1937,30 @@ components:
                 - name
                 - url
             type: object
+        chatPost:
+            properties:
+                field:
+                    type: string
+                message:
+                    type: string
+                values:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - message
+                - field
+                - values
+            type: object
+        chatView:
+            properties:
+                messages:
+                    items:
+                        $ref: '#/components/schemas/ChatMessage'
+                    type: array
+            required:
+                - messages
+            type: object
         checkResp:
             properties:
                 state:
@@ -3063,6 +3112,35 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ApplicationView'
+                    description: OK
+    /api/vacancies/{id}/application/chat:
+        get:
+            operationId: getApiVacanciesIdApplicationChat
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/chatView'
+                    description: OK
+        post:
+            operationId: postApiVacanciesIdApplicationChat
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/chatPost'
+                required: true
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/chatView'
                     description: OK
     /api/vacancies/{id}/application/fields/{field}:
         patch:
