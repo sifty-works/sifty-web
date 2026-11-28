@@ -1605,6 +1605,32 @@ components:
                 - stage
                 - fit
             type: object
+        SaidItem:
+            properties:
+                company:
+                    type: string
+                createdAt:
+                    type: string
+                id:
+                    format: int64
+                    type: integer
+                text:
+                    type: string
+            required:
+                - id
+                - text
+                - company
+                - createdAt
+            type: object
+        SaidListResp:
+            properties:
+                items:
+                    items:
+                        $ref: '#/components/schemas/SaidItem'
+                    type: array
+            required:
+                - items
+            type: object
         SetActiveReq:
             properties:
                 id:
@@ -2865,6 +2891,26 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ReferenceResp'
                     description: OK
+    /api/said:
+        get:
+            operationId: getApiSaid
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SaidListResp'
+                    description: OK
+    /api/said/{id}:
+        delete:
+            operationId: deleteApiSaidId
+            responses:
+                4XX:
+                    $ref: '#/components/responses/Error'
+                "204":
+                    description: No Content
     /api/secrets:
         get:
             operationId: getApiSecrets

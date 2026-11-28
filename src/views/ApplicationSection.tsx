@@ -28,7 +28,8 @@ function valuesOf(f: ApplicationField, draft: string): string[] {
 
 function quote(f: ApplicationField): string {
   const answer = answerText(f)
-  return `Q: ${f.label}\n${answer ? `A: ${answer}\n` : ''}\n`
+  const lines = answer ? answer.split(/\r?\n/).map((line, i) => `> ${i === 0 ? 'A: ' : ''}${line}`.trimEnd()) : []
+  return [`> Q: ${f.label}`, ...lines].join('\n') + '\n\n'
 }
 
 async function copy(f: ApplicationField) {

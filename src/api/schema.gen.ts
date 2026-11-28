@@ -420,6 +420,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/said": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiSaid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/said/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteApiSaidId"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/secrets": {
         parameters: {
             query?: never;
@@ -1256,6 +1288,16 @@ export interface components {
             stage: "inbox" | "shortlist" | "applied" | "dismissed";
             title: string;
             unread: boolean;
+        };
+        SaidItem: {
+            company: string;
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            text: string;
+        };
+        SaidListResp: {
+            items: components["schemas"]["SaidItem"][];
         };
         SetActiveReq: {
             /** Format: int64 */
@@ -2418,6 +2460,46 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReferenceResp"];
                 };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiSaid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaidListResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    deleteApiSaidId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             "4XX": components["responses"]["Error"];
         };

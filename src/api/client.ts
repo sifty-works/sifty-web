@@ -15,6 +15,8 @@ export type ReferenceRegion = components['schemas']['ReferenceRegion']
 export type ReferenceTimeZoneBand = components['schemas']['ReferenceTimeZoneBand']
 export type QAItem = components['schemas']['QAItem']
 export type QAListResp = components['schemas']['QAListResp']
+export type SaidItem = components['schemas']['SaidItem']
+export type SaidList = components['schemas']['SaidListResp']
 export type Skill = components['schemas']['Skill']
 export type AbsentSkill = components['schemas']['AbsentSkill']
 export type ConfirmedFact = components['schemas']['ConfirmedFact']
@@ -377,6 +379,13 @@ export function updateQA(id: number, question: string | null, answer: string | n
 }
 export function deleteQA(id: number): Promise<void> {
   return request<void>('DELETE', '/api/qa', { id })
+}
+
+export function getSaid(): Promise<SaidList> {
+  return request<SaidList>('GET', '/api/said', undefined, { items: [] })
+}
+export function deleteSaid(id: number): Promise<void> {
+  return request<void>('DELETE', `/api/said/${id}`)
 }
 
 export function getExclusions(profileId: number): Promise<ExclusionListResponse> {

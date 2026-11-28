@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import {
-  checkPhoto, createQA, deleteQA, getMe, getProfile, getProfiles, getQA, patchMe, patchProfile,
+  checkPhoto, createQA, deleteQA, deleteSaid, getMe, getProfile, getProfiles, getQA, getSaid, patchMe, patchProfile,
   PHOTO_URL, removePhoto, updateQA, uploadPhoto,
   type MeData, type ProfileDetailResp, type ProfileListItem, type ProfilePatchReq, type MePatchReq,
-  type QAItem, type ReferenceResp,
+  type QAItem, type ReferenceResp, type SaidItem,
 } from '../api/client.ts'
 import { announce, describe, failure, retract, type Note } from '../state/messages.ts'
 import { useProposals, type UseProposalsResult } from '../state/proposals.ts'
 import { useReference } from '../state/profile.ts'
 import { Icon } from './Icon.tsx'
 import { Refusal } from './Refusal.tsx'
+import { localTime } from './WorkTable.tsx'
 
 export function NotSet() { return <span className="profile-not-set">Not set</span> }
 
@@ -419,7 +420,44 @@ function QAPanel() {
         <button type="button" disabled={addSaving || !addQ.trim()} onClick={() => void doAdd()}>{addSaving ? 'Saving…' : 'Add'}</button>
       </div>
     </details> : null}
+    <SaidPanel/>
   </div>
+}
+
+function SaidPanel() {
+  const [items, setItems] = useState<SaidItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadNote, setLoadNote] = useState<Note | null>(null)
+  const [busy, setBusy] = useState<Record<number, boolean>>({})
+
+  useEffect(() => {
+    void getSaid().then((r) => { setItems(r.items); setLoading(false) }).catch((e) => {
+      setLoadNote(failure(`What you told Sifty could not be loaded. ${describe(e, '')}`.trim()))
+      setLoading(false)
+    })
+  }, [])
+
+  async function doDelete(id: number) {
+    setBusy((p) => ({ ...p, [id]: true })); retract(`said-${id}`)
+    try { await deleteSaid(id); setItems((p) => p.filter((x) => x.id !== id)) }
+    catch (e) { announce(failure(e, 'Could not delete'), `said-${id}`) }
+    finally { setBusy((p) => ({ ...p, [id]: false })) }
+  }
+
+  return <>
+    <p className="profile-col-heading">What you told Sifty</p>
+    <p className="profile-hint">Your own words from the answer conversation on the Application tab. Drafting uses them; delete an entry to stop it being used.</p>
+    {loading ? <p>Loading…</p> : null}
+    <Refusal note={loadNote}/>
+    {!loading && !loadNote && !items.length ? <p className="profile-hint">Nothing yet. What you tell Sifty while discussing answers appears here.</p> : null}
+    {items.map((item) => <article key={item.id} className="profile-qa-entry">
+      <p className="profile-qa-answer">{item.text}</p>
+      <p className="profile-hint">{localTime(item.createdAt)}{item.company ? ` · ${item.company}` : ''}</p>
+      <div className="profile-document-actions">
+        <button type="button" disabled={busy[item.id]} onClick={() => void doDelete(item.id)}>Delete</button>
+      </div>
+    </article>)}
+  </>
 }
 
 const LINKEDIN_PREFIX = 'https://www.linkedin.com/in/'
