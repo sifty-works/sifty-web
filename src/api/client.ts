@@ -34,6 +34,8 @@ export type Outcome = components['schemas']['Outcome']
 export type VacancyListing = components['schemas']['ListingView']
 export type VacancySource = components['schemas']['VacancySource']
 export type VacancyView = components['schemas']['VacancyView']
+export type ApplicationView = components['schemas']['ApplicationView']
+export type ApplicationField = components['schemas']['Field']
 export type CheckView = components['schemas']['CheckView']
 export type CheckAnswer = components['schemas']['CheckAnswer']
 export type SourceStatus = components['schemas']['SourceStatus']
@@ -229,6 +231,22 @@ export function postDecision(id: number, req: DecisionRequest): Promise<Decision
 
 export function postShortlistCheckRetry(id: number, profile: number): Promise<VacancyView> {
   return request<VacancyView>('POST', `/api/vacancies/${id}/shortlist-check/retry`, { profile })
+}
+
+export function getApplication(id: number): Promise<ApplicationView> {
+  return request<ApplicationView>('GET', `/api/vacancies/${id}/application`)
+}
+
+export function retryApplication(id: number): Promise<ApplicationView> {
+  return request<ApplicationView>('POST', `/api/vacancies/${id}/application/retry`)
+}
+
+export function patchApplicationField(id: number, field: string, values: string[], revision: number): Promise<ApplicationView> {
+  return request<ApplicationView>('PATCH', `/api/vacancies/${id}/application/fields/${encodeURIComponent(field)}`, { values, revision })
+}
+
+export function postLocate(id: number, profile: number): Promise<VacancyView> {
+  return request<VacancyView>('POST', `/api/vacancies/${id}/locate`, { profile })
 }
 
 export function deleteVacancy(id: number, profile: number): Promise<{ counts: VacancyCounts }> {

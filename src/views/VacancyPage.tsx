@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react'
 import { SkillAnswer, VacancyAction, VacancyView } from '../api/client.ts'
 import { SessionDecision } from '../state/decisions.ts'
+import { ApplicationSection } from './ApplicationSection.tsx'
 import { FitBand } from './FitBand.tsx'
 import { CheckLine, OtherRequirements } from './Requirements.tsx'
 
@@ -26,9 +27,10 @@ interface Props {
   onUndoDecision: () => void
   onSkillDecision: (answer: SkillAnswer) => Promise<void>
   onCheckRetry: () => Promise<void>
+  onLocate: () => Promise<void>
 }
 
-export function VacancyPage({ view, sessionDecision, onAction, onUndoDecision, onSkillDecision, onCheckRetry }: Props) {
+export function VacancyPage({ view, sessionDecision, onAction, onUndoDecision, onSkillDecision, onCheckRetry, onLocate }: Props) {
   const placed = (place: Place) =>
     (view.actions ?? []).filter((a) => (ACTIONS[a.key]?.place ?? 'main') === place)
   const buttons = (list: VacancyAction[]) =>
@@ -37,9 +39,10 @@ export function VacancyPage({ view, sessionDecision, onAction, onUndoDecision, o
   const segment = placed('segment')
   const links = placed('links')
 
-  const appAvailable = false
   const showTabs = view.stage === 'shortlist'
-  const [activeTab, setActiveTab] = useState<'overview' | 'application'>('overview')
+  const [chosenTab, setActiveTab] = useState<'overview' | 'application'>('overview')
+  const activeTab = showTabs ? chosenTab : 'overview'
+  const apply = (view.actions ?? []).find((a) => a.key === 'apply')
 
   return (
     <>
@@ -80,10 +83,13 @@ export function VacancyPage({ view, sessionDecision, onAction, onUndoDecision, o
           ) : (
             <>
               {segment.length > 0 ? (
-                <div className="shortlist-top">
-                  {mainRow}
-                  <div className="apply-seg">{buttons(segment)}</div>
-                </div>
+                <>
+                  <div className="shortlist-top">
+                    {mainRow}
+                    <div className="apply-seg">{buttons(segment)}</div>
+                  </div>
+                  {apply?.via && <ApplyVia action={apply} onLocate={onLocate} />}
+                </>
               ) : mainRow}
               {links.length > 0 && (
                 <div className="action-links-row">
@@ -114,14 +120,18 @@ export function VacancyPage({ view, sessionDecision, onAction, onUndoDecision, o
             role="tab"
             className={activeTab === 'application' ? 'active' : undefined}
             aria-selected={activeTab === 'application'}
-            disabled={!appAvailable}
-            title="Application is not available yet"
-            onClick={() => { if (appAvailable) setActiveTab('application') }}
+            onClick={() => setActiveTab('application')}
           >
             Application
           </button>
         </div>
       </div>}
+
+      {activeTab === 'application' && (
+        <div className="overview-stack">
+          <ApplicationSection key={view.id} id={view.id} onApplyDirectly={() => onAction('apply')} />
+        </div>
+      )}
 
       {activeTab === 'overview' && (
         <>
@@ -168,6 +178,19 @@ function ActionButton({ action, onAction }: ActionButtonProps) {
     >
       {text}{code && <kbd>{code.replace('Key', '')}</kbd>}
     </button>
+  )
+}
+
+function ApplyVia({ action, onLocate }: { action: VacancyAction; onLocate: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false)
+  async function locate() {
+    setBusy(true)
+    try { await onLocate() } finally { setBusy(false) }
+  }
+  return action.search ? (
+    <button className="link-button apply-via" disabled={busy} onClick={() => void locate()}>{action.via}</button>
+  ) : (
+    <span className="apply-via">{action.via}</span>
   )
 }
 

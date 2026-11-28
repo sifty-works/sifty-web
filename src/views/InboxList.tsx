@@ -9,6 +9,7 @@ import {
   OfflineError,
   Outcome,
   postDecision,
+  postLocate,
   postShortlistCheckRetry,
   postSkillsDecision,
   ServerError,
@@ -20,7 +21,7 @@ import {
 import { installActionShortcuts, installNavShortcuts } from '../keyboard.ts'
 import { ReturnedRow, SessionDecision } from '../state/decisions.ts'
 import { announce, failure, retract, type Note, silent } from '../state/messages.ts'
-import { useCheckRefresh, useVacancies } from '../state/vacancies.ts'
+import { useViewRefresh, useVacancies } from '../state/vacancies.ts'
 import { ApplyOutcomeDialog, DeleteConfirmDialog } from './Dialogs.tsx'
 import { FilterPanel } from './FilterPanel.tsx'
 import { Icon } from './Icon.tsx'
@@ -214,7 +215,7 @@ export function InboxList({
     },
     [profile],
   )
-  useCheckRefresh(pageView, reloadOpen)
+  useViewRefresh(pageView, reloadOpen)
 
   const selectRow = useCallback(
     (id: number) => {
@@ -466,6 +467,16 @@ export function InboxList({
     }
   }
 
+  async function handleLocate(): Promise<void> {
+    if (!pageView || profile === null) return
+    retract('vacancy-action')
+    try {
+      setPageView(await postLocate(pageView.id, profile))
+    } catch (err) {
+      announce(failure(err instanceof ServerError ? err : null, 'Could not start the search'), 'vacancy-action')
+    }
+  }
+
   async function handleCheckRetry(): Promise<void> {
     if (!pageView || profile === null) return
     retract('vacancy-action')
@@ -622,6 +633,7 @@ export function InboxList({
               onUndoDecision={() => void handleUndoDecision()}
               onSkillDecision={handleSkillDecision}
               onCheckRetry={handleCheckRetry}
+              onLocate={handleLocate}
             />
           ) : loading || listNote ? null : (
             <div className="empty">

@@ -532,6 +532,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vacancies/{id}/application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiVacanciesIdApplication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vacancies/{id}/application/fields/{field}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiVacanciesIdApplicationFieldsField"];
+        trace?: never;
+    };
+    "/api/vacancies/{id}/application/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiVacanciesIdApplicationRetry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/vacancies/{id}/decision": {
         parameters: {
             query?: never;
@@ -654,6 +702,13 @@ export interface components {
             /** Format: int64 */
             profile?: number;
             value: string;
+        };
+        ApplicationView: {
+            action: string;
+            fields: components["schemas"]["Field"][];
+            state: string;
+            system: string;
+            text: string;
         };
         Attention: {
             /** Format: int64 */
@@ -821,6 +876,19 @@ export interface components {
             start?: string;
             summary?: string;
             title: string;
+        };
+        Field: {
+            evidence: string;
+            key: string;
+            kind: string;
+            label: string;
+            note: string;
+            options: string[];
+            required: boolean;
+            /** Format: int64 */
+            revision: number;
+            source: string;
+            values: string[];
         };
         FillAnswer: {
             key: string;
@@ -1290,6 +1358,11 @@ export interface components {
         };
         collectReq: {
             force: boolean;
+        };
+        fieldEdit: {
+            /** Format: int64 */
+            revision: number;
+            values: string[];
         };
         logAttr: {
             key: string;
@@ -2598,6 +2671,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeleteVacancyResp"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    getApiVacanciesIdApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationView"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    patchApiVacanciesIdApplicationFieldsField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["fieldEdit"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationView"];
+                };
+            };
+            "4XX": components["responses"]["Error"];
+        };
+    };
+    postApiVacanciesIdApplicationRetry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationView"];
                 };
             };
             "4XX": components["responses"]["Error"];

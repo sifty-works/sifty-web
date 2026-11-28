@@ -114,8 +114,11 @@ function saveSort(v: 'fit' | 'newest'): void {
 
 const CHECK_POLL_MS = 2000
 
-export function useCheckRefresh(view: VacancyView | null, reload: (id: number) => Promise<void>): void {
-  const active = view?.check?.active === true
+export const SEARCHING = 'searching…'
+
+export function useViewRefresh(view: VacancyView | null, reload: (id: number) => Promise<void>): void {
+  const searching = view?.actions?.some((a) => a.key === 'apply' && a.via === SEARCHING) === true
+  const active = view?.check?.active === true || searching
   const id = view?.id
   const [tick, setTick] = useState(0)
   useEffect(() => {

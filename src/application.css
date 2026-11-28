@@ -122,3 +122,33 @@
   cursor: default;
   background: transparent !important;
 }
+
+.apply-via {
+  align-self: flex-end;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.detail button.apply-via {
+  height: auto;
+  padding: 0;
+  font-weight: 500;
+  color: var(--ink-3);
+  background: transparent;
+}
+.detail button.apply-via:hover:not(:disabled) { color: var(--ink); background: transparent; }
+
+.application-panel .check-line { margin-bottom: 14px; }
+.app-fields { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.app-field { display: grid; gap: 4px; padding-top: 14px; border-top: 1px solid var(--well); }
+.app-field:first-child { padding-top: 0; border-top: 0; }
+.app-field-head { display: flex; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 600; }
+.app-source { font-size: 11px; font-weight: 500; color: var(--ink-3); background: var(--well); border-radius: 6px; padding: 1px 7px; }
+.app-answer { margin: 0; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.app-note { margin: 0; font-size: 12px; color: var(--ink-3); }
+.app-field-actions { display: flex; gap: 8px; margin-top: 4px; }
+.app-field-actions button { padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.app-edit { display: grid; gap: 6px; }
+.app-edit :is(textarea, select) { width: 100%; background: var(--soft); }
+.app-field .refusal { margin: 6px 0 0; font-size: 13px; }
+.app-extension { margin: 18px 0 0; font-size: 13px; }
